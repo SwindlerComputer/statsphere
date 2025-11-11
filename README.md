@@ -18,3 +18,63 @@
 
 ## 🧠 Project Architecture
 
+Frontend (React + Tailwind)
+↕
+Backend (Node.js + Express)
+↕
+Database (PostgreSQL)
+↕
+Predictive Engine (Python / ML)
+
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-------------|
+| **Frontend** | React, Tailwind CSS, Axios, Recharts |
+| **Backend** | Node.js, Express.js, dotenv, CORS |
+| **Database** | PostgreSQL |
+| **Authentication** | Firebase Auth (planned) |
+| **Data Source** | API-Football |
+| **Predictive Engine** | Python (scikit-learn / rule-based model) |
+
+---
+
+## ⚙️ Installation & Setup
+
+### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/SwindlerComputer/statsphere.git
+cd statsphere
+
+2️⃣ Install Dependencies
+
+cd backend
+npm install
+
+Frontend:
+cd ../frontend
+npm install
+
+3️⃣ Configure Environment Variables
+
+Create a .env file inside the backend/ folder:
+DB_USER=postgres
+DB_PASS=yourpassword
+DB_NAME=statsphere
+DB_HOST=localhost
+PORT=5000
+
+4️⃣ Run the App
+
+Start Backend:
+cd backend
+npm start
+
+create another shell
+Start Frontend:
+
+cd ../frontend
+npm start

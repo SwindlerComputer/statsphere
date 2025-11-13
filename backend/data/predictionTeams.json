@@ -1,0 +1,8 @@
+[
+  { "id": 1, "name": "Real Madrid", "attack": 92, "defense": 88, "form": 5 },
+  { "id": 2, "name": "Manchester City", "attack": 90, "defense": 89, "form": 4 },
+  { "id": 3, "name": "Al Nassr", "attack": 85, "defense": 80, "form": 4 },
+  { "id": 4, "name": "Galatasaray", "attack": 79, "defense": 78, "form": 3 },
+  { "id": 5, "name": "Bayern Munich", "attack": 87, "defense": 84, "form": 2 },
+  { "id": 6, "name": "Napoli", "attack": 82, "defense": 81, "form": 3 }
+]

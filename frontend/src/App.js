@@ -3,6 +3,7 @@ import Dashboard from "./pages/Dashboard";
 import Players from "./pages/Players";
 import Predictions from "./pages/Predictions";
 import Community from "./pages/Community";
+import Login from "./pages/Login"; 
 
 function App() {
   return (
@@ -63,6 +64,18 @@ function App() {
                 Community
               </NavLink>
             </li>
+            <li>
+              <NavLink
+                to="/login"
+                className={({ isActive }) =>
+                  `transition-all duration-200 ${
+                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
+                  }`
+                }
+              >
+                Login
+              </NavLink>
+            </li>
           </ul>
         </nav>
 
@@ -72,6 +85,7 @@ function App() {
           <Route path="/players" element={<Players />} />
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
 
         {/* Footer */}

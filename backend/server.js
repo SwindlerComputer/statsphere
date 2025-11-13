@@ -3,6 +3,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import pkg from "pg";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 const { Pool } = pkg;
@@ -20,9 +23,15 @@ const pool = new Pool({
   port: 5432,
 });
 
-// ---- ROUTES ----
+// Fix __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Teams route (connected to Postgres)
+// -------------------------------------------------------------
+//                       ROUTES
+// -------------------------------------------------------------
+
+// ✅ TEAMS (PostgreSQL)
 app.get("/api/teams", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM teams");
@@ -33,18 +42,65 @@ app.get("/api/teams", async (req, res) => {
   }
 });
 
-// Players route (sample data for interim)
+// ✅ PLAYERS (Load from backend/data/players.json)
 app.get("/api/players", (req, res) => {
-  const players = [
-    { id: 1, name: "Cristiano Ronaldo", team: "Al Nassr", position: "Forward", goals: 22, assists: 7 },
-    { id: 2, name: "Kylian Mbappé", team: "PSG", position: "Forward", goals: 18, assists: 10 },
-    { id: 3, name: "Jude Bellingham", team: "Real Madrid", position: "Midfielder", goals: 12, assists: 8 },
-    { id: 4, name: "Kevin De Bruyne", team: "Man City", position: "Midfielder", goals: 5, assists: 15 },
-    { id: 5, name: "Virgil van Dijk", team: "Liverpool", position: "Defender", goals: 4, assists: 1 }
-  ];
-  res.json(players);
+  try {
+    const filePath = path.join(__dirname, "data", "players.json");
+    const jsonData = fs.readFileSync(filePath, "utf8");
+    const players = JSON.parse(jsonData);
+    res.json(players);
+  } catch (err) {
+    console.error("Error loading players.json:", err);
+    res.status(500).json({ error: "Failed to load player data" });
+  }
 });
 
-// ---- SERVER START ----
+// ✅ PREDICTION TEAMS (Load from backend/data/predictionTeams.json)
+app.get("/api/prediction-teams", (req, res) => {
+  try {
+    const filePath = path.join(__dirname, "data", "predictionTeams.json");
+    const jsonData = fs.readFileSync(filePath, "utf8");
+    const teams = JSON.parse(jsonData);
+    res.json(teams);
+  } catch (err) {
+    console.error("Error loading predictionTeams.json:", err);
+    res.status(500).json({ error: "Failed to load prediction teams" });
+  }
+});
+
+// ✅ MOCK MATCH PREDICTOR
+app.post("/api/predict-match", (req, res) => {
+  const { teamA, teamB } = req.body;
+
+  if (!teamA || !teamB) {
+    return res.status(400).json({ error: "Teams required" });
+  }
+
+  // Simple weighted scoring model (rule-based)
+  const scoreA =
+    teamA.attack * 0.4 + teamA.defense * 0.3 + teamA.form * 5;
+
+  const scoreB =
+    teamB.attack * 0.4 + teamB.defense * 0.3 + teamB.form * 5;
+
+  let winner = "Draw";
+  if (scoreA > scoreB) winner = teamA.name;
+  if (scoreB > scoreA) winner = teamB.name;
+
+  res.json({
+    prediction: winner,
+    confidence: Math.abs(scoreA - scoreB).toFixed(1) + "%",
+    details: {
+      teamA_score: scoreA.toFixed(1),
+      teamB_score: scoreB.toFixed(1),
+    },
+  });
+});
+
+// -------------------------------------------------------------
+//                      START SERVER
+// -------------------------------------------------------------
 const PORT = 5000;
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`✅ Server running on http://localhost:${PORT}`)
+);

@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "name": "Cristiano Ronaldo",
+    "team": "Al Nassr",
+    "league": "Saudi Pro League",
+    "position": "Forward",
+    "age": 39,
+    "goals": 22,
+    "assists": 7,
+    "xG": 19.4,
+    "xA": 5.2,
+    "npxG": 17.9,
+    "shots": 102,
+    "shotsOnTarget": 48,
+    "per90": {
+      "goals": 0.85,
+      "assists": 0.25,
+      "xG": 0.75,
+      "shots": 3.8
+    }
+  },
+  {
+    "id": 2,
+    "name": "Kylian Mbappé",
+    "team": "Real Madrid",
+    "league": "La Liga",
+    "position": "Forward",
+    "age": 26,
+    "goals": 18,
+    "assists": 10,
+    "xG": 17.1,
+    "xA": 6.4,
+    "npxG": 15.8,
+    "shots": 89,
+    "shotsOnTarget": 41,
+    "per90": {
+      "goals": 0.92,
+      "assists": 0.30,
+      "xG": 0.88,
+      "shots": 4.1
+    }
+  },
+  {
+    "id": 3,
+    "name": "Jude Bellingham",
+    "team": "Real Madrid",
+    "league": "La Liga",
+    "position": "Midfielder",
+    "age": 21,
+    "goals": 12,
+    "assists": 8,
+    "xG": 9.2,
+    "xA": 6.8,
+    "npxG": 8.1,
+    "shots": 47,
+    "shotsOnTarget": 21,
+    "per90": {
+      "goals": 0.55,
+      "assists": 0.35,
+      "xG": 0.40,
+      "shots": 2.3
+    }
+  },
+  {
+    "id": 4,
+    "name": "Kevin De Bruyne",
+    "team": "Napoli",
+    "league": "Serie A",
+    "position": "Midfielder",
+    "age": 33,
+    "goals": 5,
+    "assists": 15,
+    "xG": 4.1,
+    "xA": 13.2,
+    "npxG": 3.8,
+    "shots": 29,
+    "shotsOnTarget": 12,
+    "per90": {
+      "goals": 0.20,
+      "assists": 0.55,
+      "xG": 0.16,
+      "shots": 1.1
+    }
+  },
+  {
+    "id": 5,
+    "name": "Victor Osimhen",
+    "team": "Galatasaray",
+    "league": "Super Lig",
+    "position": "Forward",
+    "age": 26,
+    "goals": 10,
+    "assists": 4,
+    "xG": 11.3,
+    "xA": 2.1,
+    "npxG": 10.9,
+    "shots": 65,
+    "shotsOnTarget": 31,
+    "per90": {
+      "goals": 0.70,
+      "assists": 0.15,
+      "xG": 0.76,
+      "shots": 3.5
+    }
+  },
+  {
+    "id": 6,
+    "name": "Nicolas Jackson",
+    "team": "Bayern Munich",
+    "league": "Bundesliga",
+    "position": "Forward",
+    "age": 23,
+    "goals": 9,
+    "assists": 6,
+    "xG": 8.7,
+    "xA": 3.4,
+    "npxG": 8.2,
+    "shots": 54,
+    "shotsOnTarget": 27,
+    "per90": {
+      "goals": 0.53,
+      "assists": 0.22,
+      "xG": 0.50,
+      "shots": 2.8
+    }
+  }
+]

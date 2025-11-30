@@ -1,3 +1,9 @@
+// ========================================
+// Dashboard.js - Team Overview Page
+// ========================================
+// Fetches teams from backend API and displays them in a table and bar chart.
+// Loading state shows spinner while data is being fetched.
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -11,25 +17,35 @@ import {
 } from "recharts";
 
 export default function Dashboard() {
+  // State to hold the teams array fetched from server
   const [teams, setTeams] = useState([]);
+  // State to track if data is still loading (true = show spinner, false = show content)
   const [loading, setLoading] = useState(true);
 
+  // useEffect runs once when component mounts (empty dependency array = [])
+  // It fetches teams from the backend API using axios
   useEffect(() => {
+    // GET request to backend endpoint
     axios
       .get("http://localhost:5000/api/teams")
       .then((res) => {
+        // res.data contains the teams array from server
         setTeams(res.data);
+        // Set loading to false so component shows teams table instead of spinner
         setLoading(false);
       })
       .catch((err) => {
+        // If request fails, log error and stop showing spinner
         console.error(err);
         setLoading(false);
       });
   }, []);
 
+  // Show spinner while loading is true
   if (loading) {
     return (
       <div className="text-center mt-20">
+        {/* Spinning circle animation with Tailwind's animate-spin class */}
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-400 mx-auto mb-4"></div>
         <p className="text-gray-300">Loading team data...</p>
       </div>
@@ -53,6 +69,8 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
+            {/* map() loops through teams array and returns a <tr> for each team */}
+            {/* key={t.id} helps React track which rows changed (React best practice) */}
             {teams.map((t, i) => (
               <tr
                 key={t.id}

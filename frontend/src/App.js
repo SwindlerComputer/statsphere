@@ -1,3 +1,10 @@
+// ========================================
+// App.js - Main Router & Layout
+// ========================================
+// This is the root component. It uses React Router to show different pages
+// based on the URL. Router wraps the app, Routes matches the URL path to a
+// component, and NavLink creates links that highlight when active.
+
 import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Players from "./pages/Players";
@@ -9,11 +16,12 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
-        {/* Navigation Bar */}
+        {/* Navigation Bar - Show logo and links to all pages */}
         <nav className="w-full flex justify-between items-center bg-gray-800 p-4 rounded-lg mb-6 shadow-lg">
           <h1 className="text-2xl font-bold text-cyan-400 flex items-center gap-2">
             <span>⚽</span> <span>StatSphere</span>
           </h1>
+          {/* NavLink automatically detects active page using isActive prop */}
           <ul className="flex gap-6 text-lg">
             <li>
               <NavLink
@@ -79,7 +87,8 @@ function App() {
           </ul>
         </nav>
 
-        {/* Routes */}
+        {/* Routes - Match URL paths to page components */}
+        {/* When user clicks a NavLink, the URL changes and Routes renders the matching component */}
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/players" element={<Players />} />

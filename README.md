@@ -36,7 +36,7 @@ Predictive Engine (Python / ML)
 | **Frontend** | React, Tailwind CSS, Axios, Recharts |
 | **Backend** | Node.js, Express.js, dotenv, CORS |
 | **Database** | PostgreSQL |
-| **Authentication** | Firebase Auth (planned) |
+| **Authentication** | PostgreSQL Auth (planned) |
 | **Data Source** | API-Football |
 | **Predictive Engine** | Python (scikit-learn / rule-based model) |
 

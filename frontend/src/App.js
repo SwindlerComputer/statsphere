@@ -90,7 +90,7 @@ function App() {
 
         {/* Footer */}
         <footer className="mt-8 text-gray-400 text-sm text-center">
-          © 2025 StatSphere | Built with React, Node.js & PostgreSQL
+          © 2025 StatSphere 
         </footer>
       </div>
     </Router>

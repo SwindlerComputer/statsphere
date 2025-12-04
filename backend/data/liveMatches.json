@@ -1,0 +1,23 @@
+[
+  {
+    "id": 101,
+    "home": "Arsenal",
+    "away": "Chelsea",
+    "score": "1 - 2",
+    "minute": "67'"
+  },
+  {
+    "id": 102,
+    "home": "Real Madrid",
+    "away": "Barcelona",
+    "score": "3 - 0",
+    "minute": "54'"
+  },
+  {
+    "id": 103,
+    "home": "Bayern Munich",
+    "away": "Dortmund",
+    "score": "1 - 0",
+    "minute": "22'"
+  }
+]

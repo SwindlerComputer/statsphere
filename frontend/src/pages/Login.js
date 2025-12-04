@@ -1,38 +1,81 @@
-export default function Login() {
-  return (
-    <div className="min-h-screen flex">
-      {/* Left side (branding/info) */}
-      <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-gradient-to-br from-cyan-500 to-blue-700 text-white p-12">
-        <h1 className="text-4xl font-bold mb-4">⚽ StatSphere</h1>
-        <p className="text-lg text-gray-100 text-center max-w-md">
-          Your all-in-one football analytics hub — track players, teams, and predictions.
-        </p>
-      </div>
+import { useState } from "react";
 
-      {/* Right side (login form) */}
-      <div className="flex flex-col justify-center items-center w-full md:w-1/2 bg-gray-900 text-white p-8">
-        <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-80 md:w-96">
-          <h2 className="text-2xl font-bold mb-6 text-center">Sign in to StatSphere</h2>
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full mb-4 p-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full mb-6 p-3 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          />
-          <button className="w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded font-semibold transition">
-            Sign In
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [msg, setMsg] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setMsg("");
+
+    const res = await fetch("http://localhost:5000/auth/login", {
+      method: "POST",
+      credentials: "include", // IMPORTANT: sends cookies for JWT
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setMsg(data.message || "Login failed");
+      return;
+    }
+
+    // SUCCESS: Redirect to dashboard
+    setMsg("Login successful! Redirecting...");
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+      <div className="bg-gray-800 p-8 rounded-lg w-full max-w-md shadow-xl">
+        <h1 className="text-3xl font-bold text-cyan-400 mb-6 text-center">
+          StatSphere Login
+        </h1>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+
+          <div>
+            <label className="block mb-1 text-sm">Email</label>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:border-cyan-400 focus:outline-none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm">Password</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              className="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:border-cyan-400 focus:outline-none"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          {msg && (
+            <p className="text-center text-sm text-red-400">{msg}</p>
+          )}
+
+          <button
+            type="submit"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 transition p-3 rounded-lg font-semibold"
+          >
+            Login
           </button>
-          <p className="text-center text-gray-400 text-sm mt-4">
-            Don’t have an account?{" "}
-            <a href="#" className="text-cyan-400 hover:underline">
-              Register
-            </a>
-          </p>
-        </div>
+        </form>
       </div>
     </div>
   );

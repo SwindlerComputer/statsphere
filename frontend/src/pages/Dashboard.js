@@ -1,104 +1,118 @@
 // ========================================
-// Dashboard.js - Team Overview Page
+// Dashboard.js - Main Home Page
 // ========================================
-// Fetches teams from backend API and displays them in a table and bar chart.
-// Loading state shows spinner while data is being fetched.
+// Shows logged-in user greeting, live matches, and other stats.
+// Fetches user data from auth endpoint and live matches from API.
 
 import { useEffect, useState } from "react";
-import axios from "axios";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
 
 export default function Dashboard() {
-  // State to hold the teams array fetched from server
-  const [teams, setTeams] = useState([]);
-  // State to track if data is still loading (true = show spinner, false = show content)
-  const [loading, setLoading] = useState(true);
+  // State to hold logged-in user object (null if not logged in)
+  const [user, setUser] = useState(null); 
+  // State to track if user fetch is complete (prevents showing Login link while checking)
+  const [loadingUser, setLoadingUser] = useState(true);
 
-  // useEffect runs once when component mounts (empty dependency array = [])
-  // It fetches teams from the backend API using axios
+  // Fetch logged-in user when component mounts
+  // This checks if user has valid session cookie
   useEffect(() => {
-    // GET request to backend endpoint
-    axios
-      .get("http://localhost:5000/api/teams")
-      .then((res) => {
-        // res.data contains the teams array from server
-        setTeams(res.data);
-        // Set loading to false so component shows teams table instead of spinner
-        setLoading(false);
-      })
-      .catch((err) => {
-        // If request fails, log error and stop showing spinner
-        console.error(err);
-        setLoading(false);
-      });
+    async function fetchUser() {
+      try {
+        // GET request with credentials: "include" sends cookies to backend
+        // This lets backend verify who you are
+        const res = await fetch("http://localhost:5000/auth/me", {
+          credentials: "include",
+        });
+
+        // If status 200: user is logged in, parse response
+        if (res.status === 200) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+
+      } catch (err) {
+        console.log("User not logged in");
+      }
+
+      // Mark loading as complete (show UI either way)
+      setLoadingUser(false);
+    }
+
+    fetchUser();
   }, []);
 
-  // Show spinner while loading is true
-  if (loading) {
-    return (
-      <div className="text-center mt-20">
-        {/* Spinning circle animation with Tailwind's animate-spin class */}
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-400 mx-auto mb-4"></div>
-        <p className="text-gray-300">Loading team data...</p>
-      </div>
-    );
-  }
+  // State to hold live matches array
+  const [liveMatches, setLiveMatches] = useState([]);
+
+  // Fetch live matches when component mounts
+  useEffect(() => {
+    async function fetchMatches() {
+      try {
+        // GET request to backend for current live matches
+        const res = await fetch("http://localhost:5000/api/live-matches");
+        const data = await res.json();
+        setLiveMatches(data);
+      } catch (err) {
+        console.error("Error loading live matches:", err);
+      }
+    }
+
+    fetchMatches();
+  }, []);
+
 
   return (
-    <div className="flex flex-col items-center p-6">
-      <header className="w-full text-center text-3xl font-bold mb-8">
-        ⚽ Team Overview
-      </header>
+    <div className="min-h-screen bg-gray-900 text-white p-6">
 
-      <div className="bg-gray-800 shadow-lg rounded-lg p-4 w-full max-w-3xl mb-8">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-gray-700 text-lg">
-              <th className="p-2">#</th>
-              <th className="p-2">Team</th>
-              <th className="p-2">League</th>
-              <th className="p-2">Country</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* map() loops through teams array and returns a <tr> for each team */}
-            {/* key={t.id} helps React track which rows changed (React best practice) */}
-            {teams.map((t, i) => (
-              <tr
-                key={t.id}
-                className="border-b border-gray-700 hover:bg-gray-700 transition-all duration-200"
-              >
-                <td className="p-2">{i + 1}</td>
-                <td className="p-2 font-semibold">{t.name}</td>
-                <td className="p-2">{t.league}</td>
-                <td className="p-2">{t.country}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Top Bar - Show logo on left, user info on right (if logged in) */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-cyan-400">StatSphere</h1>
+
+        {/* If user is logged in, show greeting + logout button */}
+        {/* If not logged in, show nothing (Login link is already in navbar) */}
+        {!loadingUser && user && (
+          <div className="flex items-center gap-4">
+            <p className="text-gray-300">
+              Hi, <span className="font-semibold">{user.name}</span>
+            </p>
+
+            {/* Logout button - POST request to backend with credentials */}
+            <button
+              onClick={async () => {
+                await fetch("http://localhost:5000/auth/logout", {
+                  method: "POST",
+                  credentials: "include",
+                });
+                window.location.reload();
+              }}
+              className="bg-red-500 px-3 py-2 rounded hover:bg-red-600 transition"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="bg-gray-800 shadow-lg rounded-lg p-4 w-full max-w-3xl">
-        <h2 className="text-xl mb-4 text-center">Teams by League</h2>
-        <div className="flex justify-center">
-          <BarChart width={500} height={300} data={teams}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="league" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="id" fill="#38bdf8" name="Teams" />
-          </BarChart>
-        </div>
+      {/* LIVE MATCHES SECTION - Display all active matches */}
+      <h2 className="text-2xl font-bold mb-4">Live Matches</h2>
+
+      {/* Grid of match cards - each shows home/away score */}
+      <div className="grid grid-cols-1 gap-4">
+        {/* map() loops through liveMatches array and renders a card for each match */}
+        {liveMatches.map((match) => (
+          <div key={match.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
+            <div className="flex justify-between">
+              {/* Show: Home Team | Score | Away Team */}
+              <span>{match.home}</span>
+              <strong>{match.score}</strong>
+              <span>{match.away}</span>
+            </div>
+            {/* Show current minute of the match */}
+            <p className="text-sm text-gray-400">{match.minute} minute</p>
+          </div>
+        ))}
       </div>
+
+      {/* More sections can be added here later */}
     </div>
   );
 }

@@ -1,4 +1,7 @@
 // auth/authRoutes.js
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -12,7 +15,7 @@ const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
-  password: process.env.DB_PASS,
+  password: String(process.env.DB_PASS),
   port: 5432,
 });
 
@@ -29,8 +32,13 @@ const createToken = (user) => {
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
+  // Check all fields are provided
   if (!name || !email || !password)
-    return res.status(400).json({ message: "Missing fields" });
+    return res.status(400).json({ message: "All fields are required" });
+
+  // Check password length
+  if (password.length < 8)
+    return res.status(400).json({ message: "Password must be at least 8 characters" });
 
   const existing = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
   if (existing.rows.length > 0)

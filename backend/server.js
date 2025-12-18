@@ -46,7 +46,7 @@ const pool = new Pool({
   user: process.env.DB_USER || "postgres",
   host: process.env.DB_HOST || "localhost",
   database: process.env.DB_NAME || "statsphere",
-  password: process.env.DB_PASS || "admin123",
+  password: String(process.env.DB_PASS || "admin123"),
   port: 5432,
 });
 

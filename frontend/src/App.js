@@ -10,7 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import Players from "./pages/Players";
 import Predictions from "./pages/Predictions";
 import Community from "./pages/Community";
-import Login from "./pages/Login"; 
+import Login from "./pages/Login";
+import Register from "./pages/Register"; 
 
 function App() {
   return (
@@ -95,6 +96,7 @@ function App() {
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/community" element={<Community />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
 
         {/* Footer */}

@@ -11,7 +11,8 @@ import Players from "./pages/Players";
 import Predictions from "./pages/Predictions";
 import Community from "./pages/Community";
 import Login from "./pages/Login";
-import Register from "./pages/Register"; 
+import Register from "./pages/Register";
+import PlayerComparison from "./pages/PlayerComparison"; 
 
 function App() {
   return (
@@ -47,6 +48,18 @@ function App() {
                 }
               >
                 Players
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/compare"
+                className={({ isActive }) =>
+                  `transition-all duration-200 ${
+                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
+                  }`
+                }
+              >
+                Compare
               </NavLink>
             </li>
             <li>
@@ -93,6 +106,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/players" element={<Players />} />
+          <Route path="/compare" element={<PlayerComparison />} />
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/community" element={<Community />} />
           <Route path="/login" element={<Login />} />

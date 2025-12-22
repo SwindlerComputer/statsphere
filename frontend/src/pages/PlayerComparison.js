@@ -49,6 +49,65 @@ export default function PlayerComparison() {
     return "tie";
   };
 
+  // ========================================
+  // getPlaystyle - Determine player's playing style
+  // ========================================
+  // This function looks at a player's stats and returns a label
+  // describing how they play. It uses simple if/else logic.
+  const getPlaystyle = (player) => {
+    // Step 1: Calculate some useful numbers
+    // goalsPerShot = what percentage of shots become goals
+    const goalsPerShot = player.goals / player.shots;
+    
+    // assistRatio = what percentage of their output is assists
+    const totalOutput = player.goals + player.assists;
+    const assistRatio = player.assists / totalOutput;
+
+    // Step 2: Check conditions from most specific to least specific
+
+    // If player scores lots of goals efficiently = Clinical Finisher
+    if (player.goals >= 15 && goalsPerShot > 0.2) {
+      return "Clinical Finisher";
+    }
+
+    // If player has many assists and high expected assists = Creative Playmaker
+    if (player.assists >= 10 && player.xA > 5) {
+      return "Creative Playmaker";
+    }
+
+    // If player takes lots of shots but doesn't score much = High-Volume Shooter
+    if (player.shots >= 60 && goalsPerShot < 0.15) {
+      return "High-Volume Shooter";
+    }
+
+    // If more than half their output is assists = Team Playmaker
+    if (assistRatio > 0.5) {
+      return "Team Playmaker";
+    }
+
+    // If player scores often per 90 minutes = Direct Goal Scorer
+    if (player.per90.goals >= 0.7) {
+      return "Direct Goal Scorer";
+    }
+
+    // If player has decent goals AND assists = All-Round Attacker
+    if (player.goals >= 8 && player.assists >= 5) {
+      return "All-Round Attacker";
+    }
+
+    // Step 3: Default labels based on position
+    if (player.position === "Forward") {
+      return "Goal-Focused Forward";
+    }
+    
+    if (player.position === "Midfielder") {
+      return "Box-to-Box Midfielder";
+    }
+
+    // If nothing else matches
+    return "Versatile Player";
+  };
+
   // Render a single stat row with highlighting
   // statName: display name, valueA: player A's value, valueB: player B's value
   const StatRow = ({ statName, valueA, valueB }) => {
@@ -123,11 +182,14 @@ export default function PlayerComparison() {
       {/* Comparison Results - Only show when both players are selected */}
       {playerA && playerB && (
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-          {/* Player Names Header */}
+          {/* Player Names Header with Playstyle */}
           <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-600">
             <div className="w-1/3 text-left">
               <h2 className="text-xl font-bold text-cyan-400">{playerA.name}</h2>
               <p className="text-sm text-gray-400">{playerA.team}</p>
+              <span className="inline-block mt-2 px-3 py-1 bg-purple-600 text-white text-xs rounded-full">
+                {getPlaystyle(playerA)}
+              </span>
             </div>
             <div className="w-1/3 text-center">
               <span className="text-gray-500">Stats</span>
@@ -135,6 +197,9 @@ export default function PlayerComparison() {
             <div className="w-1/3 text-right">
               <h2 className="text-xl font-bold text-cyan-400">{playerB.name}</h2>
               <p className="text-sm text-gray-400">{playerB.team}</p>
+              <span className="inline-block mt-2 px-3 py-1 bg-purple-600 text-white text-xs rounded-full">
+                {getPlaystyle(playerB)}
+              </span>
             </div>
           </div>
 

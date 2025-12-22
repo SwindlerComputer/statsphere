@@ -6,6 +6,7 @@
 // component, and NavLink creates links that highlight when active.
 
 import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Dashboard from "./pages/Dashboard";
 import Players from "./pages/Players";
 import Predictions from "./pages/Predictions";
@@ -13,9 +14,53 @@ import Community from "./pages/Community";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PlayerComparison from "./pages/PlayerComparison";
-import BallonDor from "./pages/BallonDor"; 
+import BallonDor from "./pages/BallonDor";
 
 function App() {
+  // Store the logged in user (null means not logged in)
+  let [user, setUser] = useState(null);
+
+  // ========================================
+  // Check if user is logged in when app loads
+  // ========================================
+  // This runs once when the page first loads.
+  // It asks the server "who am I?" by checking the cookie.
+  useEffect(function() {
+    fetch("http://localhost:5000/auth/me", {
+      credentials: "include"  // Send cookies with request
+    })
+      .then(function(res) {
+        return res.json();
+      })
+      .then(function(data) {
+        // If server returns a user, save it to state
+        if (data.user) {
+          setUser(data.user);
+        }
+      })
+      .catch(function(err) {
+        console.log("Not logged in");
+      });
+  }, []);
+
+  // ========================================
+  // Handle logout button click
+  // ========================================
+  // Sends request to server to clear the cookie, then redirects home.
+  function handleLogout() {
+    fetch("http://localhost:5000/auth/logout", {
+      method: "POST",
+      credentials: "include"
+    })
+      .then(function() {
+        setUser(null);           // Clear user from state
+        window.location.href = "/";  // Redirect to home page
+      })
+      .catch(function(err) {
+        console.log("Logout error");
+      });
+  }
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
@@ -25,7 +70,7 @@ function App() {
             <span>⚽</span> <span>StatSphere</span>
           </h1>
           {/* NavLink automatically detects active page using isActive prop */}
-          <ul className="flex gap-6 text-lg">
+          <ul className="flex gap-6 text-lg items-center">
             <li>
               <NavLink
                 to="/"
@@ -99,18 +144,36 @@ function App() {
                 Community
               </NavLink>
             </li>
-            <li>
-              <NavLink
-                to="/login"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Login
-              </NavLink>
-            </li>
+
+            {/* Show Login or Logout based on user state */}
+            {user ? (
+              // User is logged in - show name and logout button
+              <li className="flex items-center gap-3">
+                <span className="text-gray-400 text-sm">
+                  Hi, <span className="text-cyan-400 font-semibold">{user.name}</span>
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition"
+                >
+                  Logout
+                </button>
+              </li>
+            ) : (
+              // User is not logged in - show login link
+              <li>
+                <NavLink
+                  to="/login"
+                  className={({ isActive }) =>
+                    `transition-all duration-200 ${
+                      isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
+                    }`
+                  }
+                >
+                  Login
+                </NavLink>
+              </li>
+            )}
           </ul>
         </nav>
 
@@ -129,7 +192,7 @@ function App() {
 
         {/* Footer */}
         <footer className="mt-8 text-gray-400 text-sm text-center">
-          © 2025 StatSphere 
+          © 2025 StatSphere
         </footer>
       </div>
     </Router>

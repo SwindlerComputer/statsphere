@@ -22,26 +22,52 @@ export default function BallonDor() {
   }, []);
 
   // ========================================
+  // League Weights - How strong each league is
+  // ========================================
+  // Premier League is the hardest (1.0 = 100%)
+  // Other leagues are slightly easier, so we reduce the score
+  // This means scoring 20 goals in Saudi Pro League counts less than Premier League
+  const leagueWeights = {
+    "Premier League": 1.0,    // 100% - hardest league
+    "La Liga": 0.95,          // 95%
+    "Serie A": 0.9,           // 90%
+    "Bundesliga": 0.9,        // 90%
+    "Ligue 1": 0.85,          // 85%
+    "Super Lig": 0.75,        // 75% - Turkish league
+    "Saudi Pro League": 0.7   // 70% - easier league
+  };
+
+  // ========================================
   // calculateBallonDorScore Function
   // ========================================
   // Takes a player and returns a number (their score).
   // We multiply each stat by a "weight" to show importance.
-  // Then we add everything together.
+  // Then we multiply by league weight to adjust for difficulty.
   //
-  // Formula: Score = (Goals x 4) + (Assists x 3) + (xG x 2) + (xA x 2) + (Goals/90 x 50)
+  // Formula: Score = [(Goals x 4) + (Assists x 3) + (xG x 2) + (xA x 2) + (Goals/90 x 50)] x League Weight
   //
   function calculateBallonDorScore(player) {
-    // Multiply each stat by how important it is
+    // Step 1: Get the league weight (default to 0.8 if league not found)
+    let leagueWeight = leagueWeights[player.league];
+    if (leagueWeight === undefined) {
+      leagueWeight = 0.8; // Default for unknown leagues
+    }
+
+    // Step 2: Calculate points for each stat
     let goalsPoints = player.goals * 4;       // Goals are worth 4 points each
     let assistsPoints = player.assists * 3;   // Assists are worth 3 points each
     let xgPoints = player.xG * 2;             // Expected goals worth 2 points
     let xaPoints = player.xA * 2;             // Expected assists worth 2 points
     let consistencyPoints = player.per90.goals * 50;  // Goals per game worth 50 points
 
-    // Add all the points together
-    let totalScore = goalsPoints + assistsPoints + xgPoints + xaPoints + consistencyPoints;
+    // Step 3: Add all the points together
+    let rawScore = goalsPoints + assistsPoints + xgPoints + xaPoints + consistencyPoints;
 
-    // Round to 1 decimal place (e.g. 156.7)
+    // Step 4: Multiply by league weight
+    // Example: 150 points in Saudi Pro League = 150 x 0.7 = 105 points
+    let totalScore = rawScore * leagueWeight;
+
+    // Step 5: Round to 1 decimal place
     totalScore = Math.round(totalScore * 10) / 10;
 
     return totalScore;
@@ -96,8 +122,11 @@ export default function BallonDor() {
       {/* Show the formula */}
       <div className="bg-gray-800 rounded-lg p-4 mb-6">
         <h3 className="text-lg font-semibold text-gray-300 mb-2">How the Score is Calculated:</h3>
-        <p className="text-sm text-gray-400">
-          Score = (Goals × 4) + (Assists × 3) + (xG × 2) + (xA × 2) + (Goals/90 × 50)
+        <p className="text-sm text-gray-400 mb-2">
+          Score = [(Goals × 4) + (Assists × 3) + (xG × 2) + (xA × 2) + (Goals/90 × 50)] × League Weight
+        </p>
+        <p className="text-xs text-gray-500">
+          League Weights: Premier League (1.0), La Liga (0.95), Serie A (0.9), Bundesliga (0.9), Ligue 1 (0.85), Super Lig (0.75), Saudi Pro League (0.7)
         </p>
       </div>
 
@@ -109,9 +138,9 @@ export default function BallonDor() {
               <th className="p-3 text-left">Rank</th>
               <th className="p-3 text-left">Player</th>
               <th className="p-3 text-left">Team</th>
+              <th className="p-3 text-left">League</th>
               <th className="p-3 text-center">Goals</th>
               <th className="p-3 text-center">Assists</th>
-              <th className="p-3 text-center">G/90</th>
               <th className="p-3 text-right">Score</th>
             </tr>
           </thead>
@@ -137,9 +166,9 @@ export default function BallonDor() {
                     </span>
                   </td>
                   <td className="p-3 text-gray-400">{player.team}</td>
+                  <td className="p-3 text-gray-400">{player.league}</td>
                   <td className="p-3 text-center">{player.goals}</td>
                   <td className="p-3 text-center">{player.assists}</td>
-                  <td className="p-3 text-center">{player.per90.goals}</td>
                   <td className="p-3 text-right">
                     <span className={isTopThree ? "font-bold text-green-400" : "font-bold text-gray-300"}>
                       {player.ballonDorScore}
@@ -175,6 +204,13 @@ export default function BallonDor() {
               <p className="text-gray-400">Consistency</p>
               <p className="text-xl font-bold">{rankedPlayers[0].per90.goals} × 50 = {(rankedPlayers[0].per90.goals * 50).toFixed(1)}</p>
             </div>
+          </div>
+          {/* League Weight Info */}
+          <div className="mt-4 bg-gray-700 p-3 rounded">
+            <p className="text-gray-400">League Weight ({rankedPlayers[0].league})</p>
+            <p className="text-xl font-bold">
+              Raw Score × {leagueWeights[rankedPlayers[0].league] || 0.8} = {rankedPlayers[0].ballonDorScore}
+            </p>
           </div>
         </div>
       )}

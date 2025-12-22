@@ -12,7 +12,8 @@ import Predictions from "./pages/Predictions";
 import Community from "./pages/Community";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import PlayerComparison from "./pages/PlayerComparison"; 
+import PlayerComparison from "./pages/PlayerComparison";
+import BallonDor from "./pages/BallonDor"; 
 
 function App() {
   return (
@@ -64,6 +65,18 @@ function App() {
             </li>
             <li>
               <NavLink
+                to="/ballon-dor"
+                className={({ isActive }) =>
+                  `transition-all duration-200 ${
+                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
+                  }`
+                }
+              >
+                Ballon d'Or
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
                 to="/predictions"
                 className={({ isActive }) =>
                   `transition-all duration-200 ${
@@ -107,6 +120,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/players" element={<Players />} />
           <Route path="/compare" element={<PlayerComparison />} />
+          <Route path="/ballon-dor" element={<BallonDor />} />
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/community" element={<Community />} />
           <Route path="/login" element={<Login />} />

@@ -1,0 +1,12 @@
+name,team,league,goals,assists,xG,xA,minutes_played,ballon_dor_score
+Cristiano Ronaldo,Al Nassr,Saudi Pro League,22,7,19.4,5.2,2340,105.5
+Kylian Mbappe,Real Madrid,La Liga,18,10,17.1,6.4,1760,133.0
+Jude Bellingham,Real Madrid,La Liga,12,8,9.2,6.8,1960,98.5
+Kevin De Bruyne,Napoli,Serie A,5,15,4.1,13.2,1350,85.2
+Victor Osimhen,Galatasaray,Super Lig,10,4,11.3,2.1,1290,72.8
+Nicolas Jackson,Bayern Munich,Bundesliga,9,6,8.7,3.4,1530,78.4
+Erling Haaland,Manchester City,Premier League,25,5,22.1,4.8,2100,145.0
+Mohamed Salah,Liverpool,Premier League,19,12,16.5,9.2,2250,138.5
+Vinicius Jr,Real Madrid,La Liga,15,9,12.8,7.5,2050,125.3
+Bukayo Saka,Arsenal,Premier League,14,11,11.2,8.9,2180,118.7
+

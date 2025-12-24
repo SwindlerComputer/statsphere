@@ -20,6 +20,7 @@ import fs from "fs";
 import path from "path";
 import cookieParser from "cookie-parser";
 import authRoutes from "./auth/authRoutes.js";
+import footballApiRoutes from "./api/footballApiRoutes.js";
 import { fileURLToPath } from "url";
 import { createServer } from "http";        // Needed for Socket.IO
 import { Server } from "socket.io";         // Socket.IO library
@@ -70,6 +71,13 @@ app.use("/auth", authRoutes);
 // /auth/login
 // /auth/logout
 // /auth/me
+
+// ========================================
+// FOOTBALL API ROUTES (RapidAPI Integration)
+// ========================================
+app.use("/api/football", footballApiRoutes);
+// /api/football/standings - Get league standings
+// /api/football/fixtures - Get match fixtures
 
 // ========================================
 // EXISTING API ROUTES

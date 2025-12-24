@@ -15,6 +15,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PlayerComparison from "./pages/PlayerComparison";
 import BallonDor from "./pages/BallonDor";
+import LeagueStandings from "./pages/LeagueStandings";
+import LeagueFixtures from "./pages/LeagueFixtures";
 
 function App() {
   // Store the logged in user (null means not logged in)
@@ -144,6 +146,30 @@ function App() {
                 Community
               </NavLink>
             </li>
+            <li>
+              <NavLink
+                to="/leagues/39/standings"
+                className={({ isActive }) =>
+                  `transition-all duration-200 ${
+                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
+                  }`
+                }
+              >
+                Standings
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/leagues/39/fixtures"
+                className={({ isActive }) =>
+                  `transition-all duration-200 ${
+                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
+                  }`
+                }
+              >
+                Fixtures
+              </NavLink>
+            </li>
 
             {/* Show Login or Logout based on user state */}
             {user ? (
@@ -188,6 +214,9 @@ function App() {
           <Route path="/community" element={<Community />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          {/* League pages with dynamic leagueId parameter */}
+          <Route path="/leagues/:leagueId/standings" element={<LeagueStandings />} />
+          <Route path="/leagues/:leagueId/fixtures" element={<LeagueFixtures />} />
         </Routes>
 
         {/* Footer */}

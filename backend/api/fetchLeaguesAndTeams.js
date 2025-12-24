@@ -151,3 +151,4 @@ async function fetchLeaguesAndTeams() {
 // Run the function
 fetchLeaguesAndTeams();
 
+

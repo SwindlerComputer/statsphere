@@ -21,6 +21,7 @@ import path from "path";
 import cookieParser from "cookie-parser";
 import authRoutes from "./auth/authRoutes.js";
 import footballApiRoutes from "./api/footballApiRoutes.js";
+import modRoutes from "./api/modRoutes.js";
 import { fileURLToPath } from "url";
 import { createServer } from "http";        // Needed for Socket.IO
 import { Server } from "socket.io";         // Socket.IO library
@@ -78,6 +79,15 @@ app.use("/auth", authRoutes);
 app.use("/api/football", footballApiRoutes);
 // /api/football/standings - Get league standings
 // /api/football/fixtures - Get match fixtures
+
+// ========================================
+// MODERATION ROUTES
+// ========================================
+app.use("/api/mod", modRoutes);
+// /api/mod/report - Report a message
+// /api/mod/reports - Get all reports (admin only)
+// /api/mod/ban-user - Ban a user (admin only)
+// /api/mod/unban-user - Unban a user (admin only)
 
 // ========================================
 // EXISTING API ROUTES
@@ -180,6 +190,25 @@ const io = new Server(httpServer, {
 // Note: Messages are lost when server restarts (no database yet)
 let chatMessages = [];
 
+// Step 4: Store last message time per user (for spam rate limiting)
+// Format: { userId: timestamp }
+let lastMessageTime = {};
+
+// Step 5: List of banned words (simple array)
+// Students can add more words here
+// These words will block messages if found in the text
+// IMPORTANT: Add any inappropriate or offensive words here
+const bannedWords = [
+  "spam",
+  "badword", 
+  "inappropriate",
+  "hate",
+  "racist",
+  "racism",
+  // Add more words as needed - these are examples
+  // You can add more inappropriate words here
+];
+
 // ========================================
 // SOCKET.IO CONNECTION HANDLER
 // ========================================
@@ -201,15 +230,32 @@ io.on("connection", async (socket) => {
       try {
         let decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Get user name from database
-        let result = await pool.query("SELECT id, name, email FROM users WHERE id = $1", [decoded.id]);
-        if (result.rows.length > 0) {
-          user = result.rows[0]; // { id, name, email }
+        // Get user name and ban status from database
+        // Note: is_banned column might not exist if migration hasn't been run
+        let result;
+        try {
+          result = await pool.query("SELECT id, name, email, is_banned FROM users WHERE id = $1", [decoded.id]);
+        } catch (dbError) {
+          // If is_banned column doesn't exist, get user without it
+          if (dbError.message && dbError.message.includes("is_banned")) {
+            console.log("⚠️ is_banned column not found, getting user without ban status");
+            result = await pool.query("SELECT id, name, email FROM users WHERE id = $1", [decoded.id]);
+            // Add is_banned as false by default
+            if (result.rows.length > 0) {
+              result.rows[0].is_banned = false;
+            }
+          } else {
+            throw dbError; // Re-throw if it's a different error
+          }
         }
         
-        console.log("✅ Authenticated user:", user.name);
+        if (result.rows.length > 0) {
+          user = result.rows[0]; // { id, name, email, is_banned }
+          console.log("✅ Authenticated user:", user.name);
+        }
       } catch (err) {
         console.log("❌ Invalid token, user is guest");
+        console.log("❌ Error:", err.message);
       }
     }
   }
@@ -223,17 +269,87 @@ io.on("connection", async (socket) => {
   // ========================================
   // HANDLE: User sends a message
   // ========================================
-  socket.on("send_message", (messageText) => {
+  socket.on("send_message", async (messageText) => {
     // Only logged-in users can send messages
     if (!socket.user) {
       socket.emit("error_message", "You must be logged in to send messages");
       return;
     }
 
-    // Create message object
+    // ========================================
+    // VALIDATION: Check if user is banned
+    // ========================================
+    // Get latest ban status from database
+    try {
+      let userResult = await pool.query("SELECT is_banned FROM users WHERE id = $1", [socket.user.id]);
+      if (userResult.rows.length > 0 && userResult.rows[0].is_banned === true) {
+        socket.emit("error_message", "You are banned from sending messages");
+        return;
+      }
+    } catch (dbError) {
+      // If is_banned column doesn't exist, skip ban check
+      if (!dbError.message || !dbError.message.includes("is_banned")) {
+        console.error("Database error checking ban status:", dbError);
+      }
+    }
+
+    // ========================================
+    // VALIDATION: Check if message is empty or only whitespace
+    // ========================================
+    if (!messageText || messageText.trim() === "") {
+      socket.emit("error_message", "Message cannot be empty");
+      return;
+    }
+
+    // ========================================
+    // VALIDATION: Check message length (max 200 characters)
+    // ========================================
+    if (messageText.length > 200) {
+      socket.emit("error_message", "Message is too long (max 200 characters)");
+      return;
+    }
+
+    // ========================================
+    // VALIDATION: Check for banned words
+    // ========================================
+    // Convert message to lowercase for checking
+    const messageLower = messageText.toLowerCase().trim();
+    
+    // Check each banned word
+    for (let i = 0; i < bannedWords.length; i++) {
+      const bannedWord = bannedWords[i].toLowerCase();
+      
+      // Check if message contains the banned word
+      if (messageLower.includes(bannedWord)) {
+        console.log("🚫 Blocked message containing banned word:", bannedWord);
+        socket.emit("error_message", "⚠️ Prohibited message: Your message contains inappropriate content and cannot be sent.");
+        return; // Stop here, don't send the message
+      }
+    }
+
+    // ========================================
+    // VALIDATION: Spam rate limit (1 message every 2 seconds)
+    // ========================================
+    const userId = socket.user.id;
+    const now = Date.now();
+    const lastTime = lastMessageTime[userId] || 0;
+    const timeSinceLastMessage = now - lastTime;
+    
+    // 2000 milliseconds = 2 seconds
+    if (timeSinceLastMessage < 2000) {
+      socket.emit("error_message", "Please wait 2 seconds before sending another message");
+      return;
+    }
+    
+    // Update last message time
+    lastMessageTime[userId] = now;
+
+    // ========================================
+    // ALL VALIDATIONS PASSED - Create message
+    // ========================================
     let newMessage = {
       id: Date.now(),                    // Unique ID using timestamp
-      text: messageText,                 // The message content
+      text: messageText.trim(),          // The message content (trimmed)
       userId: socket.user.id,            // Who sent it
       userName: socket.user.name,        // Username to display
       userEmail: socket.user.email,      // Email as backup

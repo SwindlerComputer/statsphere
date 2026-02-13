@@ -56,11 +56,22 @@ router.post("/register", async (req, res) => {
   const user = result.rows[0];
   const token = createToken(user);
 
-  res.cookie("token", token, {
+  // Cookie settings: For localhost, omit sameSite to allow WebSocket connections
+  // In production with HTTPS, use secure: true and sameSite: "lax"
+  const isLocalhost = req.get('host')?.includes('localhost') || req.get('host')?.includes('127.0.0.1');
+  const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  };
+  
+  // Only set sameSite and secure for production (HTTPS)
+  if (process.env.NODE_ENV === "production" && !isLocalhost) {
+    cookieOptions.sameSite = "lax";
+    cookieOptions.secure = true;
+  }
+  // For localhost, don't set sameSite to allow WebSocket connections
+  
+  res.cookie("token", token, cookieOptions);
 
   res.json({ message: "User registered", user });
 });
@@ -81,11 +92,22 @@ router.post("/login", async (req, res) => {
 
   const token = createToken(user);
 
-  res.cookie("token", token, {
+  // Cookie settings: For localhost, omit sameSite to allow WebSocket connections
+  // In production with HTTPS, use secure: true and sameSite: "lax"
+  const isLocalhost = req.get('host')?.includes('localhost') || req.get('host')?.includes('127.0.0.1');
+  const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  };
+  
+  // Only set sameSite and secure for production (HTTPS)
+  if (process.env.NODE_ENV === "production" && !isLocalhost) {
+    cookieOptions.sameSite = "lax";
+    cookieOptions.secure = true;
+  }
+  // For localhost, don't set sameSite to allow WebSocket connections
+  
+  res.cookie("token", token, cookieOptions);
 
   res.json({ message: "Logged in", user: { id: user.id, email: user.email, name: user.name } });
 });

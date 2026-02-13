@@ -211,7 +211,7 @@ function App() {
           <Route path="/compare" element={<PlayerComparison />} />
           <Route path="/ballon-dor" element={<BallonDor />} />
           <Route path="/predictions" element={<Predictions />} />
-          <Route path="/community" element={<Community />} />
+          <Route path="/community" element={<Community user={user} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           {/* League pages with dynamic leagueId parameter */}

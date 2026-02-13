@@ -196,7 +196,7 @@ let lastMessageTime = {};
 
 // Step 5: List of banned words (simple array)
 // Students can add more words here
-// These words will block messages if found in the text
+// These words will be CENSORED (replaced with ***) in messages
 // IMPORTANT: Add any inappropriate or offensive words here
 const bannedWords = [
   "spam",
@@ -208,6 +208,29 @@ const bannedWords = [
   // Add more words as needed - these are examples
   // You can add more inappropriate words here
 ];
+
+// ========================================
+// CENSOR FUNCTION
+// ========================================
+// Replaces banned words in a message with asterisks (*)
+// Example: "You are a racist" → "You are a ******"
+// This is case-insensitive but preserves the original casing of non-banned parts
+function censorMessage(text) {
+  let censoredText = text;
+
+  for (let i = 0; i < bannedWords.length; i++) {
+    const bannedWord = bannedWords[i];
+    // Create a case-insensitive regex to find ALL occurrences of the banned word
+    // "gi" = global (all matches) + case-insensitive
+    const regex = new RegExp(bannedWord, "gi");
+    // Replace each match with the same number of asterisks
+    censoredText = censoredText.replace(regex, function(match) {
+      return "*".repeat(match.length);
+    });
+  }
+
+  return censoredText;
+}
 
 // ========================================
 // SOCKET.IO CONNECTION HANDLER
@@ -310,21 +333,17 @@ io.on("connection", async (socket) => {
     }
 
     // ========================================
-    // VALIDATION: Check for banned words
+    // CENSOR: Replace banned words with asterisks
     // ========================================
-    // Convert message to lowercase for checking
-    const messageLower = messageText.toLowerCase().trim();
-    
-    // Check each banned word
-    for (let i = 0; i < bannedWords.length; i++) {
-      const bannedWord = bannedWords[i].toLowerCase();
-      
-      // Check if message contains the banned word
-      if (messageLower.includes(bannedWord)) {
-        console.log("🚫 Blocked message containing banned word:", bannedWord);
-        socket.emit("error_message", "⚠️ Prohibited message: Your message contains inappropriate content and cannot be sent.");
-        return; // Stop here, don't send the message
-      }
+    // Instead of blocking the message, we censor any banned words
+    // Example: "You are a racist" → "You are a ******"
+    const censoredText = censorMessage(messageText.trim());
+
+    // Log if any words were censored (for moderation tracking)
+    if (censoredText !== messageText.trim()) {
+      console.log("🚫 Censored message from", socket.user.email);
+      console.log("   Original:", messageText.trim());
+      console.log("   Censored:", censoredText);
     }
 
     // ========================================
@@ -349,7 +368,7 @@ io.on("connection", async (socket) => {
     // ========================================
     let newMessage = {
       id: Date.now(),                    // Unique ID using timestamp
-      text: messageText.trim(),          // The message content (trimmed)
+      text: censoredText,               // The censored message content
       userId: socket.user.id,            // Who sent it
       userName: socket.user.name,        // Username to display
       userEmail: socket.user.email,      // Email as backup

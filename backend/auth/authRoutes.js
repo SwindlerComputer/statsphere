@@ -64,7 +64,8 @@ router.post("/register", async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.json({ message: "User registered", user });
+  // Return token in body too (for localStorage fallback when cookies are blocked)
+  res.json({ message: "User registered", user, token });
 });
 
 // LOGIN
@@ -94,7 +95,8 @@ router.post("/login", async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.json({ message: "Logged in", user: { id: user.id, email: user.email, name: user.name } });
+  // Return token in body too (for localStorage fallback when cookies are blocked)
+  res.json({ message: "Logged in", user: { id: user.id, email: user.email, name: user.name }, token });
 });
 
 // LOGOUT

@@ -28,7 +28,11 @@ export default function Login() {
       return;
     }
 
-    // SUCCESS: Redirect to dashboard
+    // SUCCESS: Save token to localStorage (backup for when cookies are blocked)
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+    }
+
     setMsg("Login successful! Redirecting...");
     setTimeout(() => {
       window.location.href = "/";

@@ -50,8 +50,12 @@ export default function Register() {
         return;
       }
 
-      // Registration successful - show success message
-      // Backend already sets the cookie, so user is logged in
+      // Registration successful
+      // Save token to localStorage (backup for when cookies are blocked, e.g. incognito)
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
       setIsSuccess(true);
       setMsg("Account created! Redirecting to dashboard...");
       

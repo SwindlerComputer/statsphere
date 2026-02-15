@@ -31,10 +31,14 @@ function App() {
   // Check if user is logged in when app loads
   // ========================================
   // This runs once when the page first loads.
-  // It asks the server "who am I?" by checking the cookie.
+  // It asks the server "who am I?" using cookie or saved token.
   useEffect(function() {
+    // Get token from localStorage (backup when cookies are blocked)
+    var savedToken = localStorage.getItem("token");
+
     fetch(`${API_BASE}/auth/me`, {
-      credentials: "include"  // Send cookies with request
+      credentials: "include",
+      headers: savedToken ? { "Authorization": "Bearer " + savedToken } : {}
     })
       .then(function(res) {
         return res.json();
@@ -55,11 +59,16 @@ function App() {
   // ========================================
   // Sends request to server to clear the cookie, then redirects home.
   function handleLogout() {
+    var savedToken = localStorage.getItem("token");
+
     fetch(`${API_BASE}/auth/logout`, {
       method: "POST",
-      credentials: "include"
+      credentials: "include",
+      headers: savedToken ? { "Authorization": "Bearer " + savedToken } : {}
     })
       .then(function() {
+        // Clear token from localStorage
+        localStorage.removeItem("token");
         setUser(null);           // Clear user from state
         window.location.href = "/";  // Redirect to home page
       })
@@ -71,13 +80,43 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
-        {/* Navigation Bar - Show logo and links to all pages */}
-        <nav className="w-full flex justify-between items-center bg-gray-800 p-4 rounded-lg mb-6 shadow-lg">
-          <h1 className="text-2xl font-bold text-cyan-400 flex items-center gap-2">
-            <span>⚽</span> <span>StatSphere</span>
-          </h1>
-          {/* NavLink automatically detects active page using isActive prop */}
-          <ul className="flex gap-6 text-lg items-center">
+        {/* Navigation Bar - Logo, links, and login/logout */}
+        <nav className="w-full bg-gray-800 p-4 rounded-lg mb-6 shadow-lg">
+          {/* Top row: Logo + User status */}
+          <div className="flex justify-between items-center flex-wrap gap-3 mb-3">
+            <h1 className="text-2xl font-bold text-cyan-400 flex items-center gap-2">
+              <span>⚽</span> <span>StatSphere</span>
+            </h1>
+
+            {/* Show logged-in info OR login link */}
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-gray-300 text-sm">
+                  Logged in as: <span className="text-cyan-400 font-semibold">{user.name}</span>
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <NavLink
+                to="/login"
+                className={({ isActive }) =>
+                  `text-sm transition-all duration-200 ${
+                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
+                  }`
+                }
+              >
+                Login
+              </NavLink>
+            )}
+          </div>
+
+          {/* Bottom row: Page links (wraps on small screens) */}
+          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-base items-center">
             <li>
               <NavLink
                 to="/"
@@ -175,36 +214,6 @@ function App() {
                 Fixtures
               </NavLink>
             </li>
-
-            {/* Show Login or Logout based on user state */}
-            {user ? (
-              // User is logged in - show name and logout button
-              <li className="flex items-center gap-3">
-                <span className="text-gray-400 text-sm">
-                  Hi, <span className="text-cyan-400 font-semibold">{user.name}</span>
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition"
-                >
-                  Logout
-                </button>
-              </li>
-            ) : (
-              // User is not logged in - show login link
-              <li>
-                <NavLink
-                  to="/login"
-                  className={({ isActive }) =>
-                    `transition-all duration-200 ${
-                      isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                    }`
-                  }
-                >
-                  Login
-                </NavLink>
-              </li>
-            )}
           </ul>
         </nav>
 

@@ -37,8 +37,17 @@ function isAdmin(userEmail) {
 // ========================================
 function getUserFromToken(req) {
   try {
-    // Get token from cookie
-    const token = req.cookies.token;
+    // Try to get token from cookie first
+    let token = req.cookies.token;
+
+    // If no cookie, check Authorization header (for incognito / cross-site)
+    if (!token && req.headers.authorization) {
+      const parts = req.headers.authorization.split(" ");
+      if (parts[0] === "Bearer" && parts[1]) {
+        token = parts[1];
+      }
+    }
+
     if (!token) {
       return null;
     }

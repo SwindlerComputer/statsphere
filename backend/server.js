@@ -247,16 +247,23 @@ function censorMessage(text) {
 io.on("connection", async (socket) => {
   console.log("🔌 New socket connected:", socket.id);
 
-  // Try to get user info from JWT cookie
+  // Try to get user info from JWT cookie or auth token
   let user = null;
   
-  // Parse cookies from the socket handshake
+  // Step 1: Try to get token from cookie
+  let token = null;
   if (socket.handshake.headers.cookie) {
     let cookies = cookie.parse(socket.handshake.headers.cookie);
-    let token = cookies.token;
-    
-    // If token exists, verify it and get user name from database
-    if (token) {
+    token = cookies.token;
+  }
+
+  // Step 2: If no cookie, check auth token (for incognito / cross-site)
+  if (!token && socket.handshake.auth && socket.handshake.auth.token) {
+    token = socket.handshake.auth.token;
+  }
+  
+  // If token exists, verify it and get user name from database
+  if (token) {
       try {
         let decoded = jwt.verify(token, process.env.JWT_SECRET);
         
@@ -287,7 +294,6 @@ io.on("connection", async (socket) => {
         console.log("❌ Invalid token, user is guest");
         console.log("❌ Error:", err.message);
       }
-    }
   }
 
   // Store user info on the socket object

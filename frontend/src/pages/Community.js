@@ -37,8 +37,11 @@ export default function Community({ user }) {
   useEffect(() => {
     // Create socket connection to backend
     // withCredentials: true sends cookies (for JWT auth)
+    // Also send token from localStorage (backup when cookies are blocked)
+    let savedToken = localStorage.getItem("token");
     let newSocket = io(API_BASE, {
-      withCredentials: true
+      withCredentials: true,
+      auth: savedToken ? { token: savedToken } : {}
     });
 
     // Save socket to state
@@ -121,10 +124,13 @@ export default function Community({ user }) {
     }
     
     // Send report to backend
+    // Send token in header too (backup for when cookies are blocked)
+    var savedToken = localStorage.getItem("token");
     fetch(`${API_BASE}/api/mod/report`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(savedToken ? { "Authorization": "Bearer " + savedToken } : {})
       },
       credentials: "include",
       body: JSON.stringify({

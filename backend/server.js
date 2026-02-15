@@ -206,14 +206,32 @@ let lastMessageTime = {};
 // These words will be CENSORED (replaced with ***) in messages
 // IMPORTANT: Add any inappropriate or offensive words here
 const bannedWords = [
-  "spam",
-  "badword", 
-  "inappropriate",
+  // Slurs and hate speech
+  "nigger", "nigga", "n1gger", "n1gga",
+  "faggot", "fag", "f4ggot",
+  "retard", "retarded",
+  "tranny",
+  // Swear words
+  "fuck", "f*ck", "fck", "fuk", "fucker", "fucking", "motherfucker",
+  "shit", "sh1t", "bullshit",
+  "bitch", "b1tch", "bitches",
+  "ass", "asshole", "a$$hole",
+  "damn", "damnit",
+  "dick", "d1ck",
+  "pussy", "p*ssy",
+  "cunt", "c*nt",
+  "whore", "wh0re",
+  "slut",
+  "bastard",
+  "piss",
+  "cock",
+  // Hate and harassment
+  "racist", "racism",
   "hate",
-  "racist",
-  "racism",
-  // Add more words as needed - these are examples
-  // You can add more inappropriate words here
+  "kys", "kill yourself",
+  // Spam
+  "spam",
+  "inappropriate",
 ];
 
 // ========================================

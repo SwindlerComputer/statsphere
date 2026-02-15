@@ -17,11 +17,27 @@
 // - Otherwise → connect to local Postgres
 // ========================================
 
+// ========================================
+// STEP 1: Load .env FIRST before anything else
+// ========================================
+// This MUST be at the very top so all environment variables
+// (like SUPABASE_DATABASE_URL) are available before we create the Pool
+//
+// We use path.join(__dirname, ".env") instead of just dotenv.config()
+// so it ALWAYS finds backend/.env no matter what folder you run the
+// server from (fixes a common Windows issue with working directories)
 import dotenv from "dotenv";
-import pkg from "pg";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Load .env variables
-dotenv.config();
+// Get the directory where THIS file (db.js) lives (the backend folder)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from the backend folder using an absolute path
+dotenv.config({ path: path.join(__dirname, ".env") });
+
+import pkg from "pg";
 
 // Get the Pool class from the pg library
 const { Pool } = pkg;
@@ -30,14 +46,16 @@ const { Pool } = pkg;
 let pool;
 
 // ========================================
-// CHECK: Are we using Supabase or Local DB?
+// STEP 2: Check which database to use
 // ========================================
 if (process.env.SUPABASE_DATABASE_URL) {
   // ----- SUPABASE CONNECTION -----
   // Use the full connection string from Supabase dashboard
   // SSL is REQUIRED for Supabase (it's a cloud database)
   // rejectUnauthorized: false allows self-signed certificates
-  console.log("🌐 Connecting to Supabase database...");
+  console.log("========================================");
+  console.log("DB MODE: SUPABASE");
+  console.log("========================================");
 
   pool = new Pool({
     connectionString: process.env.SUPABASE_DATABASE_URL,
@@ -47,7 +65,9 @@ if (process.env.SUPABASE_DATABASE_URL) {
   // ----- LOCAL POSTGRES CONNECTION -----
   // Use individual environment variables for local development
   // Falls back to default values if .env variables are missing
-  console.log("💻 Connecting to local PostgreSQL database...");
+  console.log("========================================");
+  console.log("DB MODE: LOCAL");
+  console.log("========================================");
 
   pool = new Pool({
     user: process.env.DB_USER || "postgres",

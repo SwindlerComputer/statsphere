@@ -46,22 +46,22 @@ router.post("/register", async (req, res) => {
   const user = result.rows[0];
   const token = createToken(user);
 
-  // Cookie settings: For localhost, omit sameSite to allow WebSocket connections
-  // In production with HTTPS, use secure: true and sameSite: "lax"
-  const isLocalhost = req.get('host')?.includes('localhost') || req.get('host')?.includes('127.0.0.1');
-  const cookieOptions = {
+  // Check if we're running in production (Render sets NODE_ENV=production)
+  const isProd = process.env.NODE_ENV === "production";
+
+  // Cookie settings for JWT token:
+  // - httpOnly: prevents JavaScript from reading the cookie (security)
+  // - sameSite: "none" in production (allows cross-site cookies between frontend & backend)
+  //             "lax" locally (normal browser behavior)
+  // - secure: true in production (cookies only sent over HTTPS)
+  //           false locally (localhost uses HTTP)
+  // - maxAge: cookie expires in 7 days
+  res.cookie("token", token, {
     httpOnly: true,
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-  
-  // Only set sameSite and secure for production (HTTPS)
-  if (process.env.NODE_ENV === "production" && !isLocalhost) {
-    cookieOptions.sameSite = "lax";
-    cookieOptions.secure = true;
-  }
-  // For localhost, don't set sameSite to allow WebSocket connections
-  
-  res.cookie("token", token, cookieOptions);
+  });
 
   res.json({ message: "User registered", user });
 });
@@ -82,22 +82,16 @@ router.post("/login", async (req, res) => {
 
   const token = createToken(user);
 
-  // Cookie settings: For localhost, omit sameSite to allow WebSocket connections
-  // In production with HTTPS, use secure: true and sameSite: "lax"
-  const isLocalhost = req.get('host')?.includes('localhost') || req.get('host')?.includes('127.0.0.1');
-  const cookieOptions = {
+  // Check if we're running in production (Render sets NODE_ENV=production)
+  const isProd = process.env.NODE_ENV === "production";
+
+  // Cookie settings (same as register - see comments there)
+  res.cookie("token", token, {
     httpOnly: true,
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-  
-  // Only set sameSite and secure for production (HTTPS)
-  if (process.env.NODE_ENV === "production" && !isLocalhost) {
-    cookieOptions.sameSite = "lax";
-    cookieOptions.secure = true;
-  }
-  // For localhost, don't set sameSite to allow WebSocket connections
-  
-  res.cookie("token", token, cookieOptions);
+  });
 
   res.json({ message: "Logged in", user: { id: user.id, email: user.email, name: user.name } });
 });

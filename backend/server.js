@@ -38,10 +38,13 @@ const app = express();
 // ========================================
 
 // Allow frontend to send cookies to backend
+// FRONTEND_URL comes from .env:
+//   - Local development: FRONTEND_URL=http://localhost:3000
+//   - Production (Render): FRONTEND_URL=https://your-app.onrender.com
 app.use(
   cors({
-    origin: "http://localhost:3000", // Your React app
-    credentials: true,               // Allow sending cookies
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true, // Allow sending cookies
   })
 );
 
@@ -173,10 +176,11 @@ app.post("/api/predict-match", (req, res) => {
 const httpServer = createServer(app);
 
 // Step 2: Create Socket.IO server attached to HTTP server
+// Uses same FRONTEND_URL as Express CORS so WebSocket works in production too
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",  // Allow frontend to connect
-    credentials: true                  // Allow cookies
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true // Allow cookies
   }
 });
 
@@ -395,7 +399,9 @@ io.on("connection", async (socket) => {
 // ========================================
 // START SERVER
 // ========================================
-const PORT = 5000;
+// Render sets process.env.PORT automatically
+// Locally it falls back to 5000
+const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () =>
   console.log(`✅ Server running on http://localhost:${PORT}`)
 );

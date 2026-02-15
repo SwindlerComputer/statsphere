@@ -10,9 +10,10 @@ import pool from "../db.js"; // Shared database connection (supports Supabase + 
 const router = express.Router();
 
 // Helper to create tokens
+// Stores id, email, AND name so they're always available
 const createToken = (user) => {
   return jwt.sign(
-    { id: user.id, email: user.email },
+    { id: user.id, email: user.email, name: user.name },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -97,8 +98,15 @@ router.post("/login", async (req, res) => {
 });
 
 // LOGOUT
+// clearCookie MUST use the same options as when the cookie was set
+// Otherwise the browser won't remove it (especially in production)
 router.post("/logout", (req, res) => {
-  res.clearCookie("token");
+  const isProd = process.env.NODE_ENV === "production";
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
+  });
   res.json({ message: "Logged out" });
 });
 

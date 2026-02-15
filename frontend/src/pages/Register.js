@@ -6,6 +6,9 @@
 
 import { useState } from "react";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function Register() {
   // State for form inputs
   const [name, setName] = useState("");
@@ -30,7 +33,7 @@ export default function Register() {
 
     try {
       // Send POST request to backend register endpoint
-      const res = await fetch("http://localhost:5000/auth/register", {
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         credentials: "include",
         headers: {

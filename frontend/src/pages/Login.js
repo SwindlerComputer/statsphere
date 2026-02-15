@@ -1,5 +1,8 @@
 import { useState } from "react";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -9,7 +12,7 @@ export default function Login() {
     e.preventDefault();
     setMsg("");
 
-    const res = await fetch("http://localhost:5000/auth/login", {
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       credentials: "include", // IMPORTANT: sends cookies for JWT
       headers: {

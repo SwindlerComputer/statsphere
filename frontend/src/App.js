@@ -7,6 +7,11 @@
 
 import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
+
+// API_BASE = backend URL from .env file
+// Locally: REACT_APP_API_URL=http://localhost:5000
+// Production: REACT_APP_API_URL=https://your-backend.onrender.com
+const API_BASE = process.env.REACT_APP_API_URL;
 import Dashboard from "./pages/Dashboard";
 import Players from "./pages/Players";
 import Predictions from "./pages/Predictions";
@@ -28,7 +33,7 @@ function App() {
   // This runs once when the page first loads.
   // It asks the server "who am I?" by checking the cookie.
   useEffect(function() {
-    fetch("http://localhost:5000/auth/me", {
+    fetch(`${API_BASE}/auth/me`, {
       credentials: "include"  // Send cookies with request
     })
       .then(function(res) {
@@ -50,7 +55,7 @@ function App() {
   // ========================================
   // Sends request to server to clear the cookie, then redirects home.
   function handleLogout() {
-    fetch("http://localhost:5000/auth/logout", {
+    fetch(`${API_BASE}/auth/logout`, {
       method: "POST",
       credentials: "include"
     })

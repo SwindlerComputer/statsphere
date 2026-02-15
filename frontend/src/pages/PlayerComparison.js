@@ -6,6 +6,9 @@
 
 import { useEffect, useState } from "react";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function PlayerComparison() {
   // State to hold all players from backend
   const [players, setPlayers] = useState([]);
@@ -17,7 +20,7 @@ export default function PlayerComparison() {
   useEffect(() => {
     async function fetchPlayers() {
       try {
-        const res = await fetch("http://localhost:5000/api/players");
+        const res = await fetch(`${API_BASE}/api/players`);
         const data = await res.json();
         setPlayers(data);
       } catch (err) {

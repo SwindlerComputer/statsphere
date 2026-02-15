@@ -5,6 +5,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function LeagueFixtures() {
   // Get league ID from the URL
   const { leagueId } = useParams();
@@ -31,7 +34,7 @@ export default function LeagueFixtures() {
     setError(null);
     
     // Build URL to call backend
-    const url = "http://localhost:5000/api/football/fixtures?leagueId=" + selectedLeague + "&season=" + season;
+    const url = API_BASE + "/api/football/fixtures?leagueId=" + selectedLeague + "&season=" + season;
     
     // Call the backend
     fetch(url)

@@ -6,6 +6,9 @@
 
 import { useEffect, useState } from "react";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function Dashboard() {
   // State to hold live matches array
   const [liveMatches, setLiveMatches] = useState([]);
@@ -15,7 +18,7 @@ export default function Dashboard() {
     async function fetchMatches() {
       try {
         // GET request to backend for current live matches
-        const res = await fetch("http://localhost:5000/api/live-matches");
+        const res = await fetch(`${API_BASE}/api/live-matches`);
         const data = await res.json();
         setLiveMatches(data);
       } catch (err) {

@@ -6,6 +6,9 @@
 
 import { useEffect, useState } from "react";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function Predictions() {
   // State for teams list fetched from backend
   const [teams, setTeams] = useState([]);
@@ -19,7 +22,7 @@ export default function Predictions() {
   // Fetch prediction teams when component mounts
   useEffect(() => {
     // GET request to get list of teams for the dropdowns
-    fetch("http://localhost:5000/api/prediction-teams")
+    fetch(`${API_BASE}/api/prediction-teams`)
       .then((res) => res.json())  // Parse response as JSON
       .then(setTeams)  // Store teams array in state
       .catch(err => console.error("Failed to load teams:", err));
@@ -40,7 +43,7 @@ export default function Predictions() {
 
     // POST request to backend with both full team objects
     // async/await makes it easier to wait for response before proceeding
-    const res = await fetch("http://localhost:5000/api/predict-match", {
+    const res = await fetch(`${API_BASE}/api/predict-match`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       // Send team objects with their stats (attack, defense, form)

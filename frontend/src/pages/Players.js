@@ -6,6 +6,9 @@
 
 import { useEffect, useState } from "react";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function Players() {
   // State for the full players list from backend
   const [players, setPlayers] = useState([]);
@@ -19,7 +22,7 @@ export default function Players() {
   // Fetch players from backend when component mounts
   useEffect(() => {
     // GET request using the fetch API (similar to axios, but built-in)
-    fetch("http://localhost:5000/api/players")
+    fetch(`${API_BASE}/api/players`)
       .then((res) => res.json())  // Convert response to JSON
       .then((data) => setPlayers(data))  // Store players in state
       .catch((err) => console.error("Error loading players:", err));

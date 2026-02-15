@@ -16,6 +16,9 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function Community({ user }) {
   // Store all chat messages
   const [messages, setMessages] = useState([]);
@@ -34,7 +37,7 @@ export default function Community({ user }) {
   useEffect(() => {
     // Create socket connection to backend
     // withCredentials: true sends cookies (for JWT auth)
-    let newSocket = io("http://localhost:5000", {
+    let newSocket = io(API_BASE, {
       withCredentials: true
     });
 
@@ -118,7 +121,7 @@ export default function Community({ user }) {
     }
     
     // Send report to backend
-    fetch("http://localhost:5000/api/mod/report", {
+    fetch(`${API_BASE}/api/mod/report`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

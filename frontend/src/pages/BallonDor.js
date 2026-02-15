@@ -7,6 +7,9 @@
 
 import { useEffect, useState } from "react";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function BallonDor() {
   // Store all players from the database
   const [players, setPlayers] = useState([]);
@@ -15,7 +18,7 @@ export default function BallonDor() {
 
   // Fetch players when page loads
   useEffect(() => {
-    fetch("http://localhost:5000/api/players")
+    fetch(`${API_BASE}/api/players`)
       .then((res) => res.json())
       .then((data) => setPlayers(data))
       .catch((err) => console.error("Error:", err));

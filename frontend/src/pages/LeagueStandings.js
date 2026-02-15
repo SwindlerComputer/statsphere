@@ -5,6 +5,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
+// API_BASE = backend URL from .env file
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function LeagueStandings() {
   // Get league ID from the URL
   // Example: /leagues/39/standings means leagueId = "39"
@@ -34,7 +37,7 @@ export default function LeagueStandings() {
     setError(null);
     
     // Build the URL to call our backend
-    const url = "http://localhost:5000/api/football/standings?leagueId=" + selectedLeague + "&season=" + season;
+    const url = API_BASE + "/api/football/standings?leagueId=" + selectedLeague + "&season=" + season;
     
     // Call the backend API
     fetch(url)

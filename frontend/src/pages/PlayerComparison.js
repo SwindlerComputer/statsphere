@@ -135,13 +135,13 @@ export default function PlayerComparison() {
   };
 
   return (
-    <div className="w-full max-w-4xl">
-      <h1 className="text-3xl font-bold text-cyan-400 mb-6 text-center">
+    <div className="w-full max-w-4xl px-2">
+      <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-6 text-center">
         Player Comparison
       </h1>
 
       {/* Player Selection Dropdowns */}
-      <div className="flex justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 mb-8">
         {/* Player A Dropdown */}
         <div className="flex-1">
           <label className="block mb-2 text-sm text-gray-400">Select Player A</label>
@@ -160,7 +160,7 @@ export default function PlayerComparison() {
         </div>
 
         {/* VS Label */}
-        <div className="flex items-end pb-3">
+        <div className="flex items-center justify-center sm:items-end sm:pb-3">
           <span className="text-2xl font-bold text-gray-500">VS</span>
         </div>
 

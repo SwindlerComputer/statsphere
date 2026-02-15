@@ -79,7 +79,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center px-3 py-4 sm:p-6">
         {/* Navigation Bar - Logo, links, and login/logout */}
         <nav className="w-full bg-gray-800 p-4 rounded-lg mb-6 shadow-lg">
           {/* Top row: Logo + User status */}

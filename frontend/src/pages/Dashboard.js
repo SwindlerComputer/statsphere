@@ -31,9 +31,9 @@ export default function Dashboard() {
 
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full max-w-4xl px-2">
       {/* LIVE MATCHES SECTION - Display all active matches */}
-      <h2 className="text-2xl font-bold mb-4 text-cyan-400">Live Matches</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-cyan-400">Live Matches</h2>
 
       {/* Grid of match cards - each shows home/away score */}
       <div className="grid grid-cols-1 gap-4">

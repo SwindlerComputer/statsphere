@@ -54,13 +54,13 @@ export default function Players() {
   });
 
   return (
-    <div className="text-white w-full max-w-6xl mx-auto mt-10">
-      <h1 className="text-3xl font-bold text-center mb-6">
+    <div className="text-white w-full max-w-6xl mx-auto px-2">
+      <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">
         ⚽ StatSphere – Player Statistics
       </h1>
 
       {/* Search + Filters */}
-      <div className="bg-gray-800 p-4 rounded-lg mb-6 flex flex-wrap gap-4 justify-center">
+      <div className="bg-gray-800 p-3 sm:p-4 rounded-lg mb-6 flex flex-wrap gap-3 sm:gap-4 justify-center">
 
         {/* Search Bar - Updates search state as user types */}
         <input
@@ -68,7 +68,7 @@ export default function Players() {
           placeholder="Search players..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="p-2 w-60 rounded bg-gray-700 text-white border border-gray-600"
+          className="p-2 w-full sm:w-60 rounded bg-gray-700 text-white border border-gray-600"
         />
 
         {/* Position Filter Dropdown */}

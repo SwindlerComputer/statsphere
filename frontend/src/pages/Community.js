@@ -158,8 +158,8 @@ export default function Community({ user }) {
   }
 
   return (
-    <div className="w-full max-w-2xl">
-      <h1 className="text-3xl font-bold text-cyan-400 mb-2 text-center">
+    <div className="w-full max-w-2xl px-2">
+      <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-2 text-center">
         💬 Community Chat
       </h1>
       {/* Show login status */}

@@ -101,9 +101,9 @@ export default function LeagueFixtures() {
 
   // Show the page
   return (
-    <div className="w-full max-w-6xl">
+    <div className="w-full max-w-6xl px-2">
       {/* Page Title */}
-      <h1 className="text-3xl font-bold text-cyan-400 mb-4">
+      <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-4">
         {getLeagueName(selectedLeague)} Fixtures
       </h1>
 

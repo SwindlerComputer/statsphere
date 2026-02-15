@@ -206,10 +206,23 @@ let lastMessageTime = {};
 // These words will be CENSORED (replaced with ***) in messages
 // IMPORTANT: Add any inappropriate or offensive words here
 const bannedWords = [
-  // Slurs and hate speech
-  "nigger", "nigga", "n1gger", "n1gga",
-  "faggot", "fag", "f4ggot",
+  // Slurs - Anti-Black
+  "nigger", "nigga", "n1gger", "n1gga", "negro",
+  // Slurs - Anti-Asian / East Asian
+  "chink", "ch1nk", "gook", "chinky", "ching chong",
+  "slant", "slanteye", "zipperhead", "jap",
+  // Slurs - Anti-South Asian / Pakistani
+  "paki", "p4ki", "curry muncher", "sandnigger", "towelhead",
+  "raghead", "terrorist",
+  // Slurs - Anti-White
+  "cracker", "honky", "honkey", "redneck", "white trash",
+  // Slurs - Anti-Hispanic
+  "spic", "sp1c", "wetback", "beaner",
+  // Slurs - Homophobic
+  "faggot", "fag", "f4ggot", "dyke",
+  // Slurs - Ableist
   "retard", "retarded",
+  // Slurs - Transphobic
   "tranny",
   // Swear words
   "fuck", "f*ck", "fck", "fuk", "fucker", "fucking", "motherfucker",

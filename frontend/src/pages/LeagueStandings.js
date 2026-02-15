@@ -95,9 +95,9 @@ export default function LeagueStandings() {
 
   // Show the page
   return (
-    <div className="w-full max-w-6xl">
+    <div className="w-full max-w-6xl px-2">
       {/* Page Title */}
-      <h1 className="text-3xl font-bold text-cyan-400 mb-4">
+      <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-4">
         {getLeagueName(selectedLeague)} Standings
       </h1>
 
@@ -154,18 +154,18 @@ export default function LeagueStandings() {
 
       {/* Show the standings table */}
       {!loading && !error && (
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
-          <table className="w-full">
+        <div className="bg-gray-800 rounded-lg overflow-x-auto">
+          <table className="w-full min-w-[500px]">
             {/* Table Header */}
             <thead className="bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-sm text-gray-300">Pos</th>
-                <th className="px-6 py-3 text-left text-sm text-gray-300">Team</th>
-                <th className="px-6 py-3 text-center text-sm text-gray-300">Played</th>
-                <th className="px-6 py-3 text-center text-sm text-gray-300">Won</th>
-                <th className="px-6 py-3 text-center text-sm text-gray-300">Draw</th>
-                <th className="px-6 py-3 text-center text-sm text-gray-300">Lost</th>
-                <th className="px-6 py-3 text-center text-sm text-gray-300">Points</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-sm text-gray-300">Pos</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-sm text-gray-300">Team</th>
+                <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">P</th>
+                <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">W</th>
+                <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">D</th>
+                <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">L</th>
+                <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">Pts</th>
               </tr>
             </thead>
             
@@ -199,25 +199,25 @@ export default function LeagueStandings() {
                   
                   return (
                     <tr key={team.team ? team.team.id : index} className="hover:bg-gray-700">
-                      <td className="px-6 py-4">
-                        <span className={"text-lg font-bold " + positionColor}>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <span className={"text-base sm:text-lg font-bold " + positionColor}>
                           {position}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
                         <div className="flex items-center">
                           {teamLogo && (
-                            <img src={teamLogo} alt={teamName} className="h-8 w-8 mr-3" />
+                            <img src={teamLogo} alt={teamName} className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3" />
                           )}
-                          <span>{teamName}</span>
+                          <span className="text-sm sm:text-base">{teamName}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center text-gray-300">{played}</td>
-                      <td className="px-6 py-4 text-center text-green-400">{won}</td>
-                      <td className="px-6 py-4 text-center text-yellow-400">{draw}</td>
-                      <td className="px-6 py-4 text-center text-red-400">{lost}</td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-xl font-bold text-cyan-400">{points}</span>
+                      <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-gray-300">{played}</td>
+                      <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-green-400">{won}</td>
+                      <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-yellow-400">{draw}</td>
+                      <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-red-400">{lost}</td>
+                      <td className="px-2 sm:px-6 py-3 sm:py-4 text-center">
+                        <span className="text-base sm:text-xl font-bold text-cyan-400">{points}</span>
                       </td>
                     </tr>
                   );

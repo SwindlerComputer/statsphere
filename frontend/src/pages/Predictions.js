@@ -56,15 +56,15 @@ export default function Predictions() {
   };
 
   return (
-    <div className="mt-20 text-white text-center">
-      <h1 className="text-3xl font-bold mb-6">🔮 Match Outcome Predictor</h1>
+    <div className="mt-10 sm:mt-20 text-white text-center w-full max-w-xl mx-auto px-2">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6">🔮 Match Outcome Predictor</h1>
 
       {/* Dropdowns - Let user pick two teams */}
-      <div className="flex justify-center gap-6 mb-8">
+      <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-6 mb-8">
         {/* Team A Dropdown */}
         <select
           onChange={(e) => setTeamA(e.target.value)}
-          className="p-3 bg-gray-800 rounded"
+          className="p-3 bg-gray-800 rounded w-full sm:w-auto"
         >
           <option value="">Select Team A</option>
           {/* map() creates <option> for each team in teams array */}
@@ -78,7 +78,7 @@ export default function Predictions() {
         {/* Team B Dropdown */}
         <select
           onChange={(e) => setTeamB(e.target.value)}
-          className="p-3 bg-gray-800 rounded"
+          className="p-3 bg-gray-800 rounded w-full sm:w-auto"
         >
           <option value="">Select Team B</option>
           {/* map() creates <option> for each team in teams array */}
@@ -93,7 +93,7 @@ export default function Predictions() {
       {/* Predict Button - Calls handlePredict when clicked */}
       <button
         onClick={handlePredict}
-        className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded font-semibold"
+        className="w-full sm:w-auto px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded font-semibold"
       >
         Predict Match
       </button>
@@ -101,8 +101,8 @@ export default function Predictions() {
       {/* Result Section - Only shows if result is not null (prediction received) */}
       {/* && operator: if result is truthy, show the div */}
       {result && (
-        <div className="mt-10 bg-gray-800 p-6 rounded-lg w-[450px] mx-auto shadow-lg">
-          <h2 className="text-2xl font-bold mb-2">Prediction Result</h2>
+        <div className="mt-10 bg-gray-800 p-6 rounded-lg w-full max-w-md mx-auto shadow-lg">
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">Prediction Result</h2>
           <p className="text-lg">
             {/* result.prediction = winner name from backend */}
             <span className="text-cyan-400">{result.prediction}</span> is likely to win.

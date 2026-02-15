@@ -7,11 +7,6 @@
 
 import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
-
-// API_BASE = backend URL from .env file
-// Locally: REACT_APP_API_URL=http://localhost:5000
-// Production: REACT_APP_API_URL=https://your-backend.onrender.com
-const API_BASE = process.env.REACT_APP_API_URL;
 import Dashboard from "./pages/Dashboard";
 import Players from "./pages/Players";
 import Predictions from "./pages/Predictions";
@@ -22,6 +17,11 @@ import PlayerComparison from "./pages/PlayerComparison";
 import BallonDor from "./pages/BallonDor";
 import LeagueStandings from "./pages/LeagueStandings";
 import LeagueFixtures from "./pages/LeagueFixtures";
+
+// API_BASE = backend URL from .env file
+// Locally: REACT_APP_API_URL=http://localhost:5000
+// Production: REACT_APP_API_URL=https://your-backend.onrender.com
+const API_BASE = process.env.REACT_APP_API_URL;
 
 function App() {
   // Store the logged in user (null means not logged in)

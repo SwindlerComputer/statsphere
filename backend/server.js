@@ -87,6 +87,15 @@ app.use("/api/mod", modRoutes);
 // /api/mod/unban-user - Unban a user (admin only)
 
 // ========================================
+// HEALTH CHECK (for verifying deploys on Render)
+// ========================================
+// Visit: https://your-backend.onrender.com/api/health
+// Should return: { ok: true }
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true });
+});
+
+// ========================================
 // EXISTING API ROUTES
 // ========================================
 

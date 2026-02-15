@@ -15,7 +15,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import pkg from "pg";
 import fs from "fs";
 import path from "path";
 import cookieParser from "cookie-parser";
@@ -27,10 +26,10 @@ import { createServer } from "http";        // Needed for Socket.IO
 import { Server } from "socket.io";         // Socket.IO library
 import jwt from "jsonwebtoken";             // To verify user tokens
 import cookie from "cookie";                // To parse cookies from socket
+import pool from "./db.js";                 // Shared database connection
 
 // Load environment variables
 dotenv.config();
-const { Pool } = pkg;
 
 const app = express();
 
@@ -52,13 +51,8 @@ app.use(cookieParser()); // <-- Needed for login, logout, /me
 // ========================================
 // DATABASE CONNECTION
 // ========================================
-const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "statsphere",
-  password: String(process.env.DB_PASS || "admin123"),
-  port: 5432,
-});
+// Pool is imported from db.js (supports both Supabase and local Postgres)
+// See db.js for connection setup details
 
 // Fix __dirname for ES Module
 const __filename = fileURLToPath(import.meta.url);

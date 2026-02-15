@@ -6,26 +6,16 @@
 // ========================================
 
 import dotenv from "dotenv";
-import pkg from "pg";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import pool from "../db.js"; // Shared database connection (supports Supabase + local)
 
 dotenv.config();
-const { Pool } = pkg;
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Connect to database
-const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "statsphere",
-  password: String(process.env.DB_PASS || "admin123"),
-  port: 5432,
-});
 
 async function runMigration() {
   try {
@@ -50,6 +40,7 @@ async function runMigration() {
 }
 
 runMigration();
+
 
 
 

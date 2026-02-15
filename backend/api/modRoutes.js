@@ -10,22 +10,12 @@
 // ========================================
 
 import express from "express";
-import pkg from "pg";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import pool from "../db.js"; // Shared database connection (supports Supabase + local)
 
 dotenv.config();
-const { Pool } = pkg;
 const router = express.Router();
-
-// Get database connection from environment
-const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "statsphere",
-  password: String(process.env.DB_PASS || "admin123"),
-  port: 5432,
-});
 
 // ========================================
 // HELPER FUNCTION: Check if user is admin

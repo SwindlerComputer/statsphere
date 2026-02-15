@@ -5,19 +5,9 @@ dotenv.config();
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import pkg from "pg";
-
-const { Pool } = pkg;
+import pool from "../db.js"; // Shared database connection (supports Supabase + local)
 
 const router = express.Router();
-
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: String(process.env.DB_PASS),
-  port: 5432,
-});
 
 // Helper to create tokens
 const createToken = (user) => {

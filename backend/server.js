@@ -90,9 +90,9 @@ app.use("/api/mod", modRoutes);
 // HEALTH CHECK (for verifying deploys on Render)
 // ========================================
 // Visit: https://your-backend.onrender.com/api/health
-// Should return: { ok: true }
+// Should return: { ok: true, service: "statsphere-backend" }
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, service: "statsphere-backend" });
 });
 
 // ========================================

@@ -30,6 +30,8 @@ export default function Community({ user }) {
   const [error, setError] = useState("");
   // Store success message (for report confirmation)
   const [success, setSuccess] = useState("");
+  // Loading state - true until chat history is received
+  const [loading, setLoading] = useState(true);
 
   // ========================================
   // STEP 2: Connect to WebSocket server
@@ -53,6 +55,7 @@ export default function Community({ user }) {
     newSocket.on("chat_history", (history) => {
       console.log("Received chat history:", history.length, "messages");
       setMessages(history);
+      setLoading(false); // Done loading, show messages
     });
 
     // ========================================
@@ -177,7 +180,12 @@ export default function Community({ user }) {
 
       {/* Chat Messages Box */}
       <div className="bg-gray-800 rounded-lg p-4 h-96 overflow-y-auto mb-4">
-        {messages.length === 0 ? (
+        {/* Show loading text while waiting for messages from server */}
+        {loading ? (
+          <p className="text-gray-400 text-center mt-20">
+            Loading messages...
+          </p>
+        ) : messages.length === 0 ? (
           <p className="text-gray-500 text-center mt-20">
             No messages yet. Be the first to say hello!
           </p>

@@ -103,6 +103,7 @@ export default function BallonDor() {
 
     // Step 3: Save the sorted list
     setRankedPlayers(playersWithScores);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players]);
 
   // Returns medal emoji for top 3, otherwise the number

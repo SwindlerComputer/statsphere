@@ -205,7 +205,7 @@ function App() {
             </li>
             <li>
               <NavLink
-                to="/leagues/39/standings"
+                to="/standings"
                 className={({ isActive }) =>
                   `transition-all duration-200 ${
                     isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
@@ -217,7 +217,7 @@ function App() {
             </li>
             <li>
               <NavLink
-                to="/leagues/39/fixtures"
+                to="/fixtures"
                 className={({ isActive }) =>
                   `transition-all duration-200 ${
                     isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
@@ -242,14 +242,17 @@ function App() {
           <Route path="/community" element={<Community user={user} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          {/* League pages with dynamic leagueId parameter */}
+          {/* League / Competition pages */}
+          <Route path="/standings" element={<LeagueStandings />} />
+          <Route path="/fixtures" element={<LeagueFixtures />} />
+          {/* Keep old routes for backwards compatibility */}
           <Route path="/leagues/:leagueId/standings" element={<LeagueStandings />} />
           <Route path="/leagues/:leagueId/fixtures" element={<LeagueFixtures />} />
         </Routes>
 
         {/* Footer */}
         <footer className="mt-8 text-gray-400 text-sm text-center">
-          © 2025 StatSphere
+          © 2026 StatSphere
         </footer>
       </div>
     </Router>

@@ -18,6 +18,7 @@ import LeagueStandings from "./pages/LeagueStandings";
 import LeagueFixtures from "./pages/LeagueFixtures";
 import PlayerInsights from "./pages/PlayerInsights";
 import Profile from "./pages/Profile";
+import Rankings from "./pages/Rankings";
 
 var API_BASE = process.env.REACT_APP_API_URL;
 
@@ -134,6 +135,7 @@ function App() {
             <li><NavLink to="/predictions" className={function (nav) { return navClass(nav.isActive); }}>Predictions</NavLink></li>
             <li><NavLink to="/standings" className={function (nav) { return navClass(nav.isActive); }}>Standings</NavLink></li>
             <li><NavLink to="/fixtures" className={function (nav) { return navClass(nav.isActive); }}>Fixtures</NavLink></li>
+            <li><NavLink to="/rankings" className={function (nav) { return navClass(nav.isActive); }}>Rankings</NavLink></li>
             <li><NavLink to="/community" className={function (nav) { return navClass(nav.isActive); }}>Community</NavLink></li>
           </ul>
 
@@ -149,6 +151,7 @@ function App() {
                 <li><NavLink to="/predictions" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Predictions</NavLink></li>
                 <li><NavLink to="/standings" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Standings</NavLink></li>
                 <li><NavLink to="/fixtures" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Fixtures</NavLink></li>
+                <li><NavLink to="/rankings" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Rankings</NavLink></li>
                 <li><NavLink to="/community" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Community</NavLink></li>
 
                 {/* Mobile user actions */}
@@ -189,6 +192,7 @@ function App() {
             <Route path="/profile" element={<Profile user={user} />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/rankings" element={<Rankings />} />
             <Route path="/standings" element={<LeagueStandings />} />
             <Route path="/fixtures" element={<LeagueFixtures />} />
             <Route path="/leagues/:leagueId/standings" element={<LeagueStandings />} />

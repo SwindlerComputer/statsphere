@@ -1,0 +1,131 @@
+============================================================
+STATSPHERE - TEAM POWER RANKINGS PAGE
+============================================================
+Files:
+  Frontend: frontend/src/pages/Rankings.js
+  Backend:  (uses /api/prediction-teams endpoint in server.js)
+  Data:     backend/data/predictionTeams.json
+URL: /rankings
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+Shows a FIFA-style ranking table for all 20 teams.
+Each team gets an overall score based on their stats and
+the difficulty of their league. Teams are sorted from
+highest score to lowest (rank 1 = best team).
+
+This is similar to how FIFA ranks national teams or how
+Sofascore shows top teams, but simplified for our project.
+
+============================================================
+THE RANKING FORMULA
+============================================================
+  overallScore = (attack x 0.35) + (defense x 0.30)
+               + (form x 0.20) + (leagueBonus x 0.15)
+
+WHAT EACH PART MEANS:
+  - attack (0-100): How good the team is at scoring goals
+    Weight: 0.35 (35% of the score)
+    This is the most important factor
+
+  - defense (0-100): How good the team is at stopping goals
+    Weight: 0.30 (30% of the score)
+
+  - form (0-100): How well the team has been playing recently
+    Weight: 0.20 (20% of the score)
+
+  - leagueBonus: Extra points for playing in a harder league
+    Weight: 0.15 (15% of the score)
+
+============================================================
+LEAGUE BONUS VALUES
+============================================================
+  Premier League:    15 points  (hardest league)
+  La Liga:           13 points
+  Serie A:           12 points
+  Bundesliga:        12 points
+  Ligue 1:           10 points
+  Saudi Pro League:   6 points  (weakest league)
+
+WHY LEAGUE BONUS MATTERS:
+  If two teams both have 85 attack, but one plays in the
+  Premier League and the other in the Saudi Pro League,
+  the Premier League team gets a higher ranking because
+  they face tougher opponents every week.
+
+============================================================
+EXAMPLE CALCULATION
+============================================================
+  Arsenal: attack=88, defense=89, form=88, league=PL (15)
+
+  attackScore  = 88 x 0.35  = 30.8
+  defenseScore = 89 x 0.30  = 26.7
+  formScore    = 88 x 0.20  = 17.6
+  leagueScore  = 15 x 0.15  =  2.25
+  TOTAL = 30.8 + 26.7 + 17.6 + 2.25 = 77.35
+
+  Al Nassr: attack=78, defense=72, form=74, league=Saudi (6)
+
+  attackScore  = 78 x 0.35  = 27.3
+  defenseScore = 72 x 0.30  = 21.6
+  formScore    = 74 x 0.20  = 14.8
+  leagueScore  = 6  x 0.15  =  0.9
+  TOTAL = 27.3 + 21.6 + 14.8 + 0.9 = 64.6
+
+  Arsenal (77.35) ranks higher than Al Nassr (64.6)
+
+============================================================
+KEY VARIABLES (Rankings.js)
+============================================================
+  teams         - array of all teams with their overall score
+  loading       - true while fetching data
+  leagueFilter  - "all" or a specific league name
+
+============================================================
+KEY FUNCTIONS (Rankings.js)
+============================================================
+  getLeagueBonus(league)
+    Returns the bonus points for a league.
+    Example: getLeagueBonus("Premier League") returns 15
+
+  calculateOverall(team)
+    Calculates the overall ranking score for a team.
+    Uses the formula above and rounds to 1 decimal.
+
+  getFilteredTeams()
+    Returns only teams matching the selected league filter.
+
+  getRankColor(rank)
+    Returns gold for 1st, silver for 2nd, bronze for 3rd.
+
+  getBarColor(value)
+    Returns green for 90+, cyan for 80+, yellow for 70+, red below.
+
+  getTierLabel(rank, total)
+    Returns "Elite", "Strong", "Mid", or "Developing" based
+    on where the team sits in the rankings.
+
+============================================================
+WHAT THE PAGE SHOWS
+============================================================
+1. Title and formula explanation
+2. League filter dropdown
+3. Top 3 podium (gold, silver, bronze cards) when viewing all
+4. Full ranking table with:
+   - Rank number (coloured badge)
+   - Team name
+   - League name
+   - Attack rating with mini bar
+   - Defense rating with mini bar
+   - Form rating with mini bar
+   - Overall score
+   - Tier label (Elite, Strong, Mid, Developing)
+5. League bonus reference at the bottom
+
+MOBILE VERSION:
+  On mobile, each team shows as a compact card with
+  the rank badge, team name, score, and 3 stat bars.
+  The podium still shows but with smaller text.
+
+============================================================

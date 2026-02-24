@@ -142,13 +142,17 @@ router.post("/report", requireAuth, async function (req, res) {
       // Try to insert the report directly
       result = await pool.query(insertQuery, insertValues);
     } catch (insertError) {
-      // If the table doesn't exist, create it and try again
-      // PostgreSQL error code 42P01 = "undefined_table"
-      if (insertError.code === "42P01") {
-        console.log("reported_messages table not found, creating it now...");
+      // 42P01 = table doesn't exist
+      // 42703 = column doesn't exist (table has wrong columns)
+      if (insertError.code === "42P01" || insertError.code === "42703") {
+        console.log("reported_messages table missing or has wrong columns, recreating...");
 
+        // Drop the old table (if it exists with wrong columns)
+        await pool.query("DROP TABLE IF EXISTS reported_messages");
+
+        // Create fresh table with the correct columns
         await pool.query(
-          "CREATE TABLE IF NOT EXISTS reported_messages (" +
+          "CREATE TABLE reported_messages (" +
           "  id SERIAL PRIMARY KEY," +
           "  reporter_user_id INTEGER NOT NULL," +
           "  message_id BIGINT," +
@@ -158,10 +162,9 @@ router.post("/report", requireAuth, async function (req, res) {
           ")"
         );
 
-        // Try the insert again now that the table exists
+        // Try the insert again now that the table is correct
         result = await pool.query(insertQuery, insertValues);
       } else {
-        // Some other database error - throw it so outer catch handles it
         throw insertError;
       }
     }

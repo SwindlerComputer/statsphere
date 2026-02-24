@@ -1,61 +1,52 @@
-// LeagueStandings.js
-// This page shows football league standings (team rankings)
-// It gets data from our backend and shows it in a table
+// ========================================
+// LeagueStandings.js - League Table / Standings
+// ========================================
+// Shows football league standings (team rankings) from mock data.
+// Includes dropdowns for selecting competition (league, Champions League, World Cup).
+// No external APIs needed - all data from local JSON files.
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 
 // API_BASE = backend URL from .env file
 const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function LeagueStandings() {
-  // Get league ID from the URL
-  // Example: /leagues/39/standings means leagueId = "39"
-  const { leagueId } = useParams();
-  
-  // These are variables that store data
-  // useState is a React function that lets us store changing data
-  const [standings, setStandings] = useState([]); // List of teams
-  const [loading, setLoading] = useState(true); // Is data loading? (true or false)
-  const [error, setError] = useState(null); // Any error message
-  const [season, setSeason] = useState("2023"); // Which season (2021, 2022, or 2023)
-  const [selectedLeague, setSelectedLeague] = useState(leagueId || "39"); // Which league
-  
-  // List of leagues we can choose from
-  const leagues = [
-    { id: "39", name: "Premier League" },
-    { id: "140", name: "La Liga" },
-    { id: "78", name: "Bundesliga" },
-    { id: "135", name: "Serie A" },
-    { id: "61", name: "Ligue 1" }
+  // State variables
+  const [standings, setStandings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedCompetition, setSelectedCompetition] = useState("premier-league");
+
+  // List of competitions the user can choose from
+  // Includes leagues, Champions League, and World Cup
+  var competitions = [
+    { id: "premier-league", name: "Premier League" },
+    { id: "la-liga", name: "La Liga" },
+    { id: "bundesliga", name: "Bundesliga" },
+    { id: "serie-a", name: "Serie A" },
+    { id: "ligue-1", name: "Ligue 1" },
+    { id: "champions-league", name: "Champions League" },
+    { id: "world-cup-2026", name: "World Cup 2026" }
   ];
 
-  // This function runs when the page loads or when season/league changes
-  useEffect(function() {
-    // Set loading to true (show loading message)
+  // Fetch standings when page loads or competition changes
+  useEffect(function () {
     setLoading(true);
     setError(null);
-    
-    // Build the URL to call our backend
-    const url = API_BASE + "/api/football/standings?leagueId=" + selectedLeague + "&season=" + season;
-    
-    // Call the backend API
+
+    var url = API_BASE + "/api/football/standings?competition=" + selectedCompetition;
+
     fetch(url)
-      .then(function(response) {
-        // Check if we got data successfully
+      .then(function (response) {
         if (!response.ok) {
           throw new Error("Could not get standings");
         }
-        // Convert response to JSON (JavaScript object)
         return response.json();
       })
-      .then(function(data) {
-        // Check if we have data
+      .then(function (data) {
         if (data.response && data.response.length > 0) {
-          // Get the standings from the response
-          const leagueData = data.response[0];
+          var leagueData = data.response[0];
           if (leagueData.league && leagueData.league.standings) {
-            // Save the standings to our state
             setStandings(leagueData.league.standings[0] || []);
           } else {
             setStandings([]);
@@ -63,100 +54,79 @@ export default function LeagueStandings() {
         } else {
           setStandings([]);
         }
-        setLoading(false); // Done loading
+        setLoading(false);
       })
-      .catch(function(err) {
-        // If something went wrong, save the error
+      .catch(function (err) {
         console.error("Error:", err);
         setError(err.message);
         setLoading(false);
       });
-  }, [selectedLeague, season]); // Run again if league or season changes
+  }, [selectedCompetition]);
 
-  // Function to handle when user changes the season dropdown
-  function handleSeasonChange(e) {
-    setSeason(e.target.value);
+  // Handle competition dropdown change
+  function handleCompetitionChange(e) {
+    setSelectedCompetition(e.target.value);
   }
 
-  // Function to handle when user changes the league dropdown
-  function handleLeagueChange(e) {
-    setSelectedLeague(e.target.value);
-  }
-
-  // Function to get league name from ID
-  function getLeagueName(id) {
-    for (let i = 0; i < leagues.length; i++) {
-      if (leagues[i].id === id) {
-        return leagues[i].name;
+  // Get display name for the selected competition
+  function getCompetitionName(id) {
+    for (var i = 0; i < competitions.length; i++) {
+      if (competitions[i].id === id) {
+        return competitions[i].name;
       }
     }
-    return "League " + id;
+    return "Competition";
   }
 
-  // Show the page
   return (
     <div className="w-full max-w-6xl px-2">
       {/* Page Title */}
       <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-4">
-        {getLeagueName(selectedLeague)} Standings
+        {getCompetitionName(selectedCompetition)} Standings
       </h1>
 
-      {/* Dropdowns for League and Season */}
+      {/* Competition Dropdown */}
       <div className="bg-gray-800 p-4 rounded-lg mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* League Dropdown */}
-          <div>
-            <label className="block text-sm text-gray-300 mb-2">Select League:</label>
-            <select
-              value={selectedLeague}
-              onChange={handleLeagueChange}
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400"
-            >
-              {leagues.map(function(league) {
-                return (
-                  <option key={league.id} value={league.id}>
-                    {league.name}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* Season Dropdown */}
-          <div>
-            <label className="block text-sm text-gray-300 mb-2">Select Season:</label>
-            <select
-              value={season}
-              onChange={handleSeasonChange}
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400"
-            >
-              <option value="2021">2021-2022</option>
-              <option value="2022">2022-2023</option>
-              <option value="2023">2023-2024</option>
-            </select>
-          </div>
-        </div>
+        <label className="block text-sm text-gray-300 mb-2">Select Competition:</label>
+        <select
+          value={selectedCompetition}
+          onChange={handleCompetitionChange}
+          className="w-full sm:w-auto bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400"
+        >
+          {/* Group: Domestic Leagues */}
+          <optgroup label="Domestic Leagues">
+            {competitions.filter(function (c) {
+              return c.id !== "champions-league" && c.id !== "world-cup-2026";
+            }).map(function (comp) {
+              return <option key={comp.id} value={comp.id}>{comp.name}</option>;
+            })}
+          </optgroup>
+          {/* Group: International Competitions */}
+          <optgroup label="International">
+            <option value="champions-league">Champions League</option>
+            <option value="world-cup-2026">World Cup 2026</option>
+          </optgroup>
+        </select>
       </div>
 
-      {/* Show loading message */}
+      {/* Loading */}
       {loading && (
         <div className="text-center py-8">
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-gray-400">Loading standings...</p>
         </div>
       )}
 
-      {/* Show error message if something went wrong */}
+      {/* Error */}
       {error && (
         <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4">
           <p>Error: {error}</p>
         </div>
       )}
 
-      {/* Show the standings table */}
+      {/* Standings Table */}
       {!loading && !error && (
         <div className="bg-gray-800 rounded-lg overflow-x-auto">
           <table className="w-full min-w-[500px]">
-            {/* Table Header */}
             <thead className="bg-gray-700">
               <tr>
                 <th className="px-3 sm:px-6 py-3 text-left text-sm text-gray-300">Pos</th>
@@ -165,57 +135,55 @@ export default function LeagueStandings() {
                 <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">W</th>
                 <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">D</th>
                 <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">L</th>
+                <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">GD</th>
                 <th className="px-2 sm:px-6 py-3 text-center text-sm text-gray-300">Pts</th>
               </tr>
             </thead>
-            
-            {/* Table Body - Show each team */}
             <tbody>
               {standings.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-gray-400">
-                    No data available
+                  <td colSpan="8" className="px-6 py-8 text-center text-gray-400">
+                    No standings data available for this competition
                   </td>
                 </tr>
               ) : (
-                standings.map(function(team, index) {
-                  // Get team info
-                  const teamName = team.team ? team.team.name : "Unknown";
-                  const teamLogo = team.team ? team.team.logo : "";
-                  const position = team.rank || index + 1;
-                  const points = team.points || 0;
-                  const played = team.all ? team.all.played : 0;
-                  const won = team.all ? team.all.win : 0;
-                  const draw = team.all ? team.all.draw : 0;
-                  const lost = team.all ? team.all.lose : 0;
-                  
-                  // Color for position (green = top 4, red = bottom 3)
-                  let positionColor = "text-white";
+                standings.map(function (team, index) {
+                  var teamName = team.team ? team.team.name : "Unknown";
+                  var position = team.rank || index + 1;
+                  var points = team.points || 0;
+                  var played = team.all ? team.all.played : 0;
+                  var won = team.all ? team.all.win : 0;
+                  var draw = team.all ? team.all.draw : 0;
+                  var lost = team.all ? team.all.lose : 0;
+                  var gd = team.goalsDiff || 0;
+
+                  // Color coding: top 4 green, bottom 3 red
+                  var positionColor = "text-white";
                   if (position <= 4) {
                     positionColor = "text-green-400";
-                  } else if (position >= standings.length - 2) {
+                  } else if (standings.length >= 10 && position >= standings.length - 2) {
                     positionColor = "text-red-400";
                   }
-                  
+
                   return (
-                    <tr key={team.team ? team.team.id : index} className="hover:bg-gray-700">
+                    <tr key={team.team ? team.team.id : index} className="hover:bg-gray-700 border-b border-gray-700">
                       <td className="px-3 sm:px-6 py-3 sm:py-4">
                         <span className={"text-base sm:text-lg font-bold " + positionColor}>
                           {position}
                         </span>
                       </td>
                       <td className="px-3 sm:px-6 py-3 sm:py-4">
-                        <div className="flex items-center">
-                          {teamLogo && (
-                            <img src={teamLogo} alt={teamName} className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3" />
-                          )}
-                          <span className="text-sm sm:text-base">{teamName}</span>
-                        </div>
+                        <span className="text-sm sm:text-base">{teamName}</span>
                       </td>
                       <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-gray-300">{played}</td>
                       <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-green-400">{won}</td>
                       <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-yellow-400">{draw}</td>
                       <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-red-400">{lost}</td>
+                      <td className="px-2 sm:px-6 py-3 sm:py-4 text-center text-gray-300">
+                        <span className={gd > 0 ? "text-green-400" : gd < 0 ? "text-red-400" : ""}>
+                          {gd > 0 ? "+" + gd : gd}
+                        </span>
+                      </td>
                       <td className="px-2 sm:px-6 py-3 sm:py-4 text-center">
                         <span className="text-base sm:text-xl font-bold text-cyan-400">{points}</span>
                       </td>

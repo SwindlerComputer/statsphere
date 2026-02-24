@@ -1,51 +1,49 @@
-// LeagueFixtures.js
-// This page shows football fixtures (matches) for a league
-// It gets data from our backend and shows it in cards
+// ========================================
+// LeagueFixtures.js - Match Fixtures Page
+// ========================================
+// Shows match fixtures from mock data with competition dropdown.
+// Includes leagues, Champions League, and World Cup 2026.
+// No external APIs - all data from local JSON files.
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 
 // API_BASE = backend URL from .env file
 const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function LeagueFixtures() {
-  // Get league ID from the URL
-  const { leagueId } = useParams();
-  
-  // Variables to store data
-  const [fixtures, setFixtures] = useState([]); // List of matches
-  const [loading, setLoading] = useState(true); // Is data loading?
-  const [error, setError] = useState(null); // Any error message
-  const [season, setSeason] = useState("2023"); // Which season
-  const [selectedLeague, setSelectedLeague] = useState(leagueId || "39"); // Which league
-  
-  // List of leagues we can choose from
-  const leagues = [
-    { id: "39", name: "Premier League" },
-    { id: "140", name: "La Liga" },
-    { id: "78", name: "Bundesliga" },
-    { id: "135", name: "Serie A" },
-    { id: "61", name: "Ligue 1" }
+  // State variables
+  const [fixtures, setFixtures] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedCompetition, setSelectedCompetition] = useState("premier-league");
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  // List of competitions
+  var competitions = [
+    { id: "premier-league", name: "Premier League" },
+    { id: "la-liga", name: "La Liga" },
+    { id: "bundesliga", name: "Bundesliga" },
+    { id: "serie-a", name: "Serie A" },
+    { id: "ligue-1", name: "Ligue 1" },
+    { id: "champions-league", name: "Champions League" },
+    { id: "world-cup-2026", name: "World Cup 2026" }
   ];
 
-  // This runs when page loads or when league/season changes
-  useEffect(function() {
+  // Fetch fixtures when page loads or competition changes
+  useEffect(function () {
     setLoading(true);
     setError(null);
-    
-    // Build URL to call backend
-    const url = API_BASE + "/api/football/fixtures?leagueId=" + selectedLeague + "&season=" + season;
-    
-    // Call the backend
+
+    var url = API_BASE + "/api/football/fixtures?competition=" + selectedCompetition;
+
     fetch(url)
-      .then(function(response) {
+      .then(function (response) {
         if (!response.ok) {
           throw new Error("Could not get fixtures");
         }
         return response.json();
       })
-      .then(function(data) {
-        // Check if we have data
+      .then(function (data) {
         if (data.response && data.response.length > 0) {
           setFixtures(data.response);
         } else {
@@ -53,171 +51,168 @@ export default function LeagueFixtures() {
         }
         setLoading(false);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         console.error("Error:", err);
         setError(err.message);
         setLoading(false);
       });
-  }, [selectedLeague, season]);
+  }, [selectedCompetition]);
 
-  // Handle season dropdown change
-  function handleSeasonChange(e) {
-    setSeason(e.target.value);
+  // Handle dropdown changes
+  function handleCompetitionChange(e) {
+    setSelectedCompetition(e.target.value);
   }
 
-  // Handle league dropdown change
-  function handleLeagueChange(e) {
-    setSelectedLeague(e.target.value);
-  }
-
-  // Get league name from ID
-  function getLeagueName(id) {
-    for (let i = 0; i < leagues.length; i++) {
-      if (leagues[i].id === id) {
-        return leagues[i].name;
+  // Get competition display name
+  function getCompetitionName(id) {
+    for (var i = 0; i < competitions.length; i++) {
+      if (competitions[i].id === id) {
+        return competitions[i].name;
       }
     }
-    return "League " + id;
+    return "Competition";
   }
 
   // Format date to readable format
   function formatDate(dateString) {
     if (!dateString) return "TBD";
-    const date = new Date(dateString);
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return date.toLocaleDateString("en-US", options);
+    var date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   }
 
-  // Get status color
+  // Get status badge color
   function getStatusColor(status) {
-    if (status === "FT") {
-      return "bg-gray-600"; // Finished
-    } else if (status === "NS") {
-      return "bg-blue-600"; // Not Started
-    } else {
-      return "bg-red-600"; // Live
-    }
+    if (status === "FT") return "bg-gray-600";
+    if (status === "NS") return "bg-blue-600";
+    return "bg-red-600";
   }
 
-  // Show the page
+  // Get status label
+  function getStatusLabel(status) {
+    if (status === "FT") return "Full Time";
+    if (status === "NS") return "Upcoming";
+    return "Live";
+  }
+
+  // Filter fixtures by status
+  var filteredFixtures = fixtures.filter(function (fixture) {
+    var status = fixture.fixture.status ? fixture.fixture.status.short : "NS";
+    if (statusFilter === "All") return true;
+    if (statusFilter === "FT") return status === "FT";
+    if (statusFilter === "NS") return status === "NS";
+    return true;
+  });
+
   return (
     <div className="w-full max-w-6xl px-2">
       {/* Page Title */}
       <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-4">
-        {getLeagueName(selectedLeague)} Fixtures
+        {getCompetitionName(selectedCompetition)} Fixtures
       </h1>
 
       {/* Dropdowns */}
       <div className="bg-gray-800 p-4 rounded-lg mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* League Dropdown */}
+          {/* Competition Dropdown */}
           <div>
-            <label className="block text-sm text-gray-300 mb-2">Select League:</label>
+            <label className="block text-sm text-gray-300 mb-2">Select Competition:</label>
             <select
-              value={selectedLeague}
-              onChange={handleLeagueChange}
+              value={selectedCompetition}
+              onChange={handleCompetitionChange}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400"
             >
-              {leagues.map(function(league) {
-                return (
-                  <option key={league.id} value={league.id}>
-                    {league.name}
-                  </option>
-                );
-              })}
+              <optgroup label="Domestic Leagues">
+                {competitions.filter(function (c) {
+                  return c.id !== "champions-league" && c.id !== "world-cup-2026";
+                }).map(function (comp) {
+                  return <option key={comp.id} value={comp.id}>{comp.name}</option>;
+                })}
+              </optgroup>
+              <optgroup label="International">
+                <option value="champions-league">Champions League</option>
+                <option value="world-cup-2026">World Cup 2026</option>
+              </optgroup>
             </select>
           </div>
 
-          {/* Season Dropdown */}
+          {/* Status Filter */}
           <div>
-            <label className="block text-sm text-gray-300 mb-2">Select Season:</label>
+            <label className="block text-sm text-gray-300 mb-2">Filter by Status:</label>
             <select
-              value={season}
-              onChange={handleSeasonChange}
+              value={statusFilter}
+              onChange={function (e) { setStatusFilter(e.target.value); }}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 hover:border-cyan-400"
             >
-              <option value="2021">2021-2022</option>
-              <option value="2022">2022-2023</option>
-              <option value="2023">2023-2024</option>
+              <option value="All">All Matches</option>
+              <option value="FT">Completed (FT)</option>
+              <option value="NS">Upcoming (NS)</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Loading Message */}
+      {/* Loading */}
       {loading && (
         <div className="text-center py-8">
           <p className="text-gray-400">Loading fixtures...</p>
         </div>
       )}
 
-      {/* Error Message */}
+      {/* Error */}
       {error && (
         <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4">
           <p>Error: {error}</p>
         </div>
       )}
 
-      {/* Fixtures Cards */}
+      {/* Fixture Cards */}
       {!loading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {fixtures.length === 0 ? (
+          {filteredFixtures.length === 0 ? (
             <div className="col-span-2 text-center py-8 text-gray-400">
-              No fixtures available
+              No fixtures available for this selection
             </div>
           ) : (
-            fixtures.map(function(fixture, index) {
-              // Get match data
-              const match = fixture.fixture;
-              const teams = fixture.teams;
-              const goals = fixture.goals;
-              
-              // Get team names
-              const homeTeam = teams.home ? teams.home.name : "Unknown";
-              const awayTeam = teams.away ? teams.away.name : "Unknown";
-              const homeLogo = teams.home ? teams.home.logo : "";
-              const awayLogo = teams.away ? teams.away.logo : "";
-              
-              // Get scores
-              const homeScore = goals.home !== null ? goals.home : "-";
-              const awayScore = goals.away !== null ? goals.away : "-";
-              
-              // Get status
-              const status = match.status ? match.status.short : "NS";
-              const matchDate = match.date ? formatDate(match.date) : "TBD";
-              
+            filteredFixtures.map(function (fixture, index) {
+              var match = fixture.fixture;
+              var teams = fixture.teams;
+              var goals = fixture.goals;
+              var round = fixture.round || "";
+
+              var homeTeam = teams.home ? teams.home.name : "Unknown";
+              var awayTeam = teams.away ? teams.away.name : "Unknown";
+              var homeScore = goals.home !== null ? goals.home : "-";
+              var awayScore = goals.away !== null ? goals.away : "-";
+              var status = match.status ? match.status.short : "NS";
+              var matchDate = formatDate(match.date);
+
               return (
                 <div
                   key={match.id || index}
                   className="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition"
                 >
+                  {/* Round info */}
+                  {round && (
+                    <p className="text-xs text-cyan-400 mb-2 font-semibold">{round}</p>
+                  )}
+
                   {/* Date and Status */}
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-xs text-gray-400">{matchDate}</span>
                     <span className={"text-xs px-2 py-1 rounded " + getStatusColor(status)}>
-                      {status}
+                      {getStatusLabel(status)}
                     </span>
                   </div>
 
                   {/* Home Team */}
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center">
-                      {homeLogo && (
-                        <img src={homeLogo} alt={homeTeam} className="h-8 w-8 mr-3" />
-                      )}
-                      <span>{homeTeam}</span>
-                    </div>
+                    <span className="font-semibold">{homeTeam}</span>
                     <span className="text-xl font-bold text-cyan-400">{homeScore}</span>
                   </div>
 
                   {/* Away Team */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      {awayLogo && (
-                        <img src={awayLogo} alt={awayTeam} className="h-8 w-8 mr-3" />
-                      )}
-                      <span>{awayTeam}</span>
-                    </div>
+                    <span className="font-semibold">{awayTeam}</span>
                     <span className="text-xl font-bold text-cyan-400">{awayScore}</span>
                   </div>
                 </div>

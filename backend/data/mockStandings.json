@@ -1,0 +1,92 @@
+{
+  "Premier League": [
+    { "rank": 1, "team": "Liverpool", "played": 26, "won": 19, "draw": 5, "lost": 2, "goalsFor": 58, "goalsAgainst": 22, "goalDifference": 36, "points": 62 },
+    { "rank": 2, "team": "Arsenal", "played": 26, "won": 17, "draw": 6, "lost": 3, "goalsFor": 52, "goalsAgainst": 24, "goalDifference": 28, "points": 57 },
+    { "rank": 3, "team": "Manchester City", "played": 26, "won": 16, "draw": 5, "lost": 5, "goalsFor": 55, "goalsAgainst": 28, "goalDifference": 27, "points": 53 },
+    { "rank": 4, "team": "Chelsea", "played": 26, "won": 14, "draw": 7, "lost": 5, "goalsFor": 48, "goalsAgainst": 30, "goalDifference": 18, "points": 49 },
+    { "rank": 5, "team": "Aston Villa", "played": 26, "won": 13, "draw": 6, "lost": 7, "goalsFor": 42, "goalsAgainst": 34, "goalDifference": 8, "points": 45 },
+    { "rank": 6, "team": "Tottenham", "played": 26, "won": 12, "draw": 5, "lost": 9, "goalsFor": 45, "goalsAgainst": 38, "goalDifference": 7, "points": 41 },
+    { "rank": 7, "team": "Manchester United", "played": 26, "won": 11, "draw": 6, "lost": 9, "goalsFor": 38, "goalsAgainst": 35, "goalDifference": 3, "points": 39 },
+    { "rank": 8, "team": "Newcastle United", "played": 26, "won": 10, "draw": 8, "lost": 8, "goalsFor": 36, "goalsAgainst": 32, "goalDifference": 4, "points": 38 },
+    { "rank": 9, "team": "Brighton", "played": 26, "won": 10, "draw": 7, "lost": 9, "goalsFor": 38, "goalsAgainst": 37, "goalDifference": 1, "points": 37 },
+    { "rank": 10, "team": "Bournemouth", "played": 26, "won": 10, "draw": 6, "lost": 10, "goalsFor": 35, "goalsAgainst": 36, "goalDifference": -1, "points": 36 },
+    { "rank": 11, "team": "Fulham", "played": 26, "won": 9, "draw": 8, "lost": 9, "goalsFor": 33, "goalsAgainst": 34, "goalDifference": -1, "points": 35 },
+    { "rank": 12, "team": "West Ham", "played": 26, "won": 9, "draw": 6, "lost": 11, "goalsFor": 32, "goalsAgainst": 40, "goalDifference": -8, "points": 33 },
+    { "rank": 13, "team": "Brentford", "played": 26, "won": 8, "draw": 8, "lost": 10, "goalsFor": 36, "goalsAgainst": 39, "goalDifference": -3, "points": 32 },
+    { "rank": 14, "team": "Crystal Palace", "played": 26, "won": 7, "draw": 10, "lost": 9, "goalsFor": 28, "goalsAgainst": 33, "goalDifference": -5, "points": 31 },
+    { "rank": 15, "team": "Nottingham Forest", "played": 26, "won": 8, "draw": 6, "lost": 12, "goalsFor": 30, "goalsAgainst": 38, "goalDifference": -8, "points": 30 },
+    { "rank": 16, "team": "Wolves", "played": 26, "won": 7, "draw": 7, "lost": 12, "goalsFor": 28, "goalsAgainst": 42, "goalDifference": -14, "points": 28 },
+    { "rank": 17, "team": "Everton", "played": 26, "won": 6, "draw": 8, "lost": 12, "goalsFor": 24, "goalsAgainst": 38, "goalDifference": -14, "points": 26 },
+    { "rank": 18, "team": "Leicester City", "played": 26, "won": 5, "draw": 7, "lost": 14, "goalsFor": 25, "goalsAgainst": 45, "goalDifference": -20, "points": 22 },
+    { "rank": 19, "team": "Ipswich Town", "played": 26, "won": 4, "draw": 6, "lost": 16, "goalsFor": 20, "goalsAgainst": 48, "goalDifference": -28, "points": 18 },
+    { "rank": 20, "team": "Southampton", "played": 26, "won": 3, "draw": 5, "lost": 18, "goalsFor": 18, "goalsAgainst": 52, "goalDifference": -34, "points": 14 }
+  ],
+  "La Liga": [
+    { "rank": 1, "team": "Real Madrid", "played": 26, "won": 18, "draw": 4, "lost": 4, "goalsFor": 54, "goalsAgainst": 22, "goalDifference": 32, "points": 58 },
+    { "rank": 2, "team": "Barcelona", "played": 26, "won": 17, "draw": 5, "lost": 4, "goalsFor": 56, "goalsAgainst": 28, "goalDifference": 28, "points": 56 },
+    { "rank": 3, "team": "Atletico Madrid", "played": 26, "won": 16, "draw": 6, "lost": 4, "goalsFor": 44, "goalsAgainst": 20, "goalDifference": 24, "points": 54 },
+    { "rank": 4, "team": "Athletic Bilbao", "played": 26, "won": 13, "draw": 7, "lost": 6, "goalsFor": 38, "goalsAgainst": 26, "goalDifference": 12, "points": 46 },
+    { "rank": 5, "team": "Villarreal", "played": 26, "won": 12, "draw": 8, "lost": 6, "goalsFor": 40, "goalsAgainst": 30, "goalDifference": 10, "points": 44 },
+    { "rank": 6, "team": "Real Sociedad", "played": 26, "won": 12, "draw": 6, "lost": 8, "goalsFor": 35, "goalsAgainst": 30, "goalDifference": 5, "points": 42 },
+    { "rank": 7, "team": "Real Betis", "played": 26, "won": 11, "draw": 7, "lost": 8, "goalsFor": 34, "goalsAgainst": 32, "goalDifference": 2, "points": 40 },
+    { "rank": 8, "team": "Girona", "played": 26, "won": 10, "draw": 6, "lost": 10, "goalsFor": 36, "goalsAgainst": 36, "goalDifference": 0, "points": 36 },
+    { "rank": 9, "team": "Osasuna", "played": 26, "won": 9, "draw": 8, "lost": 9, "goalsFor": 30, "goalsAgainst": 32, "goalDifference": -2, "points": 35 },
+    { "rank": 10, "team": "Sevilla", "played": 26, "won": 9, "draw": 7, "lost": 10, "goalsFor": 28, "goalsAgainst": 34, "goalDifference": -6, "points": 34 }
+  ],
+  "Bundesliga": [
+    { "rank": 1, "team": "Bayern Munich", "played": 24, "won": 18, "draw": 3, "lost": 3, "goalsFor": 62, "goalsAgainst": 22, "goalDifference": 40, "points": 57 },
+    { "rank": 2, "team": "Borussia Dortmund", "played": 24, "won": 14, "draw": 5, "lost": 5, "goalsFor": 48, "goalsAgainst": 30, "goalDifference": 18, "points": 47 },
+    { "rank": 3, "team": "Bayer Leverkusen", "played": 24, "won": 13, "draw": 6, "lost": 5, "goalsFor": 44, "goalsAgainst": 28, "goalDifference": 16, "points": 45 },
+    { "rank": 4, "team": "RB Leipzig", "played": 24, "won": 12, "draw": 5, "lost": 7, "goalsFor": 40, "goalsAgainst": 32, "goalDifference": 8, "points": 41 },
+    { "rank": 5, "team": "Stuttgart", "played": 24, "won": 11, "draw": 6, "lost": 7, "goalsFor": 42, "goalsAgainst": 34, "goalDifference": 8, "points": 39 },
+    { "rank": 6, "team": "Eintracht Frankfurt", "played": 24, "won": 11, "draw": 5, "lost": 8, "goalsFor": 38, "goalsAgainst": 32, "goalDifference": 6, "points": 38 },
+    { "rank": 7, "team": "Freiburg", "played": 24, "won": 10, "draw": 6, "lost": 8, "goalsFor": 34, "goalsAgainst": 30, "goalDifference": 4, "points": 36 },
+    { "rank": 8, "team": "Wolfsburg", "played": 24, "won": 9, "draw": 7, "lost": 8, "goalsFor": 32, "goalsAgainst": 32, "goalDifference": 0, "points": 34 },
+    { "rank": 9, "team": "Werder Bremen", "played": 24, "won": 8, "draw": 6, "lost": 10, "goalsFor": 30, "goalsAgainst": 36, "goalDifference": -6, "points": 30 },
+    { "rank": 10, "team": "Union Berlin", "played": 24, "won": 7, "draw": 7, "lost": 10, "goalsFor": 26, "goalsAgainst": 34, "goalDifference": -8, "points": 28 }
+  ],
+  "Serie A": [
+    { "rank": 1, "team": "Inter Milan", "played": 26, "won": 19, "draw": 4, "lost": 3, "goalsFor": 56, "goalsAgainst": 20, "goalDifference": 36, "points": 61 },
+    { "rank": 2, "team": "Napoli", "played": 26, "won": 17, "draw": 5, "lost": 4, "goalsFor": 48, "goalsAgainst": 24, "goalDifference": 24, "points": 56 },
+    { "rank": 3, "team": "AC Milan", "played": 26, "won": 14, "draw": 7, "lost": 5, "goalsFor": 44, "goalsAgainst": 28, "goalDifference": 16, "points": 49 },
+    { "rank": 4, "team": "Juventus", "played": 26, "won": 13, "draw": 8, "lost": 5, "goalsFor": 40, "goalsAgainst": 26, "goalDifference": 14, "points": 47 },
+    { "rank": 5, "team": "Atalanta", "played": 26, "won": 13, "draw": 6, "lost": 7, "goalsFor": 46, "goalsAgainst": 32, "goalDifference": 14, "points": 45 },
+    { "rank": 6, "team": "Lazio", "played": 26, "won": 12, "draw": 6, "lost": 8, "goalsFor": 38, "goalsAgainst": 30, "goalDifference": 8, "points": 42 },
+    { "rank": 7, "team": "Roma", "played": 26, "won": 11, "draw": 7, "lost": 8, "goalsFor": 36, "goalsAgainst": 32, "goalDifference": 4, "points": 40 },
+    { "rank": 8, "team": "Fiorentina", "played": 26, "won": 10, "draw": 8, "lost": 8, "goalsFor": 34, "goalsAgainst": 30, "goalDifference": 4, "points": 38 },
+    { "rank": 9, "team": "Bologna", "played": 26, "won": 9, "draw": 8, "lost": 9, "goalsFor": 30, "goalsAgainst": 32, "goalDifference": -2, "points": 35 },
+    { "rank": 10, "team": "Torino", "played": 26, "won": 8, "draw": 9, "lost": 9, "goalsFor": 28, "goalsAgainst": 30, "goalDifference": -2, "points": 33 }
+  ],
+  "Ligue 1": [
+    { "rank": 1, "team": "Paris Saint-Germain", "played": 26, "won": 20, "draw": 3, "lost": 3, "goalsFor": 60, "goalsAgainst": 18, "goalDifference": 42, "points": 63 },
+    { "rank": 2, "team": "AS Monaco", "played": 26, "won": 15, "draw": 5, "lost": 6, "goalsFor": 44, "goalsAgainst": 28, "goalDifference": 16, "points": 50 },
+    { "rank": 3, "team": "Marseille", "played": 26, "won": 14, "draw": 6, "lost": 6, "goalsFor": 42, "goalsAgainst": 26, "goalDifference": 16, "points": 48 },
+    { "rank": 4, "team": "Lille", "played": 26, "won": 13, "draw": 7, "lost": 6, "goalsFor": 38, "goalsAgainst": 24, "goalDifference": 14, "points": 46 },
+    { "rank": 5, "team": "Lyon", "played": 26, "won": 12, "draw": 6, "lost": 8, "goalsFor": 40, "goalsAgainst": 32, "goalDifference": 8, "points": 42 },
+    { "rank": 6, "team": "Lens", "played": 26, "won": 11, "draw": 8, "lost": 7, "goalsFor": 34, "goalsAgainst": 28, "goalDifference": 6, "points": 41 },
+    { "rank": 7, "team": "Brest", "played": 26, "won": 10, "draw": 7, "lost": 9, "goalsFor": 32, "goalsAgainst": 30, "goalDifference": 2, "points": 37 },
+    { "rank": 8, "team": "Nice", "played": 26, "won": 9, "draw": 9, "lost": 8, "goalsFor": 30, "goalsAgainst": 28, "goalDifference": 2, "points": 36 },
+    { "rank": 9, "team": "Rennes", "played": 26, "won": 8, "draw": 8, "lost": 10, "goalsFor": 28, "goalsAgainst": 32, "goalDifference": -4, "points": 32 },
+    { "rank": 10, "team": "Strasbourg", "played": 26, "won": 7, "draw": 9, "lost": 10, "goalsFor": 26, "goalsAgainst": 34, "goalDifference": -8, "points": 30 }
+  ],
+  "Champions League": [
+    { "rank": 1, "team": "Liverpool", "played": 8, "won": 7, "draw": 1, "lost": 0, "goalsFor": 18, "goalsAgainst": 4, "goalDifference": 14, "points": 22 },
+    { "rank": 2, "team": "Barcelona", "played": 8, "won": 6, "draw": 1, "lost": 1, "goalsFor": 20, "goalsAgainst": 8, "goalDifference": 12, "points": 19 },
+    { "rank": 3, "team": "Arsenal", "played": 8, "won": 5, "draw": 2, "lost": 1, "goalsFor": 14, "goalsAgainst": 5, "goalDifference": 9, "points": 17 },
+    { "rank": 4, "team": "Inter Milan", "played": 8, "won": 5, "draw": 2, "lost": 1, "goalsFor": 12, "goalsAgainst": 4, "goalDifference": 8, "points": 17 },
+    { "rank": 5, "team": "Bayern Munich", "played": 8, "won": 5, "draw": 1, "lost": 2, "goalsFor": 16, "goalsAgainst": 8, "goalDifference": 8, "points": 16 },
+    { "rank": 6, "team": "Real Madrid", "played": 8, "won": 4, "draw": 3, "lost": 1, "goalsFor": 13, "goalsAgainst": 7, "goalDifference": 6, "points": 15 },
+    { "rank": 7, "team": "Paris Saint-Germain", "played": 8, "won": 4, "draw": 2, "lost": 2, "goalsFor": 11, "goalsAgainst": 8, "goalDifference": 3, "points": 14 },
+    { "rank": 8, "team": "Borussia Dortmund", "played": 8, "won": 4, "draw": 2, "lost": 2, "goalsFor": 12, "goalsAgainst": 10, "goalDifference": 2, "points": 14 }
+  ],
+  "World Cup 2026": [
+    { "rank": 1, "team": "Brazil", "played": 3, "won": 3, "draw": 0, "lost": 0, "goalsFor": 8, "goalsAgainst": 2, "goalDifference": 6, "points": 9 },
+    { "rank": 2, "team": "France", "played": 3, "won": 2, "draw": 1, "lost": 0, "goalsFor": 7, "goalsAgainst": 3, "goalDifference": 4, "points": 7 },
+    { "rank": 3, "team": "England", "played": 3, "won": 2, "draw": 1, "lost": 0, "goalsFor": 5, "goalsAgainst": 1, "goalDifference": 4, "points": 7 },
+    { "rank": 4, "team": "Argentina", "played": 3, "won": 2, "draw": 0, "lost": 1, "goalsFor": 6, "goalsAgainst": 3, "goalDifference": 3, "points": 6 },
+    { "rank": 5, "team": "Germany", "played": 3, "won": 2, "draw": 0, "lost": 1, "goalsFor": 5, "goalsAgainst": 3, "goalDifference": 2, "points": 6 },
+    { "rank": 6, "team": "Spain", "played": 3, "won": 1, "draw": 2, "lost": 0, "goalsFor": 4, "goalsAgainst": 2, "goalDifference": 2, "points": 5 },
+    { "rank": 7, "team": "Portugal", "played": 3, "won": 1, "draw": 1, "lost": 1, "goalsFor": 4, "goalsAgainst": 4, "goalDifference": 0, "points": 4 },
+    { "rank": 8, "team": "Netherlands", "played": 3, "won": 1, "draw": 1, "lost": 1, "goalsFor": 3, "goalsAgainst": 3, "goalDifference": 0, "points": 4 }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "Premier League": [
+    { "id": 1001, "home": "Arsenal", "away": "Liverpool", "homeScore": 2, "awayScore": 2, "date": "2026-02-22", "status": "FT", "round": "Matchday 27" },
+    { "id": 1002, "home": "Manchester City", "away": "Chelsea", "homeScore": 3, "awayScore": 1, "date": "2026-02-22", "status": "FT", "round": "Matchday 27" },
+    { "id": 1003, "home": "Tottenham", "away": "Aston Villa", "homeScore": 1, "awayScore": 0, "date": "2026-02-23", "status": "FT", "round": "Matchday 27" },
+    { "id": 1004, "home": "Manchester United", "away": "Newcastle United", "homeScore": 2, "awayScore": 1, "date": "2026-02-23", "status": "FT", "round": "Matchday 27" },
+    { "id": 1005, "home": "Brighton", "away": "West Ham", "homeScore": 1, "awayScore": 1, "date": "2026-02-23", "status": "FT", "round": "Matchday 27" },
+    { "id": 1006, "home": "Liverpool", "away": "Manchester City", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 28" },
+    { "id": 1007, "home": "Chelsea", "away": "Arsenal", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 28" },
+    { "id": 1008, "home": "Aston Villa", "away": "Manchester United", "homeScore": null, "awayScore": null, "date": "2026-03-02", "status": "NS", "round": "Matchday 28" },
+    { "id": 1009, "home": "Newcastle United", "away": "Tottenham", "homeScore": null, "awayScore": null, "date": "2026-03-02", "status": "NS", "round": "Matchday 28" },
+    { "id": 1010, "home": "West Ham", "away": "Bournemouth", "homeScore": null, "awayScore": null, "date": "2026-03-02", "status": "NS", "round": "Matchday 28" }
+  ],
+  "La Liga": [
+    { "id": 2001, "home": "Real Madrid", "away": "Barcelona", "homeScore": 2, "awayScore": 1, "date": "2026-02-21", "status": "FT", "round": "Matchday 26" },
+    { "id": 2002, "home": "Atletico Madrid", "away": "Villarreal", "homeScore": 1, "awayScore": 0, "date": "2026-02-22", "status": "FT", "round": "Matchday 26" },
+    { "id": 2003, "home": "Real Sociedad", "away": "Athletic Bilbao", "homeScore": 1, "awayScore": 1, "date": "2026-02-22", "status": "FT", "round": "Matchday 26" },
+    { "id": 2004, "home": "Sevilla", "away": "Real Betis", "homeScore": 0, "awayScore": 2, "date": "2026-02-23", "status": "FT", "round": "Matchday 26" },
+    { "id": 2005, "home": "Barcelona", "away": "Atletico Madrid", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 27" },
+    { "id": 2006, "home": "Villarreal", "away": "Real Madrid", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 27" },
+    { "id": 2007, "home": "Athletic Bilbao", "away": "Girona", "homeScore": null, "awayScore": null, "date": "2026-03-02", "status": "NS", "round": "Matchday 27" },
+    { "id": 2008, "home": "Real Betis", "away": "Real Sociedad", "homeScore": null, "awayScore": null, "date": "2026-03-02", "status": "NS", "round": "Matchday 27" }
+  ],
+  "Bundesliga": [
+    { "id": 3001, "home": "Bayern Munich", "away": "Borussia Dortmund", "homeScore": 3, "awayScore": 2, "date": "2026-02-21", "status": "FT", "round": "Matchday 23" },
+    { "id": 3002, "home": "Bayer Leverkusen", "away": "RB Leipzig", "homeScore": 2, "awayScore": 2, "date": "2026-02-22", "status": "FT", "round": "Matchday 23" },
+    { "id": 3003, "home": "Stuttgart", "away": "Eintracht Frankfurt", "homeScore": 1, "awayScore": 0, "date": "2026-02-22", "status": "FT", "round": "Matchday 23" },
+    { "id": 3004, "home": "Freiburg", "away": "Wolfsburg", "homeScore": 2, "awayScore": 1, "date": "2026-02-23", "status": "FT", "round": "Matchday 23" },
+    { "id": 3005, "home": "Borussia Dortmund", "away": "Bayer Leverkusen", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 24" },
+    { "id": 3006, "home": "RB Leipzig", "away": "Bayern Munich", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 24" }
+  ],
+  "Serie A": [
+    { "id": 4001, "home": "Inter Milan", "away": "AC Milan", "homeScore": 2, "awayScore": 0, "date": "2026-02-22", "status": "FT", "round": "Matchday 27" },
+    { "id": 4002, "home": "Napoli", "away": "Juventus", "homeScore": 3, "awayScore": 1, "date": "2026-02-22", "status": "FT", "round": "Matchday 27" },
+    { "id": 4003, "home": "Roma", "away": "Lazio", "homeScore": 1, "awayScore": 1, "date": "2026-02-23", "status": "FT", "round": "Matchday 27" },
+    { "id": 4004, "home": "Atalanta", "away": "Fiorentina", "homeScore": 2, "awayScore": 1, "date": "2026-02-23", "status": "FT", "round": "Matchday 27" },
+    { "id": 4005, "home": "Juventus", "away": "Inter Milan", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 28" },
+    { "id": 4006, "home": "AC Milan", "away": "Napoli", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 28" }
+  ],
+  "Ligue 1": [
+    { "id": 5001, "home": "Paris Saint-Germain", "away": "Marseille", "homeScore": 3, "awayScore": 0, "date": "2026-02-22", "status": "FT", "round": "Matchday 26" },
+    { "id": 5002, "home": "AS Monaco", "away": "Lyon", "homeScore": 2, "awayScore": 1, "date": "2026-02-22", "status": "FT", "round": "Matchday 26" },
+    { "id": 5003, "home": "Lille", "away": "Lens", "homeScore": 1, "awayScore": 0, "date": "2026-02-23", "status": "FT", "round": "Matchday 26" },
+    { "id": 5004, "home": "Marseille", "away": "Lille", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 27" },
+    { "id": 5005, "home": "Lyon", "away": "Paris Saint-Germain", "homeScore": null, "awayScore": null, "date": "2026-03-01", "status": "NS", "round": "Matchday 27" }
+  ],
+  "Champions League": [
+    { "id": 6001, "home": "Real Madrid", "away": "Liverpool", "homeScore": 1, "awayScore": 2, "date": "2026-02-18", "status": "FT", "round": "Round of 16 - Leg 1" },
+    { "id": 6002, "home": "Bayern Munich", "away": "Arsenal", "homeScore": 1, "awayScore": 1, "date": "2026-02-18", "status": "FT", "round": "Round of 16 - Leg 1" },
+    { "id": 6003, "home": "Paris Saint-Germain", "away": "Inter Milan", "homeScore": 2, "awayScore": 0, "date": "2026-02-19", "status": "FT", "round": "Round of 16 - Leg 1" },
+    { "id": 6004, "home": "Barcelona", "away": "Borussia Dortmund", "homeScore": 3, "awayScore": 1, "date": "2026-02-19", "status": "FT", "round": "Round of 16 - Leg 1" },
+    { "id": 6005, "home": "Liverpool", "away": "Real Madrid", "homeScore": null, "awayScore": null, "date": "2026-03-11", "status": "NS", "round": "Round of 16 - Leg 2" },
+    { "id": 6006, "home": "Arsenal", "away": "Bayern Munich", "homeScore": null, "awayScore": null, "date": "2026-03-11", "status": "NS", "round": "Round of 16 - Leg 2" },
+    { "id": 6007, "home": "Inter Milan", "away": "Paris Saint-Germain", "homeScore": null, "awayScore": null, "date": "2026-03-12", "status": "NS", "round": "Round of 16 - Leg 2" },
+    { "id": 6008, "home": "Borussia Dortmund", "away": "Barcelona", "homeScore": null, "awayScore": null, "date": "2026-03-12", "status": "NS", "round": "Round of 16 - Leg 2" }
+  ],
+  "World Cup 2026": [
+    { "id": 7001, "home": "USA", "away": "Mexico", "homeScore": 2, "awayScore": 1, "date": "2026-06-11", "status": "FT", "round": "Group A - Matchday 1" },
+    { "id": 7002, "home": "Brazil", "away": "Serbia", "homeScore": 3, "awayScore": 0, "date": "2026-06-12", "status": "FT", "round": "Group B - Matchday 1" },
+    { "id": 7003, "home": "England", "away": "Japan", "homeScore": 2, "awayScore": 0, "date": "2026-06-12", "status": "FT", "round": "Group C - Matchday 1" },
+    { "id": 7004, "home": "France", "away": "South Korea", "homeScore": 3, "awayScore": 1, "date": "2026-06-13", "status": "FT", "round": "Group D - Matchday 1" },
+    { "id": 7005, "home": "Argentina", "away": "Nigeria", "homeScore": 2, "awayScore": 1, "date": "2026-06-13", "status": "FT", "round": "Group E - Matchday 1" },
+    { "id": 7006, "home": "Germany", "away": "Canada", "homeScore": 2, "awayScore": 0, "date": "2026-06-14", "status": "FT", "round": "Group F - Matchday 1" },
+    { "id": 7007, "home": "Spain", "away": "Morocco", "homeScore": 1, "awayScore": 1, "date": "2026-06-14", "status": "FT", "round": "Group G - Matchday 1" },
+    { "id": 7008, "home": "Portugal", "away": "Australia", "homeScore": 3, "awayScore": 1, "date": "2026-06-15", "status": "FT", "round": "Group H - Matchday 1" }
+  ]
+}

@@ -1,8 +1,22 @@
 [
   { "id": 1, "name": "Real Madrid", "attack": 92, "defense": 88, "form": 5 },
-  { "id": 2, "name": "Manchester City", "attack": 90, "defense": 89, "form": 4 },
-  { "id": 3, "name": "Al Nassr", "attack": 85, "defense": 80, "form": 4 },
-  { "id": 4, "name": "Galatasaray", "attack": 79, "defense": 78, "form": 3 },
-  { "id": 5, "name": "Bayern Munich", "attack": 87, "defense": 84, "form": 2 },
-  { "id": 6, "name": "Napoli", "attack": 82, "defense": 81, "form": 3 }
+  { "id": 2, "name": "Barcelona", "attack": 90, "defense": 84, "form": 4 },
+  { "id": 3, "name": "Manchester City", "attack": 91, "defense": 86, "form": 4 },
+  { "id": 4, "name": "Arsenal", "attack": 88, "defense": 89, "form": 5 },
+  { "id": 5, "name": "Liverpool", "attack": 89, "defense": 87, "form": 5 },
+  { "id": 6, "name": "Chelsea", "attack": 84, "defense": 82, "form": 4 },
+  { "id": 7, "name": "Bayern Munich", "attack": 93, "defense": 85, "form": 5 },
+  { "id": 8, "name": "Borussia Dortmund", "attack": 84, "defense": 78, "form": 4 },
+  { "id": 9, "name": "Inter Milan", "attack": 85, "defense": 90, "form": 5 },
+  { "id": 10, "name": "AC Milan", "attack": 83, "defense": 80, "form": 3 },
+  { "id": 11, "name": "Juventus", "attack": 80, "defense": 84, "form": 3 },
+  { "id": 12, "name": "Napoli", "attack": 84, "defense": 82, "form": 4 },
+  { "id": 13, "name": "Paris Saint-Germain", "attack": 88, "defense": 83, "form": 5 },
+  { "id": 14, "name": "Manchester United", "attack": 80, "defense": 78, "form": 3 },
+  { "id": 15, "name": "Tottenham", "attack": 82, "defense": 76, "form": 3 },
+  { "id": 16, "name": "Aston Villa", "attack": 79, "defense": 80, "form": 4 },
+  { "id": 17, "name": "Atletico Madrid", "attack": 82, "defense": 88, "form": 4 },
+  { "id": 18, "name": "Bayer Leverkusen", "attack": 81, "defense": 80, "form": 3 },
+  { "id": 19, "name": "Al Nassr", "attack": 78, "defense": 72, "form": 4 },
+  { "id": 20, "name": "Al Ittihad", "attack": 76, "defense": 70, "form": 3 }
 ]

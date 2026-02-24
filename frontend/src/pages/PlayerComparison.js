@@ -3,6 +3,7 @@
 // ========================================
 // This page allows users to select two players and compare their stats.
 // The higher stat value is highlighted in green for easy comparison.
+// Uses the 200-player mock dataset for a wide range of comparisons.
 
 import { useEffect, useState } from "react";
 
@@ -15,124 +16,92 @@ export default function PlayerComparison() {
   // State for selected players (null means not selected yet)
   const [playerA, setPlayerA] = useState(null);
   const [playerB, setPlayerB] = useState(null);
+  // Search filters for each dropdown
+  const [searchA, setSearchA] = useState("");
+  const [searchB, setSearchB] = useState("");
 
-  // Fetch players when component loads
-  useEffect(() => {
-    async function fetchPlayers() {
-      try {
-        const res = await fetch(`${API_BASE}/api/players`);
-        const data = await res.json();
-        setPlayers(data);
-      } catch (err) {
-        console.error("Error loading players:", err);
-      }
-    }
-    fetchPlayers();
+  // Fetch the full 200-player mock dataset
+  useEffect(function () {
+    fetch(API_BASE + "/api/insights/players")
+      .then(function (res) { return res.json(); })
+      .then(function (data) { setPlayers(data); })
+      .catch(function (err) { console.error("Error loading players:", err); });
   }, []);
 
   // Handle dropdown selection for Player A
-  const handleSelectA = (e) => {
-    const id = parseInt(e.target.value);
-    const selected = players.find((p) => p.id === id);
+  function handleSelectA(e) {
+    var id = parseInt(e.target.value);
+    var selected = players.find(function (p) { return p.id === id; });
     setPlayerA(selected || null);
-  };
+  }
 
   // Handle dropdown selection for Player B
-  const handleSelectB = (e) => {
-    const id = parseInt(e.target.value);
-    const selected = players.find((p) => p.id === id);
+  function handleSelectB(e) {
+    var id = parseInt(e.target.value);
+    var selected = players.find(function (p) { return p.id === id; });
     setPlayerB(selected || null);
-  };
+  }
 
   // Compare two values and return which one is higher
-  // Returns: "A" if valueA is higher, "B" if valueB is higher, "tie" if equal
-  const compareStats = (valueA, valueB) => {
+  function compareStats(valueA, valueB) {
     if (valueA > valueB) return "A";
     if (valueB > valueA) return "B";
     return "tie";
-  };
+  }
 
   // ========================================
   // getPlaystyle - Determine player's playing style
   // ========================================
-  // This function looks at a player's stats and returns a label
-  // describing how they play. It uses simple if/else logic.
-  const getPlaystyle = (player) => {
-    // Step 1: Calculate some useful numbers
-    // goalsPerShot = what percentage of shots become goals
-    const goalsPerShot = player.goals / player.shots;
-    
-    // assistRatio = what percentage of their output is assists
-    const totalOutput = player.goals + player.assists;
-    const assistRatio = player.assists / totalOutput;
+  function getPlaystyle(player) {
+    if (player.position === "Goalkeeper") return "Shot Stopper";
 
-    // Step 2: Check conditions from most specific to least specific
-
-    // If player scores lots of goals efficiently = Clinical Finisher
-    if (player.goals >= 15 && goalsPerShot > 0.2) {
+    if (player.goals >= 15 && player.shots > 0 && (player.goals / player.shots) > 0.15) {
       return "Clinical Finisher";
     }
-
-    // If player has many assists and high expected assists = Creative Playmaker
-    if (player.assists >= 10 && player.xA > 5) {
+    if (player.assists >= 10 && player.keyPasses >= 40) {
       return "Creative Playmaker";
     }
-
-    // If player takes lots of shots but doesn't score much = High-Volume Shooter
-    if (player.shots >= 60 && goalsPerShot < 0.15) {
-      return "High-Volume Shooter";
+    if (player.tackles >= 70 && player.interceptions >= 50) {
+      return "Defensive Rock";
     }
-
-    // If more than half their output is assists = Team Playmaker
-    if (assistRatio > 0.5) {
-      return "Team Playmaker";
+    if (player.dribbles >= 60 && player.goals >= 8) {
+      return "Skillful Attacker";
     }
-
-    // If player scores often per 90 minutes = Direct Goal Scorer
-    if (player.per90.goals >= 0.7) {
-      return "Direct Goal Scorer";
+    if (player.passes >= 1800 && player.position === "Midfielder") {
+      return "Deep-Lying Playmaker";
     }
-
-    // If player has decent goals AND assists = All-Round Attacker
     if (player.goals >= 8 && player.assists >= 5) {
       return "All-Round Attacker";
     }
-
-    // Step 3: Default labels based on position
-    if (player.position === "Forward") {
-      return "Goal-Focused Forward";
-    }
-    
-    if (player.position === "Midfielder") {
-      return "Box-to-Box Midfielder";
-    }
-
-    // If nothing else matches
+    if (player.position === "Forward") return "Goal-Focused Forward";
+    if (player.position === "Midfielder") return "Box-to-Box Midfielder";
+    if (player.position === "Defender") return "Solid Defender";
     return "Versatile Player";
-  };
+  }
+
+  // Filter players by search text
+  var filteredA = players.filter(function (p) {
+    return p.name.toLowerCase().includes(searchA.toLowerCase());
+  });
+  var filteredB = players.filter(function (p) {
+    return p.name.toLowerCase().includes(searchB.toLowerCase());
+  });
 
   // Render a single stat row with highlighting
-  // statName: display name, valueA: player A's value, valueB: player B's value
-  const StatRow = ({ statName, valueA, valueB }) => {
-    const winner = compareStats(valueA, valueB);
-
+  function StatRow({ statName, valueA, valueB }) {
+    var winner = compareStats(valueA, valueB);
     return (
       <div className="flex justify-between items-center py-2 border-b border-gray-700">
-        {/* Player A value - green if higher */}
-        <span className={`w-1/3 text-left ${winner === "A" ? "text-green-400 font-bold" : ""}`}>
+        <span className={"w-1/3 text-left " + (winner === "A" ? "text-green-400 font-bold" : "")}>
           {valueA}
         </span>
-
-        {/* Stat name in the middle */}
         <span className="w-1/3 text-center text-gray-400">{statName}</span>
-
-        {/* Player B value - green if higher */}
-        <span className={`w-1/3 text-right ${winner === "B" ? "text-green-400 font-bold" : ""}`}>
+        <span className={"w-1/3 text-right " + (winner === "B" ? "text-green-400 font-bold" : "")}>
           {valueB}
         </span>
       </div>
     );
-  };
+  }
 
   return (
     <div className="w-full max-w-4xl px-2">
@@ -142,20 +111,29 @@ export default function PlayerComparison() {
 
       {/* Player Selection Dropdowns */}
       <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 mb-8">
-        {/* Player A Dropdown */}
+        {/* Player A */}
         <div className="flex-1">
           <label className="block mb-2 text-sm text-gray-400">Select Player A</label>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchA}
+            onChange={function (e) { setSearchA(e.target.value); }}
+            className="w-full p-2 mb-2 rounded bg-gray-700 border border-gray-600 text-sm"
+          />
           <select
             onChange={handleSelectA}
             className="w-full p-3 rounded bg-gray-800 border border-gray-600 focus:border-cyan-400 focus:outline-none"
             defaultValue=""
           >
             <option value="" disabled>Choose a player</option>
-            {players.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.name} ({player.team})
-              </option>
-            ))}
+            {filteredA.map(function (player) {
+              return (
+                <option key={player.id} value={player.id}>
+                  {player.name} ({player.team})
+                </option>
+              );
+            })}
           </select>
         </div>
 
@@ -164,28 +142,37 @@ export default function PlayerComparison() {
           <span className="text-2xl font-bold text-gray-500">VS</span>
         </div>
 
-        {/* Player B Dropdown */}
+        {/* Player B */}
         <div className="flex-1">
           <label className="block mb-2 text-sm text-gray-400">Select Player B</label>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchB}
+            onChange={function (e) { setSearchB(e.target.value); }}
+            className="w-full p-2 mb-2 rounded bg-gray-700 border border-gray-600 text-sm"
+          />
           <select
             onChange={handleSelectB}
             className="w-full p-3 rounded bg-gray-800 border border-gray-600 focus:border-cyan-400 focus:outline-none"
             defaultValue=""
           >
             <option value="" disabled>Choose a player</option>
-            {players.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.name} ({player.team})
-              </option>
-            ))}
+            {filteredB.map(function (player) {
+              return (
+                <option key={player.id} value={player.id}>
+                  {player.name} ({player.team})
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>
 
-      {/* Comparison Results - Only show when both players are selected */}
+      {/* Comparison Results */}
       {playerA && playerB && (
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-          {/* Player Names Header with Playstyle */}
+          {/* Player Names + Playstyle */}
           <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-600">
             <div className="w-1/3 text-left">
               <h2 className="text-xl font-bold text-cyan-400">{playerA.name}</h2>
@@ -212,32 +199,35 @@ export default function PlayerComparison() {
             <StatRow statName="Age" valueA={playerA.age} valueB={playerB.age} />
             <StatRow statName="Position" valueA={playerA.position} valueB={playerB.position} />
             <StatRow statName="League" valueA={playerA.league} valueB={playerB.league} />
+            <StatRow statName="Rating" valueA={playerA.rating} valueB={playerB.rating} />
           </div>
 
-          {/* Season Stats */}
+          {/* Attacking Stats */}
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-300 mb-2">Season Stats</h3>
+            <h3 className="text-lg font-semibold text-gray-300 mb-2">Attacking</h3>
             <StatRow statName="Goals" valueA={playerA.goals} valueB={playerB.goals} />
             <StatRow statName="Assists" valueA={playerA.assists} valueB={playerB.assists} />
             <StatRow statName="Shots" valueA={playerA.shots} valueB={playerB.shots} />
             <StatRow statName="Shots on Target" valueA={playerA.shotsOnTarget} valueB={playerB.shotsOnTarget} />
+            <StatRow statName="Key Passes" valueA={playerA.keyPasses} valueB={playerB.keyPasses} />
+            <StatRow statName="Dribbles" valueA={playerA.dribbles} valueB={playerB.dribbles} />
           </div>
 
-          {/* Advanced Stats */}
+          {/* Defensive / Passing Stats */}
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-300 mb-2">Advanced Stats</h3>
-            <StatRow statName="xG (Expected Goals)" valueA={playerA.xG} valueB={playerB.xG} />
-            <StatRow statName="xA (Expected Assists)" valueA={playerA.xA} valueB={playerB.xA} />
-            <StatRow statName="npxG (Non-Penalty xG)" valueA={playerA.npxG} valueB={playerB.npxG} />
+            <h3 className="text-lg font-semibold text-gray-300 mb-2">Defensive & Passing</h3>
+            <StatRow statName="Passes" valueA={playerA.passes} valueB={playerB.passes} />
+            <StatRow statName="Tackles" valueA={playerA.tackles} valueB={playerB.tackles} />
+            <StatRow statName="Interceptions" valueA={playerA.interceptions} valueB={playerB.interceptions} />
+            <StatRow statName="Clean Sheets" valueA={playerA.cleanSheets} valueB={playerB.cleanSheets} />
           </div>
 
-          {/* Per 90 Stats */}
+          {/* Discipline */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-300 mb-2">Per 90 Minutes</h3>
-            <StatRow statName="Goals/90" valueA={playerA.per90.goals} valueB={playerB.per90.goals} />
-            <StatRow statName="Assists/90" valueA={playerA.per90.assists} valueB={playerB.per90.assists} />
-            <StatRow statName="xG/90" valueA={playerA.per90.xG} valueB={playerB.per90.xG} />
-            <StatRow statName="Shots/90" valueA={playerA.per90.shots} valueB={playerB.per90.shots} />
+            <h3 className="text-lg font-semibold text-gray-300 mb-2">Discipline</h3>
+            <StatRow statName="Yellow Cards" valueA={playerA.yellowCards} valueB={playerB.yellowCards} />
+            <StatRow statName="Red Cards" valueA={playerA.redCards} valueB={playerB.redCards} />
+            <StatRow statName="Minutes Played" valueA={playerA.minutesPlayed} valueB={playerB.minutesPlayed} />
           </div>
         </div>
       )}
@@ -245,10 +235,10 @@ export default function PlayerComparison() {
       {/* Message when players not selected */}
       {(!playerA || !playerB) && (
         <div className="bg-gray-800 rounded-lg p-8 text-center text-gray-400">
-          <p>Select two players above to compare their stats</p>
+          <p className="text-lg mb-2">Select two players above to compare their stats</p>
+          <p className="text-sm">Choose from {players.length} players across multiple leagues</p>
         </div>
       )}
     </div>
   );
 }
-

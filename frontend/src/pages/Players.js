@@ -1,8 +1,8 @@
 // ========================================
 // Players.js - Player Statistics with Filters
 // ========================================
-// Fetches player data and lets users search by name or filter by position/team.
-// filteredPlayers = result of applying all filters and search to the full players array.
+// Fetches the full 200-player mock dataset and lets users
+// search by name or filter by position/team/league.
 
 import { useEffect, useState } from "react";
 
@@ -10,95 +10,82 @@ import { useEffect, useState } from "react";
 const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function Players() {
-  // State for the full players list from backend
   const [players, setPlayers] = useState([]);
-  // State for search input (user types player name)
   const [search, setSearch] = useState("");
-  // State for selected position filter dropdown (default = "All")
   const [positionFilter, setPositionFilter] = useState("All");
-  // State for selected team filter dropdown (default = "All")
   const [teamFilter, setTeamFilter] = useState("All");
+  const [leagueFilter, setLeagueFilter] = useState("All");
 
-  // Fetch players from backend when component mounts
-  useEffect(() => {
-    // GET request using the fetch API (similar to axios, but built-in)
-    fetch(`${API_BASE}/api/players`)
-      .then((res) => res.json())  // Convert response to JSON
-      .then((data) => setPlayers(data))  // Store players in state
-      .catch((err) => console.error("Error loading players:", err));
+  // Fetch the full 200-player dataset
+  useEffect(function () {
+    fetch(API_BASE + "/api/insights/players")
+      .then(function (res) { return res.json(); })
+      .then(function (data) { setPlayers(data); })
+      .catch(function (err) { console.error("Error loading players:", err); });
   }, []);
 
-  // Extract unique positions from players array to populate position dropdown
-  // players.map((p) => p.position) = get position from each player
-  // new Set(...) = remove duplicates
-  // ["All", ...] = add "All" at start using spread operator
-  const positions = ["All", ...new Set(players.map((p) => p.position))];
-  // Same logic for team dropdown options
-  const teams = ["All", ...new Set(players.map((p) => p.team))];
+  // Unique values for filter dropdowns
+  var positions = ["All", ...new Set(players.map(function (p) { return p.position; }))];
+  var teams = ["All", ...new Set(players.map(function (p) { return p.team; }))];
+  var leagues = ["All", ...new Set(players.map(function (p) { return p.league; }))];
 
-  // filter() creates a new array with only players that pass ALL conditions
-  // This is the key function: it combines search + both filter dropdowns
-  const filteredPlayers = players.filter((player) => {
-    // Check if player name includes the search text (case-insensitive)
-    const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase());
-
-    // Check if player position matches filter (or filter is "All")
-    const matchesPosition =
-      positionFilter === "All" || player.position === positionFilter;
-
-    // Check if player team matches filter (or filter is "All")
-    const matchesTeam = teamFilter === "All" || player.team === teamFilter;
-
-    // Player is included only if ALL three conditions are true
-    return matchesSearch && matchesPosition && matchesTeam;
+  // Apply all filters
+  var filteredPlayers = players.filter(function (player) {
+    var matchesSearch = player.name.toLowerCase().includes(search.toLowerCase());
+    var matchesPosition = positionFilter === "All" || player.position === positionFilter;
+    var matchesTeam = teamFilter === "All" || player.team === teamFilter;
+    var matchesLeague = leagueFilter === "All" || player.league === leagueFilter;
+    return matchesSearch && matchesPosition && matchesTeam && matchesLeague;
   });
 
   return (
     <div className="text-white w-full max-w-6xl mx-auto px-2">
       <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">
-        ⚽ StatSphere – Player Statistics
+        Player Statistics
       </h1>
 
       {/* Search + Filters */}
       <div className="bg-gray-800 p-3 sm:p-4 rounded-lg mb-6 flex flex-wrap gap-3 sm:gap-4 justify-center">
-
-        {/* Search Bar - Updates search state as user types */}
         <input
           type="text"
           placeholder="Search players..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={function (e) { setSearch(e.target.value); }}
           className="p-2 w-full sm:w-60 rounded bg-gray-700 text-white border border-gray-600"
         />
-
-        {/* Position Filter Dropdown */}
+        <select
+          value={leagueFilter}
+          onChange={function (e) { setLeagueFilter(e.target.value); }}
+          className="p-2 rounded bg-gray-700 text-white border border-gray-600"
+        >
+          {leagues.map(function (lg) {
+            return <option key={lg} value={lg}>{lg}</option>;
+          })}
+        </select>
         <select
           value={positionFilter}
-          onChange={(e) => setPositionFilter(e.target.value)}
+          onChange={function (e) { setPositionFilter(e.target.value); }}
           className="p-2 rounded bg-gray-700 text-white border border-gray-600"
         >
-          {/* map() creates <option> for each position in positions array */}
-          {positions.map((pos) => (
-            <option key={pos} value={pos}>
-              {pos}
-            </option>
-          ))}
+          {positions.map(function (pos) {
+            return <option key={pos} value={pos}>{pos}</option>;
+          })}
         </select>
-
-        {/* Team Filter Dropdown */}
         <select
           value={teamFilter}
-          onChange={(e) => setTeamFilter(e.target.value)}
+          onChange={function (e) { setTeamFilter(e.target.value); }}
           className="p-2 rounded bg-gray-700 text-white border border-gray-600"
         >
-          {/* map() creates <option> for each team in teams array */}
-          {teams.map((team) => (
-            <option key={team} value={team}>
-              {team}
-            </option>
-          ))}
+          {teams.map(function (team) {
+            return <option key={team} value={team}>{team}</option>;
+          })}
         </select>
       </div>
+
+      {/* Results count */}
+      <p className="text-sm text-gray-400 mb-3">
+        Showing {filteredPlayers.length} of {players.length} players
+      </p>
 
       {/* Player Table */}
       <div className="overflow-x-auto bg-gray-800 p-4 rounded-lg shadow-lg">
@@ -108,38 +95,39 @@ export default function Players() {
               <th className="p-2">#</th>
               <th className="p-2">Name</th>
               <th className="p-2">Team</th>
-              <th className="p-2">Position</th>
+              <th className="p-2">League</th>
+              <th className="p-2">Pos</th>
+              <th className="p-2">Age</th>
+              <th className="p-2">Rating</th>
               <th className="p-2">Goals</th>
               <th className="p-2">Assists</th>
-              <th className="p-2">xG</th>
-              <th className="p-2">xA</th>
-              <th className="p-2">npxG</th>
-              <th className="p-2">Shots</th>
-              <th className="p-2">Goals/90</th>
+              <th className="p-2">Passes</th>
+              <th className="p-2">Tackles</th>
+              <th className="p-2">Mins</th>
             </tr>
           </thead>
-
           <tbody>
-            {/* map() loops through filteredPlayers (result of search + filters) */}
-            {/* Each player becomes a table row <tr> with their stats */}
-            {filteredPlayers.map((p, i) => (
-              <tr
-                key={p.id}
-                className="border-b border-gray-700 hover:bg-gray-700 transition"
-              >
-                <td className="p-2">{i + 1}</td>
-                <td className="p-2 font-semibold">{p.name}</td>
-                <td className="p-2">{p.team}</td>
-                <td className="p-2">{p.position}</td>
-                <td className="p-2">{p.goals}</td>
-                <td className="p-2">{p.assists}</td>
-                <td className="p-2">{p.xG}</td>
-                <td className="p-2">{p.xA}</td>
-                <td className="p-2">{p.npxG}</td>
-                <td className="p-2">{p.shots}</td>
-                <td className="p-2">{p.goals_per90}</td>
-              </tr>
-            ))}
+            {filteredPlayers.map(function (p, i) {
+              return (
+                <tr
+                  key={p.id}
+                  className="border-b border-gray-700 hover:bg-gray-700 transition"
+                >
+                  <td className="p-2">{i + 1}</td>
+                  <td className="p-2 font-semibold">{p.name}</td>
+                  <td className="p-2">{p.team}</td>
+                  <td className="p-2 text-gray-400">{p.league}</td>
+                  <td className="p-2">{p.position}</td>
+                  <td className="p-2">{p.age}</td>
+                  <td className="p-2 text-yellow-400 font-semibold">{p.rating}</td>
+                  <td className="p-2 text-green-400">{p.goals}</td>
+                  <td className="p-2 text-blue-400">{p.assists}</td>
+                  <td className="p-2">{p.passes}</td>
+                  <td className="p-2">{p.tackles}</td>
+                  <td className="p-2 text-gray-400">{p.minutesPlayed}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

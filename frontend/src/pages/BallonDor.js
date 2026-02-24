@@ -16,9 +16,9 @@ export default function BallonDor() {
   // Store players after we add scores and sort them
   const [rankedPlayers, setRankedPlayers] = useState([]);
 
-  // Fetch players when page loads
+  // Fetch players when page loads (uses the 200-player mock dataset)
   useEffect(() => {
-    fetch(`${API_BASE}/api/players`)
+    fetch(`${API_BASE}/api/insights/players`)
       .then((res) => res.json())
       .then((data) => setPlayers(data))
       .catch((err) => console.error("Error:", err));
@@ -47,27 +47,28 @@ export default function BallonDor() {
   // We multiply each stat by a "weight" to show importance.
   // Then we multiply by league weight to adjust for difficulty.
   //
-  // Formula: Score = [(Goals x 4) + (Assists x 3) + (xG x 2) + (xA x 2) + (Goals/90 x 50)] x League Weight
+  // Formula: Score = [(Goals x 4) + (Assists x 3) + (Rating x 10) + (KeyPasses x 0.5) + (Goals/90 x 50)] x League Weight
   //
   function calculateBallonDorScore(player) {
     // Step 1: Get the league weight (default to 0.8 if league not found)
     let leagueWeight = leagueWeights[player.league];
     if (leagueWeight === undefined) {
-      leagueWeight = 0.8; // Default for unknown leagues
+      leagueWeight = 0.8;
     }
 
     // Step 2: Calculate points for each stat
-    let goalsPoints = player.goals * 4;       // Goals are worth 4 points each
-    let assistsPoints = player.assists * 3;   // Assists are worth 3 points each
-    let xgPoints = player.xG * 2;             // Expected goals worth 2 points
-    let xaPoints = player.xA * 2;             // Expected assists worth 2 points
-    let consistencyPoints = player.per90.goals * 50;  // Goals per game worth 50 points
+    let goalsPoints = player.goals * 4;
+    let assistsPoints = player.assists * 3;
+    let ratingPoints = player.rating * 10;
+    let creativityPoints = player.keyPasses * 0.5;
+    // Calculate goals per 90 from minutesPlayed
+    let goalsPer90 = player.minutesPlayed > 0 ? (player.goals / player.minutesPlayed) * 90 : 0;
+    let consistencyPoints = goalsPer90 * 50;
 
     // Step 3: Add all the points together
-    let rawScore = goalsPoints + assistsPoints + xgPoints + xaPoints + consistencyPoints;
+    let rawScore = goalsPoints + assistsPoints + ratingPoints + creativityPoints + consistencyPoints;
 
     // Step 4: Multiply by league weight
-    // Example: 150 points in Saudi Pro League = 150 x 0.7 = 105 points
     let totalScore = rawScore * leagueWeight;
 
     // Step 5: Round to 1 decimal place
@@ -127,7 +128,7 @@ export default function BallonDor() {
       <div className="bg-gray-800 rounded-lg p-3 sm:p-4 mb-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-300 mb-2">How the Score is Calculated:</h3>
         <p className="text-xs sm:text-sm text-gray-400 mb-2 break-words">
-          Score = [(Goals × 4) + (Assists × 3) + (xG × 2) + (xA × 2) + (Goals/90 × 50)] × League Weight
+          Score = [(Goals × 4) + (Assists × 3) + (Rating × 10) + (Key Passes × 0.5) + (Goals/90 × 50)] × League Weight
         </p>
         <p className="text-xs text-gray-500 break-words">
           League Weights: PL (1.0), La Liga (0.95), Serie A (0.9), Bundesliga (0.9), Ligue 1 (0.85), Super Lig (0.75), SPL (0.7)

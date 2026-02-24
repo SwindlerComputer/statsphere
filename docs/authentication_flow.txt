@@ -1,0 +1,163 @@
+============================================================
+STATSPHERE - AUTHENTICATION FLOW (JWT LOGIN SYSTEM)
+============================================================
+Written for: Final Year Project Defence
+============================================================
+
+OVERVIEW
+--------
+StatSphere uses JSON Web Tokens (JWT) for user authentication.
+JWT is a standard way to securely identify users without storing
+session data on the server.
+
+Key Files:
+  - backend/auth/authRoutes.js     → Register, login, logout, /me
+  - backend/auth/authMiddleware.js → Verifies JWT tokens
+  - frontend/src/App.js            → Checks if user is logged in
+  - frontend/src/pages/Login.js    → Login form
+  - frontend/src/pages/Register.js → Registration form
+
+
+WHAT IS JWT?
+------------
+JWT stands for "JSON Web Token". It is a small encoded string that
+contains user information (like their ID and email).
+
+A JWT looks like this:
+  eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0QGVtYWlsLmNvbSJ9.abc123
+
+It has 3 parts separated by dots:
+  1. Header  → Algorithm used (HS256)
+  2. Payload → User data (id, email, name)
+  3. Signature → Secret key verification (prevents tampering)
+
+The server creates the token using a SECRET KEY stored in the .env file.
+Only the server knows the secret, so no one can fake a token.
+
+
+REGISTRATION FLOW
+------------------
+1. User fills in name, email, password on the Register page
+2. Frontend sends POST request to /auth/register
+3. Backend checks:
+   - Are all fields provided?
+   - Is the password at least 8 characters?
+   - Is the email already registered?
+4. Password is HASHED using bcrypt (never stored as plain text!)
+   - Example: "password123" → "$2b$10$x7dJ..."
+   - Hashing is one-way: you cannot reverse it
+5. New user is saved to the database (users table)
+6. JWT token is created containing user ID, email, and name
+7. Token is sent back in TWO ways:
+   a. As an HTTP-only cookie (browser stores it automatically)
+   b. In the response body (stored in localStorage as backup)
+8. User is now logged in!
+
+Flow Diagram:
+  [User] → Register Form → POST /auth/register → [Backend]
+  [Backend] → Validate → Hash Password → Save to DB → Create JWT
+  [Backend] → Set Cookie + Return Token → [User is logged in]
+
+
+LOGIN FLOW
+-----------
+1. User enters email and password on the Login page
+2. Frontend sends POST request to /auth/login
+3. Backend checks:
+   - Does a user with this email exist?
+   - Does the password match the hash? (using bcrypt.compare)
+4. If valid, a new JWT token is created
+5. Token is sent as a cookie AND in the response body
+6. Frontend stores the token and redirects to dashboard
+
+Flow Diagram:
+  [User] → Login Form → POST /auth/login → [Backend]
+  [Backend] → Find User → Compare Password Hash → Create JWT
+  [Backend] → Set Cookie + Return Token → [User is logged in]
+
+
+HOW THE APP KNOWS YOU ARE LOGGED IN
+-------------------------------------
+When the app first loads (App.js), it runs a useEffect() that:
+1. Gets the saved token from localStorage (if any)
+2. Sends GET request to /auth/me with the token
+3. Backend verifies the JWT token using the secret key
+4. If valid, returns the user object (id, name, email)
+5. Frontend stores the user in React state
+6. Navigation bar shows "Logged in as: [name]"
+
+If the token is expired or invalid, the user sees the Login link instead.
+
+Flow Diagram:
+  [App Loads] → GET /auth/me (with token) → [Backend]
+  [Backend] → Verify JWT → Query DB → Return user object
+  [Frontend] → setUser(data.user) → Show logged-in UI
+
+
+LOGOUT FLOW
+------------
+1. User clicks the Logout button in the navbar
+2. Frontend sends POST request to /auth/logout
+3. Backend clears the JWT cookie using res.clearCookie()
+4. Frontend removes token from localStorage
+5. Frontend sets user to null and redirects to homepage
+6. User is now logged out!
+
+
+WHY TWO TOKEN STORAGE METHODS?
+-------------------------------
+We store the JWT in both a cookie AND localStorage because:
+
+1. Cookies: The preferred method
+   - httpOnly: true → JavaScript cannot read the cookie (more secure)
+   - Automatically sent with every request
+   - But: Some browsers block third-party cookies (especially in incognito)
+
+2. localStorage: The backup method
+   - Works even when cookies are blocked
+   - Sent manually via Authorization header: "Bearer <token>"
+   - Less secure than httpOnly cookies (JavaScript can access it)
+
+This dual approach ensures the app works in all browsers and modes.
+
+
+PASSWORD SECURITY
+-----------------
+- Passwords are NEVER stored as plain text
+- bcrypt hashing with salt rounds = 10
+- bcrypt.hash("password123", 10) → "$2b$10$randomSaltAndHash..."
+- Each password gets a unique random salt
+- Even if the database is leaked, passwords cannot be read
+- bcrypt.compare() checks if a password matches its hash
+
+
+COOKIE SETTINGS EXPLAINED
+--------------------------
+res.cookie("token", token, {
+  httpOnly: true,     → Cannot be read by JavaScript (XSS protection)
+  sameSite: "none",   → Allows cross-site cookies (needed for deployment)
+  secure: true,       → Cookie only sent over HTTPS (production)
+  maxAge: 7 days      → Cookie expires after 7 days
+});
+
+In local development:
+  sameSite: "lax"   → Normal browser behaviour
+  secure: false     → HTTP is fine locally (no HTTPS needed)
+
+
+JWT SECRET
+----------
+The JWT_SECRET is a random string stored in the .env file.
+Example: JWT_SECRET=my_super_secret_key_12345
+
+This secret is used to:
+1. CREATE tokens (jwt.sign)
+2. VERIFY tokens (jwt.verify)
+
+If someone doesn't know the secret, they CANNOT create valid tokens.
+This is why the .env file must NEVER be shared or committed to Git.
+
+============================================================
+END OF DOCUMENT
+============================================================
+

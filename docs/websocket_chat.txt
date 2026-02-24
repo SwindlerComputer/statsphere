@@ -1,0 +1,181 @@
+============================================================
+STATSPHERE - WEBSOCKET REAL-TIME CHAT SYSTEM
+============================================================
+Written for: Final Year Project Defence
+============================================================
+
+OVERVIEW
+--------
+StatSphere has a real-time community chat feature built with
+WebSockets using the Socket.IO library. This allows users to
+send and receive messages instantly without refreshing the page.
+
+Key Files:
+  - backend/server.js              → WebSocket server setup
+  - frontend/src/pages/Community.js → Chat page UI
+
+
+WHAT ARE WEBSOCKETS?
+---------------------
+Normal HTTP (like fetch/axios):
+  - Client sends a request → Server responds → Connection closes
+  - Client must ask again to get new data (polling)
+  - Like sending a letter and waiting for a reply
+
+WebSockets:
+  - Client opens a connection → Connection stays OPEN
+  - Server can push data to client anytime
+  - Client can send data to server anytime
+  - Like a phone call - both sides can talk at any time
+
+This makes WebSockets perfect for:
+  - Chat applications (instant messages)
+  - Live scores (real-time updates)
+  - Notifications (push to user)
+  - Multiplayer games
+
+Comparison:
+  HTTP:       Client → Server → Response → Connection Closed
+  WebSocket:  Client ↔ Server (always connected, both can send anytime)
+
+
+WHAT IS SOCKET.IO?
+-------------------
+Socket.IO is a JavaScript library that makes WebSockets easy to use.
+It works on both the server (Node.js) and client (browser).
+
+- Server: const io = new Server(httpServer)
+- Client: const socket = io("http://localhost:5000")
+
+Socket.IO adds features on top of raw WebSockets:
+  - Automatic reconnection (if connection drops)
+  - Event-based messaging (named events like "send_message")
+  - Room support (group users into channels)
+  - Fallback to HTTP polling (if WebSockets aren't supported)
+
+
+HOW THE CHAT WORKS - STEP BY STEP
+------------------------------------
+
+STEP 1: SERVER SETUP (server.js)
+  - Create HTTP server from Express app
+  - Attach Socket.IO to the HTTP server
+  - Configure CORS to allow frontend connections
+  - Store messages in an array (chatMessages = [])
+
+STEP 2: USER CONNECTS (Community.js)
+  - When user opens the Community page, a WebSocket connection is created:
+      let newSocket = io(API_BASE, { withCredentials: true })
+  - The server detects the connection:
+      io.on("connection", (socket) => { ... })
+  - Server tries to identify the user using their JWT token (from cookie)
+  - Server sends existing chat history to the new user:
+      socket.emit("chat_history", chatMessages)
+
+STEP 3: USER SENDS A MESSAGE
+  - User types a message and clicks Send
+  - Frontend sends the message via WebSocket:
+      socket.emit("send_message", messageText)
+  - Server receives it and validates:
+      a. Is the user logged in?
+      b. Is the user banned?
+      c. Is the message empty?
+      d. Is the message too long? (max 200 characters)
+      e. Is the user sending too fast? (rate limit: 2 seconds)
+  - Server censors bad words (replaces with ***)
+  - Server creates a message object: { id, text, userName, timestamp }
+  - Server BROADCASTS to ALL connected users:
+      io.emit("new_message", newMessage)
+
+STEP 4: ALL USERS RECEIVE THE MESSAGE
+  - Every connected client has a listener:
+      socket.on("new_message", (message) => { ... })
+  - React adds the message to the messages array
+  - The new message appears in everyone's chat instantly
+
+STEP 5: USER DISCONNECTS
+  - When user leaves the page or closes the browser
+  - The cleanup function runs: newSocket.disconnect()
+  - Server detects: socket.on("disconnect", () => { ... })
+
+
+MESSAGE FLOW DIAGRAM
+---------------------
+
+  User A types "Hello!"
+        |
+        v
+  [Frontend] socket.emit("send_message", "Hello!")
+        |
+        v
+  [Server] Validates → Censors → Creates message object
+        |
+        v
+  [Server] io.emit("new_message", { text: "Hello!", userName: "A", ... })
+        |
+        +-------+-------+-------+
+        |       |       |       |
+        v       v       v       v
+     User A  User B  User C  User D
+   (all see "Hello!" appear instantly)
+
+
+SOCKET.IO EVENTS USED
+-----------------------
+Server → Client:
+  - "chat_history"  → Sends all existing messages when user connects
+  - "new_message"   → Sends a new message to all connected users
+  - "error_message" → Sends an error (e.g. "You must be logged in")
+
+Client → Server:
+  - "send_message"  → Sends a new chat message
+
+Built-in Events:
+  - "connection"    → Triggered when a user connects
+  - "disconnect"    → Triggered when a user disconnects
+
+
+AUTHENTICATION IN WEBSOCKETS
+------------------------------
+WebSockets don't have HTTP headers like normal requests.
+So we authenticate users by:
+
+1. Checking the cookie attached to the WebSocket handshake:
+     socket.handshake.headers.cookie → parse → get JWT token
+
+2. As a backup, checking the auth object:
+     socket.handshake.auth.token → JWT token from localStorage
+
+3. Verifying the JWT token with jwt.verify()
+
+4. Looking up the user in the database
+
+5. Storing user info on the socket: socket.user = user
+
+
+MESSAGE STORAGE
+---------------
+Currently, messages are stored in a JavaScript array in server memory:
+  let chatMessages = []
+
+This means:
+  - Messages are fast to read/write (no database queries)
+  - Messages are LOST when the server restarts
+  - Only the last 50 messages are kept (to prevent memory overflow)
+
+In a production system, you would store messages in a database.
+
+
+RATE LIMITING
+--------------
+To prevent spam, the server tracks when each user last sent a message:
+  let lastMessageTime = { userId: timestamp }
+
+If a user tries to send another message within 2 seconds:
+  - The message is rejected
+  - User receives: "Please wait 2 seconds before sending another message"
+
+============================================================
+END OF DOCUMENT
+============================================================
+

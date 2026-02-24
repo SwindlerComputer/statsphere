@@ -182,28 +182,176 @@ app.get("/api/insights/teams", (req, res) => {
 });
 
 
+// ========================================
 // POST /api/predict-match - Predict match outcome
-app.post("/api/predict-match", (req, res) => {
-  const { teamA, teamB } = req.body;
+// ========================================
+// Uses a weighted formula to predict who wins.
+//
+// THE PREDICTION MODEL:
+// Step 1: Get league weight for each team
+// Step 2: Calculate attack strength = (attack / 100) * league weight
+// Step 3: Calculate defense weakness = 1 - (defense / 100)
+// Step 4: Expected goals = attack strength * opponent defense weakness * 2.7
+// Step 5: Apply form bonus (form / 100 gives 0-1 multiplier)
+// Step 6: Apply home advantage to Team A (+10%)
+// Step 7: Calculate win/draw/loss percentages
+// Step 8: Predict final score by rounding expected goals
+//
+app.post("/api/predict-match", function (req, res) {
+  var teamA = req.body.teamA;
+  var teamB = req.body.teamB;
 
   if (!teamA || !teamB) {
     return res.status(400).json({ error: "Teams required" });
   }
 
-  const scoreA = teamA.attack * 0.4 + teamA.defense * 0.3 + teamA.form * 5;
-  const scoreB = teamB.attack * 0.4 + teamB.defense * 0.3 + teamB.form * 5;
+  // ========================================
+  // STEP 1: League weights
+  // ========================================
+  // Harder leagues get a higher weight (max 1.0)
+  // This means teams from harder leagues are considered stronger
+  function getLeagueWeight(league) {
+    if (league === "Premier League") return 1.0;
+    if (league === "La Liga") return 0.95;
+    if (league === "Bundesliga") return 0.9;
+    if (league === "Serie A") return 0.9;
+    if (league === "Ligue 1") return 0.85;
+    if (league === "Saudi Pro League") return 0.7;
+    return 0.8;
+  }
 
-  let winner = "Draw";
-  if (scoreA > scoreB) winner = teamA.name;
-  if (scoreB > scoreA) winner = teamB.name;
+  var leagueWeightA = getLeagueWeight(teamA.league);
+  var leagueWeightB = getLeagueWeight(teamB.league);
 
+  // ========================================
+  // STEP 2: Attack strength (0 to 1 scale)
+  // ========================================
+  // Divide attack rating by 100 to get a 0-1 number
+  // Then multiply by league weight
+  var attackStrengthA = (teamA.attack / 100) * leagueWeightA;
+  var attackStrengthB = (teamB.attack / 100) * leagueWeightB;
+
+  // ========================================
+  // STEP 3: Defense weakness (0 to 1 scale)
+  // ========================================
+  // A defense of 90/100 means weakness is 0.10 (very strong defense)
+  // A defense of 60/100 means weakness is 0.40 (weak defense)
+  var defenseWeaknessA = 1 - (teamA.defense / 100);
+  var defenseWeaknessB = 1 - (teamB.defense / 100);
+
+  // ========================================
+  // STEP 4: Expected goals
+  // ========================================
+  // Average goals per match in football is about 2.7
+  // Team A expected goals = A's attack * B's defense weakness * average
+  // This is a simplified version of the Poisson model used in real football
+  var avgGoals = 2.7;
+  var expectedGoalsA = attackStrengthA * defenseWeaknessB * avgGoals;
+  var expectedGoalsB = attackStrengthB * defenseWeaknessA * avgGoals;
+
+  // ========================================
+  // STEP 5: Apply form bonus
+  // ========================================
+  // Form is 0-100. We convert to a multiplier between 0.9 and 1.1
+  // Good form (80+) boosts expected goals, bad form (<50) reduces them
+  var formBonusA = 0.9 + ((teamA.form || 75) / 100) * 0.2;
+  var formBonusB = 0.9 + ((teamB.form || 75) / 100) * 0.2;
+  expectedGoalsA = expectedGoalsA * formBonusA;
+  expectedGoalsB = expectedGoalsB * formBonusB;
+
+  // ========================================
+  // STEP 6: Home advantage
+  // ========================================
+  // Team A is the "home" team and gets a 10% boost
+  // In real football, home teams win about 46% of the time
+  var homeBoost = 1.10;
+  expectedGoalsA = expectedGoalsA * homeBoost;
+
+  // ========================================
+  // STEP 7: Calculate win/draw/loss percentages
+  // ========================================
+  // Based on the difference in expected goals
+  var totalExpected = expectedGoalsA + expectedGoalsB;
+  var rawWinA = 0;
+  var rawDraw = 0;
+  var rawWinB = 0;
+
+  if (totalExpected > 0) {
+    // The bigger the gap in expected goals, the higher the win %
+    var ratio = expectedGoalsA / totalExpected;
+    rawWinA = ratio * 80;            // Scale to max ~80%
+    rawWinB = (1 - ratio) * 80;     // The rest goes to team B
+    rawDraw = 100 - rawWinA - rawWinB;  // What's left is draw chance
+
+    // Make sure draw is at least 10% and at most 35%
+    if (rawDraw < 10) rawDraw = 10;
+    if (rawDraw > 35) rawDraw = 35;
+
+    // Recalculate so everything adds up to 100%
+    var remaining = 100 - rawDraw;
+    var winRatio = rawWinA / (rawWinA + rawWinB);
+    rawWinA = remaining * winRatio;
+    rawWinB = remaining * (1 - winRatio);
+  } else {
+    rawWinA = 33;
+    rawDraw = 34;
+    rawWinB = 33;
+  }
+
+  // Round to 1 decimal place
+  var winPercentA = Math.round(rawWinA * 10) / 10;
+  var drawPercent = Math.round(rawDraw * 10) / 10;
+  var winPercentB = Math.round(rawWinB * 10) / 10;
+
+  // ========================================
+  // STEP 8: Predicted score
+  // ========================================
+  // Round expected goals to nearest whole number
+  var predictedScoreA = Math.round(expectedGoalsA);
+  var predictedScoreB = Math.round(expectedGoalsB);
+
+  // Make sure at least 0 goals
+  if (predictedScoreA < 0) predictedScoreA = 0;
+  if (predictedScoreB < 0) predictedScoreB = 0;
+
+  // ========================================
+  // Determine the winner
+  // ========================================
+  var prediction = "Draw";
+  if (winPercentA > winPercentB + 5) {
+    prediction = teamA.name;
+  } else if (winPercentB > winPercentA + 5) {
+    prediction = teamB.name;
+  }
+
+  // ========================================
+  // SEND THE RESPONSE
+  // ========================================
   res.json({
-    prediction: winner,
-    confidence: Math.abs(scoreA - scoreB).toFixed(1) + "%",
-    details: {
-      teamA_score: scoreA.toFixed(1),
-      teamB_score: scoreB.toFixed(1),
+    prediction: prediction,
+    predictedScore: predictedScoreA + " - " + predictedScoreB,
+    probabilities: {
+      winA: winPercentA,
+      draw: drawPercent,
+      winB: winPercentB
     },
+    expectedGoals: {
+      teamA: Math.round(expectedGoalsA * 100) / 100,
+      teamB: Math.round(expectedGoalsB * 100) / 100
+    },
+    breakdown: {
+      leagueWeightA: leagueWeightA,
+      leagueWeightB: leagueWeightB,
+      attackStrengthA: Math.round(attackStrengthA * 1000) / 1000,
+      attackStrengthB: Math.round(attackStrengthB * 1000) / 1000,
+      defenseWeaknessA: Math.round(defenseWeaknessA * 1000) / 1000,
+      defenseWeaknessB: Math.round(defenseWeaknessB * 1000) / 1000,
+      formBonusA: Math.round(formBonusA * 1000) / 1000,
+      formBonusB: Math.round(formBonusB * 1000) / 1000,
+      homeBoost: homeBoost
+    },
+    teamA: { name: teamA.name, league: teamA.league, attack: teamA.attack, defense: teamA.defense, form: teamA.form },
+    teamB: { name: teamB.name, league: teamB.league, attack: teamB.attack, defense: teamB.defense, form: teamB.form }
   });
 });
 

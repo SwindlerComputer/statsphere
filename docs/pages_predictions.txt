@@ -1,86 +1,190 @@
 ============================================================
 STATSPHERE - MATCH PREDICTIONS PAGE
 ============================================================
-File: frontend/src/pages/Predictions.js
+Files:
+  Frontend: frontend/src/pages/Predictions.js
+  Backend:  backend/server.js (POST /api/predict-match)
+  Data:     backend/data/predictionTeams.json
 URL: /predictions
 ============================================================
 
 WHAT THIS PAGE DOES
 --------------------
-The user picks two teams and the system predicts who will
-win the match. It also shows the predicted score and
-each team's win percentage.
+The user picks two teams (Team A = Home, Team B = Away).
+The system predicts:
+1. Who will win
+2. The predicted score (e.g. 2 - 1)
+3. Win / Draw / Loss percentages
+4. A full breakdown showing every step of the calculation
 
-HOW IT WORKS (STEP BY STEP)
------------------------------
-1. Page loads and fetches teams from:
-   GET /api/prediction-teams
+The predictions use a WEIGHTED FORMULA that considers:
+- Attack strength
+- Defense weakness
+- League weight (harder league = stronger team)
+- Form (recent performance)
+- Home advantage (Team A gets a 10% boost)
 
-2. The backend reads predictionTeams.json and sends back
-   a list of 20 teams with their stats:
-   - Attack rating (how good at scoring)
-   - Defense rating (how good at stopping goals)
-   - Form rating (how well they've been playing recently)
+============================================================
+THE PREDICTION MODEL (STEP BY STEP)
+============================================================
 
-3. User picks Team A and Team B from dropdown menus.
+STEP 1: LEAGUE WEIGHTS
+------------------------
+Not all leagues are equally difficult. Playing in the
+Premier League is harder than playing in the Saudi Pro League.
+So we give each league a "weight" from 0 to 1:
 
-4. When the user clicks "Predict", the app runs the
-   prediction formula.
+  Premier League:    1.0  (hardest - full credit)
+  La Liga:           0.95
+  Serie A:           0.9
+  Bundesliga:        0.9
+  Ligue 1:           0.85
+  Saudi Pro League:  0.7  (easiest - reduced credit)
 
-5. The result shows:
-   - Win percentages for each team (and draw chance)
-   - A predicted score (e.g. "2 - 1")
-   - Which team is predicted to win
-
-THE PREDICTION FORMULA
------------------------
-This is a simple math-based prediction. No machine learning.
-
-Step 1: Calculate attack strength for each team
-  attackStrength = attack rating / 100
-
-Step 2: Calculate defence weakness
-  defenceWeakness = 1 - (defense rating / 100)
-
-Step 3: Predict goals
-  Team A goals = Team A attack x Team B defence weakness x form bonus
-  Team B goals = Team B attack x Team A defence weakness x form bonus
-
-Step 4: Add some randomness
-  We add a small random number so predictions aren't always the same.
-
-Step 5: Calculate percentages
-  If Team A goals > Team B goals:
-    Team A win chance is higher
-
-Example:
-  Arsenal:  attack=85, defense=80, form=82
-  Chelsea:  attack=78, defense=75, form=70
-  
-  Arsenal attack strength = 85/100 = 0.85
-  Chelsea defence weakness = 1 - (75/100) = 0.25
-  Arsenal expected goals = 0.85 x 0.25 x form = ~2.1
-
-  The team with more expected goals is predicted to win.
-
-DATA FORMAT (predictionTeams.json)
-------------------------------------
-[
-  {
-    "id": 1,
-    "name": "Real Madrid",
-    "league": "La Liga",
-    "attack": 92,
-    "defense": 82,
-    "form": 88
+Code in server.js:
+  function getLeagueWeight(league) {
+    if (league === "Premier League") return 1.0;
+    if (league === "La Liga") return 0.95;
+    ...
   }
-]
 
-KEY REACT CONCEPTS USED
+STEP 2: ATTACK STRENGTH
 -------------------------
-- useState: Stores teams, selected teams, and prediction result
-- useEffect: Fetches teams when page loads
-- Math.random(): Adds small randomness to predictions
-- Math.round(): Rounds predicted scores to whole numbers
+We divide the team's attack rating by 100 to get a number
+between 0 and 1, then multiply by the league weight.
+
+  attackStrength = (attack / 100) * leagueWeight
+
+Example: Arsenal (attack = 88, Premier League weight = 1.0)
+  attackStrength = (88 / 100) * 1.0 = 0.88
+
+Example: Al Nassr (attack = 78, Saudi weight = 0.7)
+  attackStrength = (78 / 100) * 0.7 = 0.546
+
+So Arsenal's attack is worth more because they play in a
+harder league.
+
+STEP 3: DEFENSE WEAKNESS
+--------------------------
+The HIGHER the defense rating, the LOWER the weakness.
+A team with defense = 90 only has weakness of 0.10.
+A team with defense = 70 has weakness of 0.30.
+
+  defenseWeakness = 1 - (defense / 100)
+
+Example: Inter Milan (defense = 90)
+  defenseWeakness = 1 - (90/100) = 0.10 (very hard to score against)
+
+Example: Al Ittihad (defense = 70)
+  defenseWeakness = 1 - (70/100) = 0.30 (easier to score against)
+
+STEP 4: EXPECTED GOALS
+------------------------
+This is the key calculation. How many goals will each team score?
+
+In real football, the average match has about 2.7 total goals.
+We use this as a base number.
+
+  expectedGoals = attackStrength * opponent_defenseWeakness * 2.7
+
+Example: Arsenal (0.88 attack) vs Al Ittihad (0.30 defense weakness)
+  expectedGoals = 0.88 * 0.30 * 2.7 = 0.71 goals
+
+This is BEFORE we apply form and home advantage.
+
+STEP 5: FORM BONUS
+--------------------
+Form is rated 0-100 (how well the team is playing right now).
+We convert it to a small multiplier between 0.9 and 1.1.
+
+  formBonus = 0.9 + (form / 100) * 0.2
+
+Example: Arsenal (form = 88)
+  formBonus = 0.9 + (88/100) * 0.2 = 0.9 + 0.176 = 1.076
+
+Example: Man United (form = 65)
+  formBonus = 0.9 + (65/100) * 0.2 = 0.9 + 0.13 = 1.03
+
+Then: expectedGoals = expectedGoals * formBonus
+
+STEP 6: HOME ADVANTAGE
+------------------------
+In real football, the home team wins about 46% of matches.
+We give Team A (the home team) a 10% boost to their
+expected goals.
+
+  homeBoost = 1.10  (10% more goals)
+  Team A expected goals = expectedGoals * 1.10
+
+Team B (away) gets no boost (multiplied by 1.0).
+
+STEP 7: WIN/DRAW/LOSS PERCENTAGES
+-----------------------------------
+Based on the expected goals, we calculate probabilities:
+
+  totalExpected = expectedGoalsA + expectedGoalsB
+  ratio = expectedGoalsA / totalExpected
+
+  winA  = ratio * 80      (scaled to max 80%)
+  winB  = (1 - ratio) * 80
+  draw  = 100 - winA - winB
+
+The draw percentage is clamped between 10% and 35%
+(in real football, draws happen 25-30% of the time).
+
+STEP 8: PREDICTED SCORE
+-------------------------
+The predicted score is simply the expected goals rounded
+to the nearest whole number.
+
+  predictedScoreA = Math.round(expectedGoalsA)
+  predictedScoreB = Math.round(expectedGoalsB)
+
+============================================================
+TEAM DATA FORMAT (predictionTeams.json)
+============================================================
+Each team has:
+{
+  "id": 4,
+  "name": "Arsenal",
+  "league": "Premier League",
+  "attack": 88,        (0-100 how good at scoring)
+  "defense": 89,       (0-100 how good at stopping goals)
+  "form": 88,          (0-100 recent performance)
+  "homeStrength": 91   (0-100 how strong at home)
+}
+
+============================================================
+KEY VARIABLES (Frontend - Predictions.js)
+============================================================
+  teams       - array of all 20 teams from backend
+  teamAName   - name of the selected home team
+  teamBName   - name of the selected away team
+  result      - the prediction result from the backend
+  loading     - true while waiting for backend response
+
+============================================================
+KEY VARIABLES (Backend - server.js)
+============================================================
+  leagueWeightA     - league weight for Team A (0-1)
+  attackStrengthA   - attack strength for Team A (0-1)
+  defenseWeaknessB  - defense weakness for Team B (0-1)
+  expectedGoalsA    - predicted goals for Team A
+  formBonusA        - form multiplier for Team A (0.9-1.1)
+  homeBoost         - 1.10 (10% boost for home team)
+  winPercentA       - win probability for Team A (0-100)
+  drawPercent       - draw probability (10-35)
+  predictedScoreA   - rounded expected goals
+
+============================================================
+WHAT THE FRONTEND SHOWS
+============================================================
+1. Predicted winner
+2. Predicted score (e.g. "2 - 1")
+3. Win/Draw/Loss percentages with a coloured bar
+4. Expected goals (xG) for each team
+5. Team rating comparison bars (attack, defense, form)
+6. Full calculation breakdown table
+7. League weights reference
 
 ============================================================

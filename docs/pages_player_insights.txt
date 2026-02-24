@@ -1,0 +1,76 @@
+============================================================
+STATSPHERE - PLAYER INSIGHTS PAGE
+============================================================
+File: frontend/src/pages/PlayerInsights.js
+URL: /insights
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+This is the most detailed page in the app. The user picks
+a player and sees:
+1. Their key stats in a card (goals, assists, passes, etc.)
+2. A BAR CHART showing their main stats
+3. A RADAR CHART showing their skill profile
+4. An AI analysis showing STRENGTHS and WEAKNESSES
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. Page loads and fetches all 200 players from:
+   GET /api/insights/players
+
+2. User can search and filter using dropdowns for
+   position and team.
+
+3. User picks a player from the dropdown.
+
+4. When a player is picked:
+   a. A stat card shows their key numbers
+   b. A bar chart is drawn using Recharts library
+   c. A radar chart is drawn showing their skill profile
+   d. The rule-based system runs and shows strengths/weaknesses
+
+CHARTS (RECHARTS LIBRARY)
+--------------------------
+We use a library called "Recharts" to draw charts.
+It is already installed in the project (in package.json).
+
+BAR CHART:
+- Shows goals, assists, shots, key passes, dribbles, passes
+- Each stat is a blue bar
+- Taller bar = higher number
+
+RADAR CHART:
+- Shows 6 skills: Scoring, Passing, Dribbling, Defending,
+  Creativity, Shooting
+- Each skill is scored from 0 to 100
+- The shape shows what the player is good at
+- A big shape = good at everything
+- A pointy shape = only good at some things
+
+RULE-BASED SYSTEM (AI ANALYSIS)
+---------------------------------
+This is a simple form of artificial intelligence.
+It uses IF/THEN rules to analyse each player.
+
+How it works:
+- Look at the player's stats
+- Check each stat against a threshold (a number)
+- If stat is above the threshold = STRENGTH
+- If stat is below the threshold = WEAKNESS
+
+Example rules:
+  IF goals >= 20 THEN strength = "Elite Finisher"
+  IF goals >= 12 THEN strength = "Clinical Scorer"
+  IF forward AND goals < 5 THEN weakness = "Poor Goal Output"
+  IF assists >= 12 THEN strength = "Elite Playmaker"
+  IF tackles >= 80 THEN strength = "Defensive Wall"
+  IF defender AND tackles < 40 THEN weakness = "Weak Defensively"
+  IF rating >= 8.0 THEN strength = "World Class Rating"
+
+The rules are position-aware:
+- Forwards are expected to score more goals
+- Defenders are expected to make more tackles
+- Midfielders are expected to create more assists
+
+============================================================

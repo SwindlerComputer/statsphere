@@ -1,0 +1,93 @@
+============================================================
+STATSPHERE - MOCK DATA EXPLAINED
+============================================================
+How the mock data system works
+============================================================
+
+WHAT IS MOCK DATA?
+-------------------
+Mock data is fake (but realistic) data that we created
+ourselves. Instead of calling an external football API
+(which costs money and can go offline), we store all the
+data locally in JSON files.
+
+This makes the app:
+- FREE to run (no API subscription needed)
+- RELIABLE (data never changes or breaks)
+- FAST (reading a file is quicker than calling an API)
+- EASY TO TEST (we control exactly what data is there)
+
+WHERE IS THE DATA STORED?
+---------------------------
+All data files are in: backend/data/
+
+  mockPlayers.json     200 players with full stats
+  mockTeams.json       21 teams (7 leagues)
+  mockStandings.json   League tables (8 competitions)
+  mockFixtures.json    Match schedules (8 competitions)
+  liveMatches.json     Simulated live matches
+  predictionTeams.json Team ratings for the predictor
+
+HOW A PLAYER LOOKS IN THE JSON
+---------------------------------
+{
+  "id": 1,
+  "name": "Kylian Mbappe",
+  "team": "Real Madrid",
+  "league": "La Liga",
+  "position": "Forward",
+  "age": 27,
+  "minutesPlayed": 2950,
+  "goals": 28,
+  "assists": 8,
+  "rating": 8.4,
+  "passes": 1200,
+  "tackles": 15,
+  "interceptions": 8,
+  "dribbles": 120,
+  "keyPasses": 55,
+  "shots": 150,
+  "shotsOnTarget": 75,
+  "cleanSheets": 0,
+  "yellowCards": 3,
+  "redCards": 0
+}
+
+WHICH LEAGUES ARE INCLUDED?
+------------------------------
+1. Premier League (England) - 6 teams
+2. La Liga (Spain) - 2 teams
+3. Serie A (Italy) - 3 teams
+4. Bundesliga (Germany) - 2 teams
+5. Ligue 1 (France) - 2 teams
+6. Saudi Pro League (Saudi Arabia) - 3 teams
+7. Super Lig (Turkey) - 1 team
+
+Plus tournaments:
+8. Champions League
+9. World Cup 2026
+
+WHICH PAGES USE WHICH DATA?
+------------------------------
+Dashboard       -> liveMatches.json
+Players         -> mockPlayers.json
+Player Insights -> mockPlayers.json
+Comparison      -> mockPlayers.json
+Ballon d'Or     -> mockPlayers.json
+Predictions     -> predictionTeams.json
+Standings       -> mockStandings.json
+Fixtures        -> mockFixtures.json
+
+HOW THE BACKEND SERVES THE DATA
+----------------------------------
+The backend uses Express.js routes to serve the data.
+
+When the frontend asks for players:
+  1. Frontend: fetch("/api/insights/players")
+  2. Backend receives the request
+  3. Backend does: fs.readFileSync("backend/data/mockPlayers.json")
+  4. Backend parses the JSON: JSON.parse(fileContents)
+  5. Backend sends it back: res.json(players)
+  6. Frontend receives the array of 200 players
+
+============================================================

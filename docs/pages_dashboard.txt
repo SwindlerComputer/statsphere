@@ -1,0 +1,58 @@
+============================================================
+STATSPHERE - DASHBOARD PAGE
+============================================================
+File: frontend/src/pages/Dashboard.js
+URL: / (the home page)
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+This is the home page of StatSphere. When a user opens
+the app, this is the first thing they see.
+
+It shows:
+1. Live football matches happening right now
+2. Quick stats (how many players, teams, etc.)
+3. Links to other features in the app
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. When the page loads, it calls the backend API:
+   GET /api/live-matches
+
+2. The backend reads the liveMatches.json file and sends
+   the data back as JSON.
+
+3. React stores the matches in a variable called "liveMatches"
+   using useState().
+
+4. The page shows each match in a card with:
+   - The league name (e.g. "Premier League")
+   - Home team vs Away team
+   - The current score
+   - What minute the match is at
+
+5. There is a dropdown to filter matches by league.
+   If the user picks "La Liga", only La Liga matches show.
+
+KEY REACT CONCEPTS USED
+-------------------------
+- useState: Stores the live matches and the selected league filter
+- useEffect: Runs the fetch() call when the page first loads
+- .filter(): Filters the matches based on the selected league
+- .map(): Loops through matches and creates a card for each one
+
+DATA FORMAT (what liveMatches.json looks like)
+-----------------------------------------------
+[
+  {
+    "id": 101,
+    "home": "Arsenal",
+    "away": "Chelsea",
+    "score": "1 - 2",
+    "minute": "67'",
+    "league": "Premier League"
+  }
+]
+
+============================================================

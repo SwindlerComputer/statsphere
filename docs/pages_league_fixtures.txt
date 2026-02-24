@@ -1,0 +1,94 @@
+============================================================
+STATSPHERE - LEAGUE FIXTURES PAGE
+============================================================
+File: frontend/src/pages/LeagueFixtures.js
+URL: /fixtures
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+Shows upcoming and completed matches (fixtures) for any
+competition. User can pick a league from the dropdown
+and also filter by match status (All, Completed, Upcoming).
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. Page loads with "Premier League" selected by default.
+
+2. It calls the backend:
+   GET /api/football/fixtures?competition=premier_league
+
+3. The backend reads mockFixtures.json, finds fixtures for
+   "Premier League", and sends them back.
+
+4. React stores fixtures in a useState variable.
+
+5. Each fixture is shown in a card with:
+   - The round (e.g. "Matchday 1")
+   - Home team vs Away team
+   - The score (if match is completed)
+   - Match status (Completed or Upcoming)
+   - The date of the match
+
+6. There is a STATUS FILTER dropdown:
+   - All: Shows everything
+   - Completed: Only shows finished matches
+   - Upcoming: Only shows future matches
+
+COMPETITION DROPDOWN
+---------------------
+Same as the Standings page. Split into groups:
+
+  Domestic Leagues:
+  - Premier League, La Liga, Serie A, Bundesliga,
+    Ligue 1, Saudi Pro League
+
+  Tournaments:
+  - Champions League, World Cup 2026
+
+STATUS FILTER
+--------------
+The user can filter by match status:
+  - "All": No filter, show all matches
+  - "FT" (Full Time): Show only completed matches
+  - "NS" (Not Started): Show only upcoming matches
+
+In code, this uses .filter():
+  if (statusFilter === "All") show everything
+  if (statusFilter === "FT") only show matches where status = "FT"
+  if (statusFilter === "NS") only show matches where status = "NS"
+
+DATA FORMAT (mockFixtures.json)
+---------------------------------
+{
+  "Premier League": [
+    {
+      "id": 1001,
+      "homeTeam": "Arsenal",
+      "awayTeam": "Chelsea",
+      "homeScore": 2,
+      "awayScore": 1,
+      "date": "2025-08-16",
+      "status": "FT",
+      "round": "Matchday 1"
+    }
+  ]
+}
+
+STATUS LABELS
+--------------
+FT = Full Time (match is over)
+NS = Not Started (match is in the future)
+
+These are shown as coloured badges on each fixture card:
+  FT -> Green badge saying "Completed"
+  NS -> Yellow badge saying "Upcoming"
+
+KEY REACT CONCEPTS USED
+-------------------------
+- useState: Stores fixtures, selected competition, status filter
+- useEffect: Fetches fixtures when competition changes
+- .filter(): Filters fixtures by status
+- .map(): Loops through fixtures to create cards
+
+============================================================

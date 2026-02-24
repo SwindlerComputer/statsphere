@@ -1,0 +1,67 @@
+============================================================
+STATSPHERE - PLAYERS PAGE
+============================================================
+File: frontend/src/pages/Players.js
+URL: /players
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+Shows a table of all 200 players with their stats.
+Users can search by name, filter by league, position,
+or team. It uses PAGINATION so only 20 players show
+at a time (not all 200 at once).
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. When the page loads, it calls:
+   GET /api/insights/players
+
+2. The backend reads mockPlayers.json and sends back
+   an array of 200 player objects.
+
+3. React stores all 200 players in a variable called "players".
+
+4. The user can type in the search box or pick from dropdowns.
+   Every time they type or pick, the filter runs again.
+
+5. The filter uses .filter() to check each player:
+   - Does the name match the search text?
+   - Does the position match the dropdown?
+   - Does the team match the dropdown?
+   - Does the league match the dropdown?
+   Only players that pass ALL checks are shown.
+
+6. PAGINATION: The filtered list is split into pages of 20.
+   - slice(0, 20) = page 1
+   - slice(20, 40) = page 2
+   - etc.
+   The user clicks "Next" or "Previous" to change pages.
+
+KEY REACT CONCEPTS USED
+-------------------------
+- useState: Stores players, search text, filters, current page
+- useEffect: Fetches players from backend on page load
+- .filter(): Applies search and dropdown filters
+- .slice(): Cuts the array to show only 20 players per page
+- Math.ceil(): Calculates total number of pages
+
+PAGINATION EXPLAINED (SIMPLE)
+-------------------------------
+Total players = 200
+Players per page = 20
+Total pages = 200 / 20 = 10 pages
+
+If user is on page 3:
+  startIndex = (3 - 1) * 20 = 40
+  endIndex = 40 + 20 = 60
+  Show players from index 40 to 59
+
+When user clicks "Next":
+  currentPage goes from 3 to 4
+  New slice: players 60 to 79
+
+When user changes a filter:
+  currentPage resets back to 1
+
+============================================================

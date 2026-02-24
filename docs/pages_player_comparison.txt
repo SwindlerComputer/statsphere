@@ -1,0 +1,64 @@
+============================================================
+STATSPHERE - PLAYER COMPARISON PAGE
+============================================================
+File: frontend/src/pages/PlayerComparison.js
+URL: /compare
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+Lets the user pick two players and compare them side by side.
+The better stat is highlighted in green so you can easily see
+who is better at what.
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. Page loads and fetches all 200 players from:
+   GET /api/insights/players
+
+2. There are two dropdowns: Player A and Player B.
+   Each dropdown has a search box so the user can type
+   a name to find a player quickly.
+
+3. When both players are picked, a comparison table appears.
+
+4. Each stat is shown in a row:
+   - Player A's value on the left
+   - Stat name in the middle
+   - Player B's value on the right
+   - The HIGHER value is coloured GREEN
+
+5. Each player also gets a "playstyle" label like:
+   - "Clinical Finisher" (scores a lot efficiently)
+   - "Creative Playmaker" (lots of assists and key passes)
+   - "Defensive Rock" (lots of tackles and interceptions)
+   - "Box-to-Box Midfielder" (default for midfielders)
+
+STATS COMPARED
+---------------
+Basic Info: Age, Position, League, Rating
+Attacking: Goals, Assists, Shots, Shots on Target, Key Passes, Dribbles
+Defensive: Passes, Tackles, Interceptions, Clean Sheets
+Discipline: Yellow Cards, Red Cards, Minutes Played
+
+THE compareStats FUNCTION
+--------------------------
+This is a simple function:
+  function compareStats(valueA, valueB)
+    if valueA > valueB: return "A"
+    if valueB > valueA: return "B"
+    else: return "tie"
+
+If it returns "A", Player A's number turns green.
+If it returns "B", Player B's number turns green.
+
+THE getPlaystyle FUNCTION
+--------------------------
+This checks a player's stats and returns a label:
+  IF goals >= 15 AND shot accuracy > 15% = "Clinical Finisher"
+  IF assists >= 10 AND key passes >= 40 = "Creative Playmaker"
+  IF tackles >= 70 AND interceptions >= 50 = "Defensive Rock"
+  IF dribbles >= 60 AND goals >= 8 = "Skillful Attacker"
+  Otherwise: use a default based on their position
+
+============================================================

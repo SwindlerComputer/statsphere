@@ -1,0 +1,84 @@
+============================================================
+STATSPHERE - BALLON D'OR PREDICTOR PAGE
+============================================================
+File: frontend/src/pages/BallonDor.js
+URL: /ballon-dor
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+This page predicts who should win the Ballon d'Or award.
+It loads all 200 players, gives each one a score based on
+their stats, then shows ONLY the top 10 candidates.
+
+The player with the highest score is ranked #1.
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. Page loads and fetches all 200 players from:
+   GET /api/insights/players
+
+2. For each player, it runs the calculateScore() function
+   to give them a number.
+
+3. It sorts all 200 players by score (highest first).
+
+4. It uses .slice(0, 10) to keep only the top 10.
+
+5. It shows these 10 players in cards with their stats.
+
+6. At the bottom, there is a breakdown showing WHY
+   the #1 player got the highest score.
+
+THE SCORING FORMULA
+---------------------
+For each player, the score is calculated like this:
+
+  Step 1: Calculate goal points   = goals x 4
+  Step 2: Calculate assist points = assists x 3
+  Step 3: Calculate rating points = rating x 10
+  Step 4: Calculate creativity    = keyPasses x 0.5
+  Step 5: Calculate consistency   = (goals / minutesPlayed x 90) x 50
+  Step 6: Add them all together   = rawScore
+  Step 7: Multiply by league weight = finalScore
+
+Example with Kylian Mbappe (made up numbers):
+  Goals: 25     -> 25 x 4 = 100 points
+  Assists: 10   -> 10 x 3 = 30 points
+  Rating: 8.2   -> 8.2 x 10 = 82 points
+  Key Passes: 60 -> 60 x 0.5 = 30 points
+  Goals/90: 0.8  -> 0.8 x 50 = 40 points
+  Raw Score = 100 + 30 + 82 + 30 + 40 = 282
+  League Weight (La Liga) = 0.95
+  Final Score = 282 x 0.95 = 267.9
+
+LEAGUE WEIGHTS EXPLAINED
+--------------------------
+Not all leagues are equally hard. Scoring 20 goals in the
+Premier League is harder than scoring 20 in a weaker league.
+So we multiply the score by a weight:
+
+  Premier League: 1.0   (100% - hardest)
+  La Liga:        0.95  (95%)
+  Serie A:        0.9   (90%)
+  Bundesliga:     0.9   (90%)
+  Ligue 1:        0.85  (85%)
+  Super Lig:      0.75  (75%)
+  Saudi Pro League: 0.7 (70%)
+
+WHY ONLY TOP 10?
+-----------------
+The Ballon d'Or award only goes to the best players in the
+world. Showing all 200 players would be confusing and would
+make the page slow. By showing only the top 10, it looks
+clean and makes sense (like the real award shortlist).
+
+KEY REACT CONCEPTS USED
+-------------------------
+- useState: Stores top10 array and loading state
+- useEffect: Fetches players and calculates scores on load
+- .sort(): Sorts players by score (highest first)
+- .slice(0, 10): Takes only the first 10 from sorted array
+- .map(): Loops through top 10 to create cards
+
+============================================================

@@ -1,0 +1,90 @@
+============================================================
+STATSPHERE - HOW THE WHOLE APP WORKS
+============================================================
+A simple overview for your final year project defence
+============================================================
+
+WHAT IS STATSPHERE?
+--------------------
+StatSphere is a football analytics web application.
+It lets users view player stats, compare players,
+predict match outcomes, see league tables, and chat
+with other users in real time.
+
+THE THREE MAIN PARTS
+----------------------
+The app has 3 main parts that work together:
+
+1. FRONTEND (what the user sees)
+   - Built with React.js
+   - Styled with Tailwind CSS
+   - Charts drawn with Recharts library
+   - Runs in the browser (Chrome, Firefox, etc.)
+   - Hosted on Vercel
+
+2. BACKEND (the server)
+   - Built with Node.js + Express.js
+   - Reads mock data from JSON files
+   - Handles login/register with JWT
+   - Runs the WebSocket chat server
+   - Hosted on Render
+
+3. DATABASE (stores user accounts)
+   - PostgreSQL database
+   - Hosted on Supabase
+   - Stores: users, chat messages, reports
+
+HOW THEY TALK TO EACH OTHER
+------------------------------
+Frontend <----> Backend <----> Database
+
+1. User opens the app in their browser (Frontend)
+2. Frontend sends a request to the Backend
+   Example: GET /api/insights/players
+3. Backend reads the JSON file or database
+4. Backend sends the data back to Frontend
+5. Frontend shows the data on the page
+
+ALL THE PAGES IN THE APP
+--------------------------
+
+Page              URL             What it does
+-----             ---             ------------
+Dashboard         /               Home page, live matches, quick stats
+Players           /players        Table of 200 players (20 per page)
+Player Comparison /compare        Pick 2 players and compare them
+Player Insights   /insights       Charts and AI analysis for one player
+Ballon d'Or       /ballon-dor     Top 10 Ballon d'Or candidates
+Predictions       /predictions    Predict match outcomes
+League Standings  /standings      League tables for any competition
+League Fixtures   /fixtures       Match fixtures for any competition
+Community Chat    /community      Real-time chat (needs login)
+Login             /login          Sign into your account
+Register          /register       Create a new account
+
+THE MOCK DATA
+--------------
+Instead of calling external APIs (which cost money and can
+break), we use local JSON files with realistic data:
+
+  backend/data/mockPlayers.json    - 200 real players with stats
+  backend/data/mockTeams.json      - 21 teams across 7 leagues
+  backend/data/mockStandings.json  - League tables for 8 competitions
+  backend/data/mockFixtures.json   - Match fixtures for 8 competitions
+  backend/data/liveMatches.json    - Simulated live matches
+  backend/data/predictionTeams.json - Team ratings for predictions
+
+All players are real 2025-26 players on their actual teams.
+
+KEY TECHNOLOGIES
+------------------
+React.js     - Frontend framework (builds the pages)
+Express.js   - Backend framework (handles API requests)
+PostgreSQL   - Database (stores users and messages)
+Socket.IO    - WebSocket library (real-time chat)
+JWT          - Authentication (login tokens)
+Recharts     - Chart library (bar charts, radar charts)
+Tailwind CSS - CSS framework (styling)
+Bcrypt       - Password hashing (security)
+
+============================================================

@@ -1,0 +1,90 @@
+============================================================
+STATSPHERE - COMMUNITY CHAT PAGE
+============================================================
+File: frontend/src/pages/Community.js
+URL: /community
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+This is a real-time chat page where logged-in users can
+talk to each other. Messages appear instantly (no need to
+refresh the page) because we use WebSockets.
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. User must be logged in to use the chat.
+   If not logged in, they see a message saying
+   "Please log in to join the community chat."
+
+2. When the page loads, it connects to the backend
+   using Socket.IO (a WebSocket library).
+
+3. When the user types a message and clicks "Send":
+   a. The message is sent to the backend via WebSocket
+   b. The backend receives it
+   c. The backend checks for bad words (moderation)
+   d. The backend sends the message to ALL connected users
+   e. Everyone's chat updates instantly
+
+4. Messages appear in a scrollable list with:
+   - The sender's name
+   - The message text
+   - The time it was sent
+
+WEBSOCKETS vs NORMAL HTTP
+---------------------------
+Normal HTTP (what we use for other pages):
+  - Client asks server for data (request)
+  - Server sends data back (response)
+  - Connection closes
+  - Client has to ask again to get updates
+
+WebSocket (what we use for chat):
+  - Client connects to server (stays connected)
+  - Server can send data to client at ANY TIME
+  - Client can send data to server at ANY TIME
+  - Perfect for chat because messages appear instantly
+
+SOCKET.IO EXPLAINED
+---------------------
+Socket.IO is a library that makes WebSockets easy to use.
+
+Backend (server.js):
+  const io = require("socket.io")(server)
+  io.on("connection", (socket) => {
+    socket.on("chat-message", (msg) => {
+      io.emit("chat-message", msg)
+    })
+  })
+
+Frontend (Community.js):
+  import io from "socket.io-client"
+  const socket = io(API_BASE)
+  socket.on("chat-message", (msg) => {
+    // add message to the chat list
+  })
+
+The key events:
+  "connection": A user has joined the chat
+  "chat-message": A new message was sent
+  "disconnect": A user left the chat
+
+MODERATION SYSTEM
+-------------------
+Before a message is sent to everyone, the backend checks it.
+If the message contains a bad word, it gets blocked.
+
+The system also allows users to "report" a message.
+If a message gets enough reports, it can be reviewed
+by an admin.
+
+See moderation_system.txt for more details.
+
+KEY REACT CONCEPTS USED
+-------------------------
+- useState: Stores messages, input text
+- useEffect: Connects to WebSocket when page loads
+- useRef: Scrolls chat to the bottom when new messages arrive
+
+============================================================

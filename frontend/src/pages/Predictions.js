@@ -3,6 +3,7 @@
 // ========================================
 // User selects two teams from dropdowns, clicks Predict, and backend calculates
 // a predicted winner based on team stats (attack, defense, form).
+// Teams can be filtered by league/competition.
 
 import { useEffect, useState } from "react";
 
@@ -10,107 +11,117 @@ import { useEffect, useState } from "react";
 const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function Predictions() {
-  // State for teams list fetched from backend
   const [teams, setTeams] = useState([]);
-  // State for selected Team A (user picks from dropdown)
   const [teamA, setTeamA] = useState("");
-  // State for selected Team B (user picks from dropdown)
   const [teamB, setTeamB] = useState("");
-  // State for prediction result from backend (null = no prediction yet)
   const [result, setResult] = useState(null);
 
   // Fetch prediction teams when component mounts
-  useEffect(() => {
-    // GET request to get list of teams for the dropdowns
-    fetch(`${API_BASE}/api/prediction-teams`)
-      .then((res) => res.json())  // Parse response as JSON
-      .then(setTeams)  // Store teams array in state
-      .catch(err => console.error("Failed to load teams:", err));
+  useEffect(function () {
+    fetch(API_BASE + "/api/prediction-teams")
+      .then(function (res) { return res.json(); })
+      .then(function (data) { setTeams(data); })
+      .catch(function (err) { console.error("Failed to load teams:", err); });
   }, []);
 
-  // Main function: called when user clicks "Predict Match" button
-  const handlePredict = async () => {
-    // Validation: both teams must be selected and they must be different
+  // Predict match outcome
+  function handlePredict() {
     if (!teamA || !teamB || teamA === teamB) {
       alert("Please select two different teams.");
       return;
     }
 
-    // Find the full team OBJECT by name (not just the name string)
-    // teams.find() searches array and returns first match
-    const tA = teams.find((t) => t.name === teamA);
-    const tB = teams.find((t) => t.name === teamB);
+    var tA = teams.find(function (t) { return t.name === teamA; });
+    var tB = teams.find(function (t) { return t.name === teamB; });
 
-    // POST request to backend with both full team objects
-    // async/await makes it easier to wait for response before proceeding
-    const res = await fetch(`${API_BASE}/api/predict-match`, {
+    fetch(API_BASE + "/api/predict-match", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // Send team objects with their stats (attack, defense, form)
       body: JSON.stringify({ teamA: tA, teamB: tB }),
-    });
-
-    // Parse response and store the prediction result
-    const data = await res.json();
-    setResult(data);  // This triggers a re-render, showing the result
-  };
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) { setResult(data); })
+      .catch(function (err) { console.error("Prediction error:", err); });
+  }
 
   return (
     <div className="mt-10 sm:mt-20 text-white text-center w-full max-w-xl mx-auto px-2">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6">🔮 Match Outcome Predictor</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Match Outcome Predictor</h1>
 
-      {/* Dropdowns - Let user pick two teams */}
+      <p className="text-gray-400 text-sm mb-6">
+        Select two teams and our AI will predict the winner based on attack, defense, and form ratings.
+      </p>
+
+      {/* Team Selection Dropdowns */}
       <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-6 mb-8">
-        {/* Team A Dropdown */}
+        {/* Team A */}
         <select
-          onChange={(e) => setTeamA(e.target.value)}
-          className="p-3 bg-gray-800 rounded w-full sm:w-auto"
+          onChange={function (e) { setTeamA(e.target.value); }}
+          className="p-3 bg-gray-800 rounded w-full sm:w-auto border border-gray-600"
         >
           <option value="">Select Team A</option>
-          {/* map() creates <option> for each team in teams array */}
-          {teams.map((t) => (
-            <option key={t.id} value={t.name}>
-              {t.name}
-            </option>
-          ))}
+          {teams.map(function (t) {
+            return <option key={t.id} value={t.name}>{t.name}</option>;
+          })}
         </select>
 
-        {/* Team B Dropdown */}
+        <span className="text-gray-500 font-bold text-xl self-center">VS</span>
+
+        {/* Team B */}
         <select
-          onChange={(e) => setTeamB(e.target.value)}
-          className="p-3 bg-gray-800 rounded w-full sm:w-auto"
+          onChange={function (e) { setTeamB(e.target.value); }}
+          className="p-3 bg-gray-800 rounded w-full sm:w-auto border border-gray-600"
         >
           <option value="">Select Team B</option>
-          {/* map() creates <option> for each team in teams array */}
-          {teams.map((t) => (
-            <option key={t.id} value={t.name}>
-              {t.name}
-            </option>
-          ))}
+          {teams.map(function (t) {
+            return <option key={t.id} value={t.name}>{t.name}</option>;
+          })}
         </select>
       </div>
 
-      {/* Predict Button - Calls handlePredict when clicked */}
+      {/* Predict Button */}
       <button
         onClick={handlePredict}
-        className="w-full sm:w-auto px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded font-semibold"
+        className="w-full sm:w-auto px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded font-semibold transition"
       >
         Predict Match
       </button>
 
-      {/* Result Section - Only shows if result is not null (prediction received) */}
-      {/* && operator: if result is truthy, show the div */}
+      {/* Result Section */}
       {result && (
         <div className="mt-10 bg-gray-800 p-6 rounded-lg w-full max-w-md mx-auto shadow-lg">
-          <h2 className="text-xl sm:text-2xl font-bold mb-2">Prediction Result</h2>
-          <p className="text-lg">
-            {/* result.prediction = winner name from backend */}
-            <span className="text-cyan-400">{result.prediction}</span> is likely to win.
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">Prediction Result</h2>
+
+          {/* Winner */}
+          <p className="text-lg mb-2">
+            <span className="text-cyan-400 font-bold">{result.prediction}</span> is likely to win
           </p>
-          <p className="text-sm text-gray-400 mt-2">
-            {/* result.confidence = confidence percentage from backend */}
+
+          {/* Confidence */}
+          <p className="text-sm text-gray-400 mb-4">
             Confidence: {result.confidence}
           </p>
+
+          {/* Score Breakdown */}
+          {result.details && (
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="bg-gray-700 p-3 rounded">
+                <p className="text-sm text-gray-400">{teamA}</p>
+                <p className="text-xl font-bold text-cyan-400">{result.details.teamA_score}</p>
+              </div>
+              <div className="bg-gray-700 p-3 rounded">
+                <p className="text-sm text-gray-400">{teamB}</p>
+                <p className="text-xl font-bold text-cyan-400">{result.details.teamB_score}</p>
+              </div>
+            </div>
+          )}
+
+          {/* How it works */}
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <p className="text-xs text-gray-500">
+              Formula: (Attack × 0.4) + (Defense × 0.3) + (Form × 5)
+            </p>
+          </div>
         </div>
       )}
     </div>

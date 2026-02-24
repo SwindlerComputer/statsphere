@@ -1,0 +1,96 @@
+============================================================
+STATSPHERE - LEAGUE STANDINGS PAGE
+============================================================
+File: frontend/src/pages/LeagueStandings.js
+URL: /standings
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+Shows the league table for any competition. The user picks
+a league from a dropdown (Premier League, La Liga, etc.)
+or a tournament (Champions League, World Cup 2026) and
+sees the full table with points, wins, draws, losses, etc.
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. Page loads with "Premier League" selected by default.
+
+2. It calls the backend:
+   GET /api/football/standings?competition=premier_league
+
+3. The backend reads mockStandings.json, finds the data
+   for "Premier League", and sends it back.
+
+4. React stores the standings in a useState variable.
+
+5. A table is drawn with columns:
+   - Rank (1st, 2nd, 3rd etc.)
+   - Team name
+   - Played (number of matches)
+   - Won, Draw, Lost
+   - Goal Difference (GD)
+   - Points
+
+6. When the user picks a different league from the dropdown,
+   a new API call is made with the new competition name.
+
+THE DROPDOWN (COMPETITIONS)
+-----------------------------
+The dropdown is split into groups using <optgroup>:
+
+  Domestic Leagues:
+  - Premier League
+  - La Liga
+  - Serie A
+  - Bundesliga
+  - Ligue 1
+  - Saudi Pro League
+
+  Tournaments:
+  - Champions League
+  - World Cup 2026
+
+Each option has a value (like "premier_league") and a label
+(like "Premier League").
+
+DATA FORMAT (mockStandings.json)
+----------------------------------
+The JSON file has one key for each competition:
+{
+  "Premier League": [
+    {
+      "rank": 1,
+      "team": "Arsenal",
+      "played": 38,
+      "won": 28,
+      "draw": 6,
+      "lost": 4,
+      "goalsFor": 88,
+      "goalsAgainst": 35,
+      "goalDifference": 53,
+      "points": 90
+    }
+  ]
+}
+
+HOW THE BACKEND FINDS THE DATA
+---------------------------------
+The backend route /api/football/standings works like this:
+
+1. Read mockStandings.json into memory
+2. Look at the "competition" query parameter
+3. Convert it to a display name (e.g. "premier_league" -> "Premier League")
+4. Find that key in the JSON data
+5. Send the array of team standings back
+
+If the competition is not found, it sends back an empty array.
+
+KEY REACT CONCEPTS USED
+-------------------------
+- useState: Stores standings array and selected competition
+- useEffect: Runs the fetch when the selected competition changes
+- .map(): Loops through standings to create table rows
+- <select> and onChange: Handles the dropdown selection
+
+============================================================

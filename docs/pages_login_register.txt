@@ -1,0 +1,88 @@
+============================================================
+STATSPHERE - LOGIN AND REGISTER PAGES
+============================================================
+Files: frontend/src/pages/Login.js
+       frontend/src/pages/Register.js
+URLs: /login and /register
+============================================================
+
+WHAT THESE PAGES DO
+--------------------
+Login: Lets existing users sign into their account.
+Register: Lets new users create an account.
+
+Both pages are forms with text inputs and a submit button.
+
+HOW REGISTER WORKS (STEP BY STEP)
+------------------------------------
+1. User fills in: name, email, password
+
+2. User clicks "Register"
+
+3. Frontend sends a POST request to the backend:
+   POST /api/auth/register
+   Body: { name: "John", email: "john@email.com", password: "123" }
+
+4. Backend receives the data:
+   a. Checks if email already exists in the database
+   b. If it does, sends back an error
+   c. If it doesn't, hashes the password (scrambles it for safety)
+   d. Saves the new user in the PostgreSQL database
+   e. Creates a JWT token (a login pass)
+   f. Sends the token back in a cookie
+
+5. Frontend receives the response:
+   a. If success, redirects to the Dashboard
+   b. If error, shows the error message
+
+HOW LOGIN WORKS (STEP BY STEP)
+---------------------------------
+1. User fills in: email, password
+
+2. User clicks "Login"
+
+3. Frontend sends a POST request:
+   POST /api/auth/login
+   Body: { email: "john@email.com", password: "123" }
+
+4. Backend:
+   a. Finds the user by email in the database
+   b. Compares the password with the stored hash
+   c. If they match, creates a JWT token
+   d. Sends the token back in a cookie
+
+5. Frontend receives the response and redirects to Dashboard.
+
+JWT TOKENS EXPLAINED (SIMPLE VERSION)
+----------------------------------------
+JWT = JSON Web Token. It's like a digital ID card.
+
+When you log in, the server gives you a token.
+This token proves who you are.
+Every time you visit a page or send a chat message,
+your browser sends the token so the server knows it's you.
+
+The token is stored in a cookie (a small file in your browser).
+When you log out, the cookie is deleted.
+
+See authentication_flow.txt for more details.
+
+PASSWORD HASHING
+------------------
+We NEVER store passwords as plain text.
+Instead, we use "bcrypt" to hash them.
+
+Hashing means turning "password123" into something like:
+  "$2b$10$xJKfY3kR.../..."
+
+You can't reverse a hash back to the original password.
+When logging in, we hash what the user typed and compare
+the two hashes. If they match, the password is correct.
+
+KEY REACT CONCEPTS USED
+-------------------------
+- useState: Stores form inputs (email, password, name)
+- fetch: Sends data to the backend API
+- useNavigate: Redirects user after login/register
+
+============================================================

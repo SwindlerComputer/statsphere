@@ -1,0 +1,86 @@
+============================================================
+STATSPHERE - MATCH PREDICTIONS PAGE
+============================================================
+File: frontend/src/pages/Predictions.js
+URL: /predictions
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+The user picks two teams and the system predicts who will
+win the match. It also shows the predicted score and
+each team's win percentage.
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. Page loads and fetches teams from:
+   GET /api/prediction-teams
+
+2. The backend reads predictionTeams.json and sends back
+   a list of 20 teams with their stats:
+   - Attack rating (how good at scoring)
+   - Defense rating (how good at stopping goals)
+   - Form rating (how well they've been playing recently)
+
+3. User picks Team A and Team B from dropdown menus.
+
+4. When the user clicks "Predict", the app runs the
+   prediction formula.
+
+5. The result shows:
+   - Win percentages for each team (and draw chance)
+   - A predicted score (e.g. "2 - 1")
+   - Which team is predicted to win
+
+THE PREDICTION FORMULA
+-----------------------
+This is a simple math-based prediction. No machine learning.
+
+Step 1: Calculate attack strength for each team
+  attackStrength = attack rating / 100
+
+Step 2: Calculate defence weakness
+  defenceWeakness = 1 - (defense rating / 100)
+
+Step 3: Predict goals
+  Team A goals = Team A attack x Team B defence weakness x form bonus
+  Team B goals = Team B attack x Team A defence weakness x form bonus
+
+Step 4: Add some randomness
+  We add a small random number so predictions aren't always the same.
+
+Step 5: Calculate percentages
+  If Team A goals > Team B goals:
+    Team A win chance is higher
+
+Example:
+  Arsenal:  attack=85, defense=80, form=82
+  Chelsea:  attack=78, defense=75, form=70
+  
+  Arsenal attack strength = 85/100 = 0.85
+  Chelsea defence weakness = 1 - (75/100) = 0.25
+  Arsenal expected goals = 0.85 x 0.25 x form = ~2.1
+
+  The team with more expected goals is predicted to win.
+
+DATA FORMAT (predictionTeams.json)
+------------------------------------
+[
+  {
+    "id": 1,
+    "name": "Real Madrid",
+    "league": "La Liga",
+    "attack": 92,
+    "defense": 82,
+    "form": 88
+  }
+]
+
+KEY REACT CONCEPTS USED
+-------------------------
+- useState: Stores teams, selected teams, and prediction result
+- useEffect: Fetches teams when page loads
+- Math.random(): Adds small randomness to predictions
+- Math.round(): Rounds predicted scores to whole numbers
+
+============================================================

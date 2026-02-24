@@ -85,4 +85,62 @@ KEY REACT CONCEPTS USED
 - fetch: Sends data to the backend API
 - useNavigate: Redirects user after login/register
 
+COMPLEX CODE EXPLAINED
+------------------------
+Here are the trickiest parts of these pages in plain English:
+
+1. Form Submission with fetch POST
+   When the user clicks "Login" or "Register", the frontend uses the
+   fetch() function to send data to the backend. It packages the form
+   inputs (email, password, etc.) into a JSON object and sends it as a
+   POST request. The backend processes it and sends back a response.
+   We use "await fetch(url, { method: 'POST', body: JSON.stringify(data) })"
+   which pauses the code until the server replies. If the server says
+   success, we redirect the user. If it says error, we show the message.
+
+2. Password Hashing Concept
+   We never store the actual password. Instead, the backend uses bcrypt
+   to turn "Password123" into a long scrambled string like "$2b$10$xJK..."
+   This is a one-way process - you cannot reverse it. When logging in,
+   bcrypt takes what the user typed, hashes it, and compares the two
+   hashes. If they match, the password is correct. This protects users
+   even if someone steals the database, because the real passwords are
+   never stored anywhere.
+
+3. Token Storage (Cookie + localStorage)
+   After login, the server sends back a JWT token. This token is stored
+   in TWO places: a cookie and localStorage. The cookie is sent
+   automatically with every request to the backend (the browser does this
+   on its own). localStorage is used by the frontend JavaScript to quickly
+   check if the user is logged in and display their name. Using both gives
+   us the security of cookies (sent automatically, can be HttpOnly) and
+   the convenience of localStorage (easy to read in JavaScript).
+
+DEFENCE TALKING POINTS
+------------------------
+Here is what to say when presenting the Login/Register feature:
+
+- "I implemented a secure authentication system with both client-side
+  and server-side validation. The frontend catches errors early for a
+  better user experience, and the backend validates again to prevent
+  anyone from bypassing the frontend."
+
+- "Passwords are hashed using bcrypt before storing in the database.
+  This means even if the database were compromised, attackers would not
+  have access to actual passwords. This follows industry best practice."
+
+- "I use JWT tokens for session management. The token is stored in both
+  a cookie and localStorage - the cookie provides automatic inclusion in
+  HTTP requests and the localStorage lets the frontend quickly check
+  login state without an extra server call."
+
+- "The login and register forms use React useState hooks to track each
+  input field, and fetch API to communicate with the backend. Error
+  messages are displayed in real time so the user knows exactly what
+  went wrong."
+
+- "After successful login, useNavigate from React Router redirects the
+  user to the dashboard, giving a smooth single-page-app experience
+  without a full page reload."
+
 ============================================================

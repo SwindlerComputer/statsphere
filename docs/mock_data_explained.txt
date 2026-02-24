@@ -90,4 +90,179 @@ When the frontend asks for players:
   5. Backend sends it back: res.json(players)
   6. Frontend receives the array of 200 players
 
+
+COMPLEX CODE EXPLAINED
+-----------------------
+
+1. JSON DATA STRUCTURE
+
+   From mockPlayers.json - a single player object:
+
+     {
+       "id": 1,
+       "name": "Kylian Mbappe",
+       "team": "Real Madrid",
+       "league": "La Liga",
+       "position": "Forward",
+       "age": 27,
+       "minutesPlayed": 2950,
+       "goals": 28,
+       "assists": 8,
+       "rating": 8.4,
+       "passes": 1200,
+       "tackles": 15,
+       "interceptions": 8,
+       "dribbles": 120,
+       "keyPasses": 55,
+       "shots": 150,
+       "shotsOnTarget": 75,
+       "cleanSheets": 0,
+       "yellowCards": 3,
+       "redCards": 0
+     }
+
+   How this works:
+   - JSON (JavaScript Object Notation) is a text format for storing data.
+     It uses curly braces {} for objects and square brackets [] for arrays.
+   - Each player is an object with key-value pairs. The key is the field
+     name (e.g. "goals") and the value is the data (e.g. 28).
+   - Strings use double quotes ("Kylian Mbappe"), numbers do not (28).
+   - The mockPlayers.json file contains an array of 200 of these objects:
+     [ {player1}, {player2}, ... {player200} ]
+   - JSON is used because JavaScript can parse it natively with
+     JSON.parse(), and it is human-readable so we can easily inspect
+     and edit the data.
+   - All player data uses real 2025-26 season players on their actual
+     teams with realistic statistics. This makes the app feel authentic
+     even though it is not calling a live API.
+
+2. HOW THE BACKEND READS JSON FILES (fs.readFileSync)
+
+   From server.js:
+
+     app.get("/api/insights/players", (req, res) => {
+       try {
+         const filePath = path.join(__dirname, "data", "mockPlayers.json");
+         const jsonData = fs.readFileSync(filePath, "utf8");
+         const players = JSON.parse(jsonData);
+         res.json(players);
+       } catch (err) {
+         console.error("Error loading mockPlayers.json:", err);
+         res.status(500).json({ error: "Failed to load mock player data" });
+       }
+     });
+
+   Line by line:
+   - app.get("/api/insights/players", (req, res) => {...})
+     This creates an API endpoint. When any client sends a GET request to
+     /api/insights/players, this function runs.
+   - path.join(__dirname, "data", "mockPlayers.json")
+     This builds the file path safely. __dirname is the folder where
+     server.js lives (the backend folder). path.join() combines folder
+     names with the correct separator (/ on Mac, \ on Windows). The result
+     is something like: C:\Users\Desktop\statsphere\backend\data\mockPlayers.json
+   - fs.readFileSync(filePath, "utf8")
+     fs is Node.js's built-in file system module. readFileSync reads the
+     entire file and returns its contents as a string. "utf8" tells it
+     to read as text (not binary). Sync means it waits for the file to
+     finish loading before continuing.
+   - JSON.parse(jsonData)
+     This converts the JSON string (text) into a JavaScript array of
+     objects. After parsing, "players" is an array where you can do
+     players[0].name to get "Kylian Mbappe".
+   - res.json(players)
+     This sends the JavaScript array back to the frontend as a JSON
+     response. Express automatically sets the Content-Type header to
+     application/json.
+   - The try/catch block handles errors gracefully. If the file does not
+     exist or the JSON is malformed, it returns a 500 error instead of
+     crashing the server.
+
+3. HOW THE FRONTEND FETCHES AND FILTERS DATA
+
+   From BallonDor.js - fetching then processing:
+
+     useEffect(function () {
+       fetch(API_BASE + "/api/insights/players")
+         .then(function (res) { return res.json(); })
+         .then(function (allPlayers) {
+           var scored = [];
+           for (var i = 0; i < allPlayers.length; i++) {
+             var player = allPlayers[i];
+             var score = calculateScore(player);
+             scored.push({ name: player.name, score: score, ... });
+           }
+           scored.sort(function (a, b) { return b.score - a.score; });
+           var topTen = scored.slice(0, 10);
+           setTop10(topTen);
+         });
+     }, []);
+
+   Line by line:
+   - fetch(API_BASE + "/api/insights/players")
+     Sends a GET request to the backend endpoint we saw above. The backend
+     reads the JSON file and sends back 200 player objects.
+   - .then(function (res) { return res.json(); })
+     The fetch response is not immediately usable - res.json() reads the
+     response body and parses the JSON string into a JavaScript array.
+   - .then(function (allPlayers) {...})
+     Now allPlayers is a JavaScript array of 200 player objects. We loop
+     through each one, calculate a Ballon d'Or score using calculateScore(),
+     and push it into a new "scored" array with the score attached.
+   - scored.sort(function (a, b) { return b.score - a.score; })
+     This sorts the array by score in descending order. The sort function
+     compares two items at a time: if b.score - a.score is positive, b
+     comes first (higher score first).
+   - scored.slice(0, 10)
+     slice(0, 10) returns a new array with only the first 10 items.
+     Since we sorted highest-first, this gives us the top 10 players.
+   - setTop10(topTen)
+     Save the top 10 to React state, which triggers a re-render and
+     displays the results on screen.
+   - The key pattern here: fetch ALL data from backend, then filter and
+     process it on the frontend. This means the backend stays simple
+     (just serve the file) and the frontend handles the business logic.
+
+
+DEFENCE TALKING POINTS
+-----------------------
+
+- "I chose to use mock data stored in JSON files rather than calling a
+  live external API. This was a deliberate architectural decision for
+  several reasons: external football APIs like RapidAPI cost money after
+  the free tier, they can go offline or change their response format
+  without warning, and they make the app impossible to demo without
+  internet. My mock data is free, reliable, fast, and consistent,
+  while still using real players and realistic statistics."
+
+- "Data consistency was critical for my prediction model and comparison
+  features. With a live API, the data could change between requests,
+  making it impossible to get reliable predictions. With mock data, every
+  user sees the same players with the same stats, so the Ballon d'Or
+  rankings and match predictions are reproducible and testable. This
+  is important for a project that needs to be demonstrated and evaluated."
+
+- "My mock data system is designed to be easily swappable for a real API
+  in the future. The backend serves the data through the same REST API
+  endpoints regardless of the source. To switch to a live API, I would
+  only need to change the route handlers in server.js - instead of
+  fs.readFileSync() I would use fetch() to call the external API. The
+  frontend would not need any changes at all because it already uses
+  fetch() to get data from the backend endpoints."
+
+- "The JSON format I used for the data is the industry standard for web
+  APIs. Every player object has 20+ fields covering biographical info,
+  performance stats, and calculated metrics. I created 200 players across
+  7 leagues with accurate 2025-26 season data, plus 21 teams, league
+  standings for 8 competitions, and match fixtures. This gives the app
+  enough data to demonstrate all features realistically."
+
+- "The data flow follows a clean pattern: JSON files on disk are read by
+  the Express backend using Node's fs module, parsed with JSON.parse(),
+  and served through REST API endpoints. The React frontend fetches this
+  data, processes it (filtering, sorting, scoring), and displays it
+  using components. This separation means the data layer, API layer,
+  and presentation layer are all independent - a key software engineering
+  principle."
+
 ============================================================

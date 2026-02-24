@@ -157,6 +157,139 @@ This secret is used to:
 If someone doesn't know the secret, they CANNOT create valid tokens.
 This is why the .env file must NEVER be shared or committed to Git.
 
+COMPLEX CODE EXPLAINED
+-----------------------
+
+1. JWT TOKEN CREATION (jwt.sign)
+
+   From authRoutes.js:
+
+     function createToken(user) {
+       var tokenData = {
+         id: user.id,
+         email: user.email,
+         name: user.name
+       };
+       var token = jwt.sign(tokenData, process.env.JWT_SECRET, { expiresIn: "7d" });
+       return token;
+     }
+
+   Line by line:
+   - function createToken(user)
+     This helper function takes a user object (from the database) and
+     creates a JWT token for them.
+   - var tokenData = { id: user.id, email: user.email, name: user.name }
+     This is the "payload" - the data we want to store INSIDE the token.
+     We include the user's ID, email, and name so the backend can identify
+     them later without querying the database every time.
+   - jwt.sign(tokenData, process.env.JWT_SECRET, { expiresIn: "7d" })
+     jwt.sign() does three things:
+       1. Takes the tokenData and converts it to a JSON string
+       2. Encrypts/signs it using the JWT_SECRET (a random string only
+          the server knows, stored in the .env file)
+       3. Sets it to expire in 7 days ("7d")
+     The result is a long encoded string like "eyJhbG...abc123" that
+     the browser stores and sends back with every request.
+   - Nobody can fake this token because they do not know the JWT_SECRET.
+     If someone changes even one character, jwt.verify() will reject it.
+
+2. PASSWORD HASHING (bcrypt)
+
+   From authRoutes.js - during registration:
+
+     var hash = await bcrypt.hash(password, 10);
+
+   From authRoutes.js - during login:
+
+     var passwordIsCorrect = await bcrypt.compare(password, user.password_hash);
+
+   Line by line:
+   - bcrypt.hash(password, 10)
+     This takes the plain text password (e.g. "MyPassword1") and runs it
+     through bcrypt's hashing algorithm. The number 10 is the "salt rounds"
+     - it means bcrypt will run its algorithm 2^10 (1024) times, making it
+     very slow to crack by brute force. The result looks like:
+     "$2b$10$x7dJ3kLmN..." - a long random-looking string.
+   - await - hashing is an async operation because it is intentionally slow
+     (for security). We use await to wait for it to finish.
+   - bcrypt.compare(password, user.password_hash)
+     During login, we CANNOT reverse the hash to get the original password.
+     Instead, bcrypt.compare() takes the password the user just typed,
+     hashes it using the same salt that was stored, and checks if the
+     result matches the stored hash. It returns true if they match,
+     false if they do not.
+   - Each password gets a unique random "salt" mixed in, so even if two
+     users have the same password, their hashes will be completely different.
+
+3. COOKIE + LOCALSTORAGE DUAL STORAGE
+
+   From authRoutes.js - after successful login or registration:
+
+     res.cookie("token", token, getCookieOptions());
+     res.json({ message: "Logged in", user: user, token: token });
+
+   From authMiddleware.js - checking who the user is:
+
+     let token = req.cookies.token;
+     if (!token && req.headers.authorization) {
+       const parts = req.headers.authorization.split(" ");
+       if (parts[0] === "Bearer" && parts[1]) {
+         token = parts[1];
+       }
+     }
+
+   Line by line:
+   - res.cookie("token", token, getCookieOptions())
+     This sets an HTTP-only cookie in the user's browser. The browser stores
+     it automatically and sends it with every request. httpOnly: true means
+     JavaScript on the page CANNOT read this cookie, which protects against
+     XSS attacks (malicious scripts stealing the token).
+   - res.json({ ..., token: token })
+     We ALSO send the token in the response body. The frontend stores this
+     in localStorage as a backup. This is needed because some browsers
+     (especially in incognito mode) block third-party cookies.
+   - In authMiddleware.js: it first tries req.cookies.token (the cookie).
+     If that is empty, it checks req.headers.authorization for a "Bearer"
+     token (from localStorage). This way, authentication works regardless
+     of whether cookies are enabled or not.
+
+
+DEFENCE TALKING POINTS
+-----------------------
+
+- "I chose JWT (JSON Web Tokens) over traditional server-side sessions
+  because JWT is stateless. The server does not need to store session data
+  in memory or a database. The token itself contains all the user info
+  needed, signed with a secret key. This makes the system more scalable
+  because any server instance can verify the token independently, which
+  is important for cloud deployment."
+
+- "Passwords are never stored as plain text in my database. I use bcrypt
+  with 10 salt rounds to hash every password before saving it. Bcrypt is
+  specifically designed for password hashing - it is intentionally slow,
+  which makes brute-force attacks impractical. Even if someone gained
+  access to the database, they would only see hashes like '$2b$10$x7dJ...'
+  which cannot be reversed back to the original password."
+
+- "My token expiry is set to 7 days. This is a balance between security
+  and user convenience. After 7 days, the token becomes invalid and the
+  user must log in again. This limits the damage if a token is ever stolen.
+  The jwt.verify() function automatically checks the expiry date and
+  rejects expired tokens, so the app handles this without any extra code."
+
+- "I implemented a dual storage strategy for the JWT token - it is stored
+  in both an httpOnly cookie and localStorage. The cookie is the primary
+  method because httpOnly prevents JavaScript from reading it, protecting
+  against XSS attacks. localStorage is the fallback for browsers that
+  block cookies. The authMiddleware checks both locations, ensuring the
+  app works in all browsers and incognito mode."
+
+- "The authentication middleware pattern means I write the token verification
+  logic once and reuse it across all protected routes. Any route that needs
+  a logged-in user just adds the middleware function, and if the token is
+  invalid, the request is rejected before it ever reaches the route handler.
+  This is the standard approach used in production Express.js applications."
+
 ============================================================
 END OF DOCUMENT
 ============================================================

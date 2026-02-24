@@ -89,4 +89,158 @@ Recharts     - Chart library (bar charts, radar charts)
 Tailwind CSS - CSS framework (styling)
 Bcrypt       - Password hashing (security)
 
+
+COMPLEX CODE EXPLAINED
+-----------------------
+
+1. REACT ROUTER (How pages change without reloading)
+
+   From App.js:
+
+     import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
+
+     return (
+       <Router>
+         <nav>
+           <NavLink to="/players">Players</NavLink>
+           <NavLink to="/community">Community</NavLink>
+         </nav>
+         <Routes>
+           <Route path="/" element={<Dashboard />} />
+           <Route path="/players" element={<Players />} />
+           <Route path="/community" element={<Community user={user} />} />
+           <Route path="/login" element={<Login />} />
+         </Routes>
+       </Router>
+     );
+
+   Line by line:
+   - import { BrowserRouter as Router, Routes, Route, NavLink }
+     React Router is a library that handles page navigation in a React app.
+     Normally when you click a link, the browser loads a completely new page
+     from the server. React Router intercepts the click and just swaps the
+     content on the page - the browser never actually reloads. This is called
+     a Single Page Application (SPA).
+   - <Router> wraps the entire app and enables routing.
+   - <NavLink to="/players"> creates a clickable link. When clicked, the URL
+     changes to /players but the page does NOT reload. NavLink also
+     automatically adds an "active" CSS class when the user is on that page,
+     so you can highlight the current page in the navigation bar.
+   - <Routes> is the container for all route definitions.
+   - <Route path="/players" element={<Players />} /> means: when the URL
+     is /players, show the Players component. When the URL is /community,
+     show the Community component instead.
+   - element={<Community user={user} />} passes the user object as a prop
+     to the Community component, so the chat page knows who is logged in.
+
+2. useEffect (Data loading when a page opens)
+
+   From App.js - checking login status when the app loads:
+
+     useEffect(function () {
+       var savedToken = localStorage.getItem("token");
+       fetch(API_BASE + "/auth/me", {
+         credentials: "include",
+         headers: savedToken ? { "Authorization": "Bearer " + savedToken } : {}
+       })
+         .then(function (res) { return res.json(); })
+         .then(function (data) {
+           if (data.user) { setUser(data.user); }
+         })
+         .catch(function () { console.log("Not logged in"); });
+     }, []);
+
+   Line by line:
+   - useEffect(function () {...}, [])
+     useEffect is a React "hook" that runs code AFTER the component appears
+     on screen. The empty array [] at the end means "run this only once,
+     when the page first loads". Without the [], it would run on EVERY
+     re-render, causing infinite loops.
+   - localStorage.getItem("token")
+     localStorage is built into every browser. It stores small pieces of
+     data that persist even when you close the browser. Here we check if
+     there is a saved login token from a previous session.
+   - fetch(API_BASE + "/auth/me", {...})
+     This sends an HTTP request to the backend asking "who am I?". The
+     backend checks the token and returns the user's info if valid.
+   - .then().then() is a "promise chain". The first .then() converts the
+     response to JSON. The second .then() checks if the user exists and
+     saves it to state.
+   - .catch() handles network errors gracefully instead of crashing.
+
+3. useState (Managing data that changes)
+
+   From App.js:
+
+     var [user, setUser] = useState(null);
+     var [menuOpen, setMenuOpen] = useState(false);
+
+   From Community.js:
+
+     var [messages, setMessages] = useState([]);
+     var [newMessage, setNewMessage] = useState("");
+
+   Line by line:
+   - useState(null) creates a piece of "state" - a variable that React
+     watches. When it changes, React automatically re-renders the parts
+     of the page that use it.
+   - var [user, setUser] = useState(null)
+     This gives us two things: "user" is the current value (starts as
+     null because nobody is logged in yet), and "setUser" is a function
+     to change it. When we call setUser(data.user), React updates the
+     variable and re-renders the navbar to show the username.
+   - var [menuOpen, setMenuOpen] = useState(false)
+     This tracks whether the mobile menu is open (true) or closed (false).
+     When the user taps the hamburger button, we call setMenuOpen(!menuOpen)
+     which toggles it between true and false.
+   - var [messages, setMessages] = useState([])
+     Starts as an empty array. When chat history arrives, setMessages(history)
+     fills it with messages. When a new message arrives,
+     setMessages(prev => prev.concat(message)) adds it to the end.
+   - The key idea: in React, you NEVER modify variables directly. You
+     always use the setter function (setUser, setMessages, etc.) so React
+     knows something changed and can update the screen.
+
+
+DEFENCE TALKING POINTS
+-----------------------
+
+- "StatSphere is a full-stack web application, meaning I built both the
+  frontend (what the user sees) and the backend (the server logic). The
+  frontend is built with React.js and handles the user interface, the
+  backend is built with Node.js and Express.js and handles data processing
+  and authentication, and the database is PostgreSQL for persistent
+  storage. These three layers communicate through HTTP requests and
+  WebSockets, following the standard client-server architecture."
+
+- "I chose React.js for the frontend because it is the most popular
+  JavaScript framework used by companies like Facebook, Netflix, and
+  Airbnb. React's component-based architecture lets me build each page
+  as a reusable component with its own state and logic. Combined with
+  React Router, the app behaves like a Single Page Application - pages
+  change instantly without full browser reloads, giving users a smooth
+  experience similar to native mobile apps."
+
+- "The technology stack I chose reflects industry standards: React for
+  the frontend, Express.js for the backend API, PostgreSQL for the
+  database, Socket.IO for real-time communication, and JWT for
+  authentication. I also used Tailwind CSS for styling and Recharts for
+  data visualisation. Each technology was chosen for a specific reason
+  and I can explain the trade-offs I considered."
+
+- "What makes this a genuine full-stack application is that I built every
+  layer myself: the UI with multiple interactive pages, the REST API with
+  CRUD operations, the database schema with proper relations, the
+  authentication system with JWT tokens, the real-time chat with
+  WebSockets, and the prediction model with weighted algorithms. Each
+  feature required integrating multiple technologies together."
+
+- "My app has 13 distinct pages including a dashboard, player statistics
+  with filtering and pagination, player comparison, AI-powered player
+  insights with charts, a Ballon d'Or prediction model, match outcome
+  predictions, league standings, fixtures, team rankings, a real-time
+  community chat with moderation, user profiles with favourites, and
+  login/register with full validation. This demonstrates the breadth
+  and depth of the project."
+
 ============================================================

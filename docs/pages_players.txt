@@ -64,4 +64,68 @@ When user clicks "Next":
 When user changes a filter:
   currentPage resets back to 1
 
+COMPLEX CODE EXPLAINED
+------------------------
+
+1. Pagination Logic (currentPage, startIndex, endIndex, slice)
+   Imagine you have a book with 200 pages but can only show 20 at
+   a time. Pagination does exactly that. We keep track of which
+   "page" the user is on with a variable called currentPage. To
+   figure out which players to show, we do simple maths:
+     startIndex = (currentPage - 1) * 20
+     endIndex = startIndex + 20
+   Then we use .slice(startIndex, endIndex) to cut out just those
+   20 players from the full array. When the user clicks "Next",
+   currentPage goes up by 1, the indices shift, and a different
+   set of 20 players appears. When a filter changes, currentPage
+   resets to 1 so the user always starts at the beginning of the
+   new results.
+
+2. Sorting Logic
+   The table headers are clickable. When the user clicks "Goals",
+   the players get sorted by goals. This uses JavaScript's .sort()
+   method with a compare function: (a, b) => b.goals - a.goals
+   sorts from highest to lowest. If the user clicks the same header
+   again, the direction flips (ascending/descending). We track which
+   column is selected and which direction using useState variables
+   called sortField and sortDirection.
+
+3. League Filter (and Combined Filtering)
+   The page has multiple filters that all work together. Each filter
+   (name search, position, team, league) is stored in its own
+   useState variable. When any filter changes, we chain .filter()
+   calls: first check the name, then check position, then team,
+   then league. A player must pass ALL filters to appear in the
+   results. This is like a funnel -- 200 players go in, and only
+   the ones matching every criteria come out.
+
+DEFENCE TALKING POINTS
+------------------------
+
+- "Pagination is essential for UX when dealing with large datasets.
+  Loading all 200 players at once would make the page slow to render
+  and hard to scroll through. By showing 20 at a time, I keep the
+  interface clean and the performance fast."
+
+- "The pagination formula is reusable: startIndex = (page - 1) *
+  pageSize. This is the same logic used by real apps like Google
+  search results. I can easily change the page size from 20 to any
+  number without rewriting the logic."
+
+- "I implemented multi-criteria filtering so users can combine
+  filters -- for example, showing only Premier League forwards on
+  a specific team. Each filter is independent but they work together
+  using chained .filter() calls, which is a clean functional
+  programming approach."
+
+- "Sorting is done on the frontend because all the data is already
+  loaded. This means sorting feels instant to the user. In a
+  production app with thousands of records, you would sort on the
+  backend using a database query instead."
+
+- "I reset the current page to 1 whenever a filter changes. This
+  is a small but important UX detail -- without it, the user could
+  end up on page 5 of a result set that only has 2 pages, and
+  they'd see a blank screen."
+
 ============================================================

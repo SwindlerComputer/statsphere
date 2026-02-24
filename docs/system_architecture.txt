@@ -161,6 +161,140 @@ DEPLOYMENT
 - Database: Hosted on Supabase (cloud PostgreSQL)
 - Environment variables configured on Render dashboard
 
+COMPLEX CODE EXPLAINED
+-----------------------
+
+1. HOW THE FRONTEND TALKS TO THE BACKEND (fetch API)
+
+   From App.js - checking if the user is logged in when the app loads:
+
+     fetch(API_BASE + "/auth/me", {
+       credentials: "include",
+       headers: savedToken ? { "Authorization": "Bearer " + savedToken } : {}
+     })
+       .then(function (res) { return res.json(); })
+       .then(function (data) {
+         if (data.user) {
+           setUser(data.user);
+         }
+       })
+
+   Line by line:
+   - fetch(API_BASE + "/auth/me", {...})
+     This sends an HTTP GET request to the backend. API_BASE is the backend
+     URL (e.g. http://localhost:5000). So the full URL becomes
+     http://localhost:5000/auth/me.
+   - credentials: "include"
+     This tells the browser to send cookies along with the request. Without
+     this, the backend would not receive the login cookie.
+   - headers: savedToken ? { "Authorization": "Bearer " + savedToken } : {}
+     This is a backup. If cookies are blocked (e.g. incognito mode), it sends
+     the token in the request header instead. The "Bearer" prefix is a standard
+     format that servers expect.
+   - .then(function (res) { return res.json(); })
+     fetch() returns a Response object. Calling .json() reads the response
+     body and converts it from a JSON string into a JavaScript object.
+   - .then(function (data) { if (data.user) { setUser(data.user); } })
+     If the backend returned a user object (meaning the token was valid),
+     we save it in React state so the whole app knows who is logged in.
+
+2. HOW THE BACKEND CONNECTS TO THE DATABASE (Connection Pool)
+
+   From db.js:
+
+     import pkg from "pg";
+     const { Pool } = pkg;
+
+     pool = new Pool({
+       connectionString: process.env.SUPABASE_DATABASE_URL,
+       ssl: { rejectUnauthorized: false },
+     });
+
+   Line by line:
+   - import pkg from "pg"
+     "pg" is the PostgreSQL library for Node.js. It lets JavaScript talk
+     to a PostgreSQL database.
+   - const { Pool } = pkg
+     A Pool is a collection of reusable database connections. Instead of
+     opening a new connection every time (which is slow), the pool keeps
+     several connections ready to use. Think of it like a car rental desk
+     with multiple cars - you grab one, use it, return it.
+   - new Pool({ connectionString: process.env.SUPABASE_DATABASE_URL, ... })
+     This creates the pool using a connection string from the .env file.
+     The connection string contains the database address, username, password,
+     and database name all in one URL.
+   - ssl: { rejectUnauthorized: false }
+     SSL encrypts the connection between our server and the database.
+     This is required for cloud databases like Supabase. The
+     "rejectUnauthorized: false" part allows self-signed certificates.
+
+3. HOW WEBSOCKET DIFFERS FROM HTTP
+
+   HTTP (normal requests) from server.js:
+     app.get("/api/players", (req, res) => {
+       const jsonData = fs.readFileSync(filePath, "utf8");
+       res.json(JSON.parse(jsonData));
+     });
+
+   WebSocket (real-time) from server.js:
+     io.on("connection", async (socket) => {
+       socket.emit("chat_history", chatMessages);
+       socket.on("send_message", async (messageText) => {
+         io.emit("new_message", newMessage);
+       });
+     });
+
+   The difference:
+   - HTTP: The client (browser) sends a request, the server sends ONE response,
+     and the connection closes. The client must ask again to get new data.
+   - WebSocket: The connection stays OPEN after the initial handshake. The
+     server can push data to the client at any time using io.emit(), and the
+     client can send data using socket.emit(). Neither side has to wait for
+     the other to ask first.
+   - io.emit("new_message", newMessage) sends the message to ALL connected
+     users at once - this is what makes the chat feel "real-time".
+
+
+DEFENCE TALKING POINTS
+-----------------------
+
+- "I chose a separated frontend-backend architecture because it follows
+  industry best practices. The React frontend handles what the user sees,
+  while the Express backend handles business logic and data. This means I
+  could deploy them independently - the frontend on Vercel and the backend
+  on Render - and they communicate through a REST API using JSON. If I
+  ever wanted to build a mobile app, it could use the same backend API
+  without any changes."
+
+- "I chose PostgreSQL as the database because it is a production-grade
+  relational database used by companies like Instagram and Spotify. It
+  supports structured queries with SQL, has strong data integrity with
+  foreign keys, and scales well. I hosted it on Supabase which gives me
+  a cloud PostgreSQL instance for free, so the app works from anywhere
+  without needing a local database running."
+
+- "The data flow in my app follows a clear path: the user interacts with
+  the React frontend, which sends HTTP requests to the Express backend
+  using the fetch API. The backend either reads from JSON files for static
+  data or queries the PostgreSQL database for dynamic data like user
+  accounts. It then sends a JSON response back to the frontend, which
+  updates what the user sees using React state. For real-time features
+  like chat, I use WebSockets instead of HTTP so that messages are pushed
+  to all users instantly without them having to refresh."
+
+- "I used a connection pool for the database rather than individual
+  connections. A pool keeps several database connections ready to reuse,
+  which is much faster than opening a new connection for every request.
+  This is important for performance when multiple users are using the
+  app at the same time."
+
+- "My application uses three communication methods: HTTP GET requests
+  for reading data, HTTP POST requests for sending data like login forms,
+  and WebSockets for real-time bidirectional communication in the chat.
+  Each method is suited to its purpose - you would not use WebSockets
+  for loading a player list, and you would not use HTTP polling for
+  a live chat."
+
 ============================================================
 END OF DOCUMENT
 ============================================================

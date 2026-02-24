@@ -175,6 +175,160 @@ If a user tries to send another message within 2 seconds:
   - The message is rejected
   - User receives: "Please wait 2 seconds before sending another message"
 
+COMPLEX CODE EXPLAINED
+-----------------------
+
+1. SOCKET.IO CONNECTION SETUP
+
+   Server side (server.js):
+
+     const httpServer = createServer(app);
+     const io = new Server(httpServer, {
+       cors: {
+         origin: process.env.FRONTEND_URL || "http://localhost:3000",
+         credentials: true
+       }
+     });
+
+   Client side (Community.js):
+
+     var newSocket = io(API_BASE, {
+       withCredentials: true,
+       auth: savedToken ? { token: savedToken } : {}
+     });
+
+   Line by line:
+   - const httpServer = createServer(app)
+     Normally Express uses app.listen() to start the server. But Socket.IO
+     needs access to the raw HTTP server, so we create it manually using
+     Node's built-in createServer() and pass the Express app into it.
+     This lets both REST API routes and WebSocket connections share the
+     same server and port.
+   - new Server(httpServer, { cors: {...} })
+     This creates the Socket.IO server and attaches it to our HTTP server.
+     The cors setting allows the frontend (on a different port or domain)
+     to connect. credentials: true allows cookies to be sent during the
+     WebSocket handshake.
+   - io(API_BASE, { withCredentials: true, auth: { token: savedToken } })
+     On the client side, io() connects to the backend's WebSocket server.
+     withCredentials: true sends cookies, and auth: { token } sends the
+     JWT token as a backup (for when cookies are blocked). This connection
+     stays open as long as the user is on the chat page.
+
+2. REAL-TIME EVENT HANDLING (emit/on pattern)
+
+   Sending a message (Community.js):
+
+     socket.emit("send_message", newMessage);
+
+   Server receiving and broadcasting (server.js):
+
+     socket.on("send_message", async (messageText) => {
+       const censoredText = censorMessage(messageText.trim());
+       let newMessage = {
+         id: Date.now(),
+         text: censoredText,
+         userName: socket.user.name,
+         timestamp: new Date().toISOString()
+       };
+       io.emit("new_message", newMessage);
+     });
+
+   Client receiving (Community.js):
+
+     newSocket.on("new_message", function (message) {
+       setMessages(function (prev) { return prev.concat(message); });
+     });
+
+   Line by line:
+   - socket.emit("send_message", newMessage)
+     emit() sends a named event through the WebSocket connection. Think of
+     "send_message" as a channel name. The second argument is the data
+     being sent (the message text).
+   - socket.on("send_message", async (messageText) => {...})
+     on() listens for a named event. When the server hears "send_message",
+     it runs this callback function with the data that was sent.
+   - The server censors bad words, creates a message object with an ID,
+     username, and timestamp, then calls io.emit("new_message", newMessage).
+   - io.emit() vs socket.emit(): This is the key difference.
+     socket.emit() sends to ONE user. io.emit() sends to ALL connected
+     users. This is what makes the chat real-time - when one person sends
+     a message, EVERYONE receives it instantly.
+   - On the client side, on("new_message") fires for every connected user.
+     It uses setMessages with a callback (prev.concat(message)) to safely
+     add the new message to the existing array without losing any data.
+
+3. CHAT HISTORY LOADING
+
+   Server side (server.js) - when a user first connects:
+
+     io.on("connection", async (socket) => {
+       socket.emit("chat_history", chatMessages);
+     });
+
+   Client side (Community.js) - receiving the history:
+
+     newSocket.on("chat_history", function (history) {
+       setMessages(history);
+       setLoading(false);
+     });
+
+   Line by line:
+   - io.on("connection", async (socket) => {...})
+     This fires every time a new user connects via WebSocket. The socket
+     parameter represents that specific user's connection.
+   - socket.emit("chat_history", chatMessages)
+     Immediately after connecting, the server sends ALL existing messages
+     to ONLY this new user (socket.emit, not io.emit). chatMessages is a
+     JavaScript array stored in server memory that holds the last 50
+     messages.
+   - On the client, on("chat_history") receives the array of messages,
+     saves them to React state with setMessages(history), and sets
+     loading to false so the loading spinner disappears.
+   - This means when you open the chat page, you instantly see the recent
+     conversation history, then any new messages appear in real-time
+     after that.
+
+
+DEFENCE TALKING POINTS
+-----------------------
+
+- "I chose WebSockets over HTTP polling for the chat feature because
+  polling would require the frontend to send a request every few seconds
+  asking 'are there new messages?' - this wastes bandwidth and adds
+  latency. With WebSockets, the connection stays open and the server
+  pushes new messages to all clients instantly. This is how professional
+  chat applications like Slack and Discord work."
+
+- "The real-time communication uses an event-driven pattern with emit()
+  and on(). The client emits a 'send_message' event, the server processes
+  it and then emits a 'new_message' event to all connected clients. This
+  publish-subscribe model means the server acts as a central hub that
+  distributes messages to everyone. I used Socket.IO rather than raw
+  WebSockets because it adds automatic reconnection, fallback to HTTP
+  polling if WebSockets are not supported, and a clean event-based API."
+
+- "The difference between my REST API and WebSocket communication is
+  fundamental. REST API (fetch) follows a request-response model - the
+  client asks and the server answers, then the connection closes. WebSocket
+  is bidirectional - both sides can send data at any time over a persistent
+  connection. I use REST for things like loading player data (which only
+  needs to happen once) and WebSocket for chat (which needs continuous
+  real-time updates)."
+
+- "I implemented several safety features in the chat: rate limiting
+  prevents spam by requiring a 2-second gap between messages, message
+  length is capped at 200 characters, banned words are automatically
+  censored, and banned users are blocked from sending. All validation
+  happens on the server side so it cannot be bypassed by modifying the
+  frontend code."
+
+- "Messages are currently stored in server memory for simplicity, which
+  means they are lost on server restart. In a production system, I would
+  store them in the PostgreSQL database. However, the in-memory approach
+  is faster for a prototype and demonstrates the core real-time
+  communication pattern."
+
 ============================================================
 END OF DOCUMENT
 ============================================================

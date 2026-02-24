@@ -93,4 +93,71 @@ KEY REACT CONCEPTS USED
 - .map(): Loops through standings to create table rows
 - <select> and onChange: Handles the dropdown selection
 
+COMPLEX CODE EXPLAINED
+------------------------
+
+1. Competition Selection and Dynamic Fetching
+   The dropdown stores the selected competition in a useState
+   variable (e.g. "premier_league"). This variable is listed as a
+   dependency in useEffect, which means: every time the user picks
+   a different league, useEffect runs again and makes a new API
+   call: GET /api/football/standings?competition=premier_league.
+   The "?" part is a query parameter -- it tells the backend which
+   league's data to return. This pattern (useEffect watching a
+   state variable) is how React components react to user input
+   and refresh their data without reloading the whole page.
+
+2. Fetching Filtered Data from the Backend
+   The backend receives the competition query parameter, converts
+   it from URL format ("premier_league") to display format
+   ("Premier League"), and looks it up in mockStandings.json. The
+   JSON file is structured as an object with league names as keys,
+   so the lookup is: data["Premier League"]. If the key doesn't
+   exist, it returns an empty array. This is a simple but effective
+   pattern: the frontend tells the backend what it wants, and the
+   backend finds and returns only the relevant data.
+
+3. Table Rendering with Conditional Styling
+   The standings table uses .map() to loop through each team and
+   create a <tr> (table row). But some rows need special styling:
+   the top teams might have a green background (Champions League
+   spots), and the bottom teams might have a red background
+   (relegation zone). This is done with conditional CSS classes:
+     className={rank <= 4 ? "champions-zone" : rank >= 18 ?
+     "relegation-zone" : ""}
+   This ternary checks the team's rank and applies the right colour,
+   making the table look like real league tables on BBC Sport or
+   the Premier League website.
+
+DEFENCE TALKING POINTS
+------------------------
+
+- "League standings are a fundamental feature for any football app.
+  Users expect to see who's top of the table, and presenting this
+  data clearly in a sortable, readable table demonstrates good data
+  presentation skills."
+
+- "I support 8 different competitions including domestic leagues and
+  tournaments. The dropdown uses <optgroup> to separate them into
+  categories, which improves usability. This shows I thought about
+  information architecture and not just functionality."
+
+- "The useEffect dependency array is key here -- by including the
+  selected competition as a dependency, React automatically re-
+  fetches data whenever the user changes the dropdown. This is a
+  core React concept that makes the page reactive without manual
+  event handling for the fetch."
+
+- "The data is structured with league names as keys in the JSON
+  file. This is an efficient lookup pattern -- instead of searching
+  through a flat array, the backend can go directly to the right
+  data using the key. This is O(1) lookup time versus O(n)
+  searching."
+
+- "Conditional styling for Champions League and relegation zones
+  adds a professional touch that matches how real football websites
+  display standings. It makes the data more meaningful at a glance
+  because users can immediately see which teams are in important
+  positions."
+
 ============================================================

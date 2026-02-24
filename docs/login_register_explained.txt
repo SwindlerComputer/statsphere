@@ -111,4 +111,63 @@ This token is stored in a cookie AND localStorage.
 Every time you visit a page, the token proves who you are.
 Token expires after 7 days (the user has to log in again).
 
+COMPLEX CODE EXPLAINED
+------------------------
+Here are the trickiest parts of this system in plain English:
+
+1. Email vs Username Login Detection (indexOf("@"))
+   The login form has one input field that accepts EITHER an email or a
+   username. The backend figures out which one the user typed by checking
+   if the input contains an "@" symbol using indexOf("@"). If indexOf
+   returns 0 or higher, it means "@" was found, so the backend searches
+   the database by email. If indexOf returns -1 (not found), it searches
+   by username instead. This is a simple but clever trick that gives users
+   flexibility without needing two separate input fields or a toggle button.
+
+2. Password Strength Calculation
+   The getPasswordStrength function counts how many security requirements
+   the password meets: length of 8+, has uppercase letter, has a number,
+   has a special character. Each met requirement adds 1 to the score
+   (0 to 4). The score maps to a label and colour: 1 = Weak (red, 25%
+   bar), 2 = Fair (yellow, 50%), 3 = Good (blue, 75%), 4 = Strong
+   (green, 100%). This gives users real-time visual feedback as they
+   type their password, encouraging them to create stronger passwords.
+
+3. bcrypt.compare for Password Verification
+   When logging in, bcrypt.compare() takes the plaintext password the
+   user just typed and the hashed password stored in the database. It
+   hashes the typed password using the same salt (random data) that was
+   used when the original hash was created, then compares the two hashes.
+   If they match, the password is correct. This means the server never
+   needs to "decrypt" the stored password - it only ever compares hashes.
+   This is the industry standard approach for secure password verification.
+
+DEFENCE TALKING POINTS
+------------------------
+Here is what to say when presenting the Login/Register system:
+
+- "I allow users to log in with either their email or username using a
+  single input field. The backend detects which one was entered by
+  checking for the '@' symbol. This improves usability because users
+  do not have to remember which one they registered with."
+
+- "Password security uses bcrypt hashing, which is an industry standard.
+  Passwords are never stored in plain text. Even I as the developer
+  cannot see a user's actual password in the database. bcrypt.compare
+  handles verification without ever decrypting the hash."
+
+- "I implemented both client-side and server-side validation. The
+  frontend validates in real time so users get instant feedback (like
+  the password strength bar), and the backend validates again to protect
+  against anyone who might bypass the frontend, for example using
+  Postman or developer tools."
+
+- "The password strength indicator gives users a visual bar that fills
+  up as they meet more requirements. This encourages stronger passwords
+  and is a common UX pattern seen in production applications."
+
+- "JWT tokens are stored in both cookies and localStorage after login.
+  The token expires after 7 days, forcing re-authentication. This
+  balances user convenience with security best practices."
+
 ============================================================

@@ -81,4 +81,65 @@ KEY REACT CONCEPTS USED
 - .slice(0, 10): Takes only the first 10 from sorted array
 - .map(): Loops through top 10 to create cards
 
+COMPLEX CODE EXPLAINED
+------------------------
+
+1. calculateScore Function (Weighted Formula)
+   This function takes a player object and returns a single number
+   representing how good they are. It multiplies each stat by a
+   different weight: goals are worth 4 points each, assists worth 3,
+   and so on. The weights reflect real-world importance -- goals
+   matter more than key passes for the Ballon d'Or. After adding
+   everything up to get a rawScore, we multiply by the league weight
+   (e.g. 0.95 for La Liga). This means 25 goals in the Premier
+   League is worth more than 25 goals in a weaker league. The
+   formula is: finalScore = (goals*4 + assists*3 + rating*10 +
+   keyPasses*0.5 + goalsPerGame*50) * leagueWeight.
+
+2. .sort() for Ranking
+   After every player gets a score, we put them in order using
+   JavaScript's .sort() method. The compare function is:
+     (a, b) => b.score - a.score
+   This sorts from highest to lowest (descending). If player A
+   scores 280 and player B scores 260, b.score - a.score = negative,
+   so A comes first. The sort happens on the full 200-player array,
+   so every player is ranked even though we only show the top 10.
+
+3. .slice(0, 10) for Top 10
+   After sorting, we use .slice(0, 10) to take only the first 10
+   elements from the sorted array. slice(0, 10) means "start at
+   index 0, stop before index 10" -- so you get indices 0 through 9,
+   which is exactly 10 players. This is stored in a new variable
+   called top10, and only these 10 are rendered on the page. The
+   original 200-player array is unchanged because .slice() creates
+   a new array rather than modifying the original.
+
+DEFENCE TALKING POINTS
+------------------------
+
+- "The scoring formula uses weighted metrics, which is how real-world
+  award predictions work. Goals are weighted higher than assists
+  because the Ballon d'Or historically favours goalscorers. I
+  researched the actual award criteria to make the weights realistic."
+
+- "League weights add a layer of fairness to the prediction. Without
+  them, a player scoring 30 goals in a weaker league would rank
+  above a player scoring 25 in the Premier League, which wouldn't
+  reflect reality. This shows I thought critically about data bias."
+
+- "I only show the top 10 because that mirrors the real Ballon d'Or
+  shortlist. Showing all 200 players would overwhelm the user and
+  defeat the purpose of a 'prediction'. The .slice(0, 10) method
+  is an efficient way to limit results without a database query."
+
+- "The breakdown section at the bottom shows the user exactly how
+  the #1 player earned their score. This is about transparency --
+  the system is not a black box. Users can verify and understand
+  the ranking, which builds trust in the prediction."
+
+- "The entire calculation runs on the frontend in the browser. This
+  demonstrates that complex data processing doesn't always need a
+  backend server -- JavaScript is powerful enough to score, sort,
+  and filter 200 players almost instantly."
+
 ============================================================

@@ -4,8 +4,8 @@
 // Root component with React Router.
 // Includes responsive navigation for all devices.
 
-import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import Dashboard from "./pages/Dashboard";
 import Players from "./pages/Players";
 import Predictions from "./pages/Predictions";
@@ -26,6 +26,10 @@ function App() {
   var [user, setUser] = useState(null);
   // Mobile menu toggle
   var [menuOpen, setMenuOpen] = useState(false);
+  // Profile dropdown toggle (desktop)
+  var [profileOpen, setProfileOpen] = useState(false);
+  // Ref to detect clicks outside the dropdown
+  var profileRef = useRef(null);
 
   // Check if user is logged in when app loads
   useEffect(function () {
@@ -44,6 +48,23 @@ function App() {
       .catch(function () {
         console.log("Not logged in");
       });
+  }, []);
+
+  // Close profile dropdown when user clicks outside of it
+  // useEffect with event listener pattern
+  useEffect(function () {
+    function handleClickOutside(event) {
+      // profileRef.current is the dropdown container div
+      // .contains() checks if the click was inside it
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    // Cleanup: remove the event listener when component unmounts
+    return function () {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   // Handle logout
@@ -88,22 +109,76 @@ function App() {
               <span>StatSphere</span>
             </NavLink>
 
-            {/* Desktop user info (hidden on mobile) */}
+            {/* Desktop user info with profile dropdown (hidden on mobile) */}
             <div className="hidden md:flex items-center gap-3">
               {user ? (
-                <div className="flex items-center gap-3">
-                  <NavLink
-                    to="/profile"
-                    className={function (nav) { return "text-sm transition " + (nav.isActive ? "text-cyan-400 font-semibold" : "text-gray-300 hover:text-cyan-300"); }}
-                  >
-                    {user.name}
-                  </NavLink>
+                <div className="relative" ref={profileRef}>
+                  {/* "My Profile" button that opens the dropdown */}
                   <button
-                    onClick={handleLogout}
-                    className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition"
+                    onClick={function () { setProfileOpen(!profileOpen); }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition text-sm"
                   >
-                    Logout
+                    {/* Small avatar circle */}
+                    <div className="w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center text-xs font-bold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="font-semibold">{user.name}</span>
+                    {/* Small arrow indicator */}
+                    <span className="text-gray-400 text-xs">{profileOpen ? "▲" : "▼"}</span>
                   </button>
+
+                  {/* Profile dropdown menu */}
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
+                      {/* User info at top */}
+                      <div className="px-4 py-3 border-b border-gray-700">
+                        <p className="text-sm font-semibold">{user.name}</p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
+                      </div>
+
+                      {/* Menu items */}
+                      <div className="py-1">
+                        <NavLink
+                          to="/profile"
+                          onClick={function () { setProfileOpen(false); }}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition"
+                        >
+                          My Profile
+                        </NavLink>
+                        <NavLink
+                          to="/profile"
+                          onClick={function () { setProfileOpen(false); }}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition"
+                        >
+                          Favorite Team
+                        </NavLink>
+                        <NavLink
+                          to="/profile"
+                          onClick={function () { setProfileOpen(false); }}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition"
+                        >
+                          Favorite League
+                        </NavLink>
+                        <NavLink
+                          to="/profile"
+                          onClick={function () { setProfileOpen(false); }}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition"
+                        >
+                          Favorite Players
+                        </NavLink>
+                      </div>
+
+                      {/* Logout at bottom */}
+                      <div className="border-t border-gray-700 py-1">
+                        <button
+                          onClick={function () { setProfileOpen(false); handleLogout(); }}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <NavLink

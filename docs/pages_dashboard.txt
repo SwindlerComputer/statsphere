@@ -55,4 +55,63 @@ DATA FORMAT (what liveMatches.json looks like)
   }
 ]
 
+COMPLEX CODE EXPLAINED
+------------------------
+
+1. useEffect for Fetching Data
+   When the Dashboard page first appears on screen, React runs a
+   special block of code called useEffect. Inside it, we use fetch()
+   to call the backend at /api/live-matches. This is like the page
+   saying "Hey server, give me today's live matches!" The server
+   replies with JSON data, and we store it in a variable using
+   useState. The empty [] at the end of useEffect means "only do
+   this once, when the page first loads" -- without it, the fetch
+   would run over and over in an infinite loop.
+
+2. League Filter Logic
+   The user can pick a league from a dropdown (e.g. "Premier League").
+   When they do, we save their choice in a useState variable called
+   selectedLeague. Then we use JavaScript's .filter() method on the
+   matches array: it goes through every match and only keeps the ones
+   where match.league === selectedLeague. If the user picks "All",
+   we skip the filter and show everything. This happens instantly
+   because the data is already loaded -- no new API call is needed.
+
+3. Conditional Rendering
+   The page needs to handle different situations: data is still
+   loading, no matches are happening right now, or matches exist.
+   We use JavaScript's ternary operator (condition ? showThis :
+   showThat) and && operator to decide what to display. For example:
+   {loading ? <Spinner /> : matches.map(...)} means "if still
+   loading, show a spinner; otherwise, show the match cards." This
+   prevents the page from crashing or looking broken while waiting
+   for data.
+
+DEFENCE TALKING POINTS
+------------------------
+
+- "The Dashboard is the landing page because it gives users an
+  immediate overview of what's happening in football right now.
+  Good UX design means the first page should answer the user's
+  most common question -- 'what's happening today?'"
+
+- "I used useEffect with an empty dependency array to fetch data
+  only once on page load. This is a core React pattern that
+  prevents unnecessary API calls and keeps the app efficient."
+
+- "The live matches feature simulates a real-time sports dashboard.
+  In a production app, this could be connected to a live API like
+  Football-Data.org, but I used mock data to demonstrate the
+  architecture without depending on an external service."
+
+- "The league filter works entirely on the frontend -- it doesn't
+  make a new API call. This is called client-side filtering, and
+  it makes the app feel fast and responsive because there's no
+  network delay when the user changes the filter."
+
+- "I chose a card-based layout for matches because it's a common
+  UI pattern in sports apps like ESPN and FotMob. Each card shows
+  just enough info (teams, score, minute) without overwhelming
+  the user."
+
 ============================================================

@@ -163,6 +163,178 @@ Before any message is broadcast, the server checks:
 
 Only after ALL checks pass is the message broadcast to everyone.
 
+COMPLEX CODE EXPLAINED
+-----------------------
+
+1. WORD CENSORING WITH REGEX REPLACE
+
+   From server.js:
+
+     function censorMessage(text) {
+       let censoredText = text;
+       for (let i = 0; i < bannedWords.length; i++) {
+         const bannedWord = bannedWords[i];
+         const regex = new RegExp(bannedWord, "gi");
+         censoredText = censoredText.replace(regex, function(match) {
+           return "*".repeat(match.length);
+         });
+       }
+       return censoredText;
+     }
+
+   Line by line:
+   - let censoredText = text
+     We make a copy of the original message so we can modify it without
+     losing the original (the original is kept for moderation logs).
+   - for (let i = 0; i < bannedWords.length; i++)
+     Loop through every word in the banned words array. Each word is
+     checked against the message one at a time.
+   - new RegExp(bannedWord, "gi")
+     This creates a regular expression (regex) from the banned word.
+     The "g" flag means "global" - find ALL occurrences, not just the
+     first one. The "i" flag means "case-insensitive" - so "FUCK",
+     "Fuck", and "fuck" are all caught.
+   - censoredText.replace(regex, function(match) { return "*".repeat(match.length); })
+     The replace() method finds every match of the regex in the text and
+     replaces it. The callback function receives the actual matched text,
+     then returns the same number of asterisks. So "racist" (6 letters)
+     becomes "******" (6 asterisks). This preserves the message length
+     so other users can still read the rest of the sentence.
+
+2. requireAuth MIDDLEWARE PATTERN
+
+   From modRoutes.js:
+
+     function requireAuth(req, res, next) {
+       var user = getUserFromToken(req);
+       if (!user) {
+         return res.status(401).json({ error: "You must be logged in" });
+       }
+       req.user = user;
+       next();
+     }
+
+     router.post("/report", requireAuth, async function (req, res) {
+       // This code only runs if the user is logged in
+     });
+
+   Line by line:
+   - function requireAuth(req, res, next)
+     Middleware functions in Express receive three parameters: req (the
+     incoming request), res (the response object), and next (a function
+     that passes control to the next handler in the chain).
+   - var user = getUserFromToken(req)
+     This helper extracts the JWT token from either the cookie or the
+     Authorization header, verifies it, and returns the user data. If
+     the token is missing or invalid, it returns null.
+   - if (!user) { return res.status(401).json({...}) }
+     If no valid user was found, we immediately send a 401 (Unauthorized)
+     error and RETURN. The return is important - it stops the function
+     here so the route handler never runs.
+   - req.user = user
+     If the user IS valid, we attach their info to the request object.
+     This means the actual route handler can access req.user.id,
+     req.user.email, etc.
+   - next()
+     This tells Express to move on to the next function in the chain -
+     which is the actual route handler. Without calling next(), the
+     request would hang forever.
+   - router.post("/report", requireAuth, async function (req, res) {...})
+     The middleware (requireAuth) sits BETWEEN the route path and the
+     handler function. Express runs them in order: first requireAuth,
+     then the handler. This is like a security guard at a door - you
+     must pass the guard before you can enter the room.
+
+3. CREATE TABLE IF NOT EXISTS FALLBACK
+
+   From modRoutes.js:
+
+     try {
+       result = await pool.query(insertQuery, insertValues);
+     } catch (insertError) {
+       if (insertError.code === "42P01" || insertError.code === "42703") {
+         await pool.query("DROP TABLE IF EXISTS reported_messages");
+         await pool.query(
+           "CREATE TABLE reported_messages (" +
+           "  id SERIAL PRIMARY KEY," +
+           "  reporter_user_id INTEGER NOT NULL," +
+           "  message_id BIGINT," +
+           "  message_text TEXT," +
+           "  reason TEXT NOT NULL," +
+           "  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+           ")"
+         );
+         result = await pool.query(insertQuery, insertValues);
+       } else {
+         throw insertError;
+       }
+     }
+
+   Line by line:
+   - try { result = await pool.query(insertQuery, insertValues); }
+     First, we TRY to insert the report into the reported_messages table
+     as normal. If the table exists and has the right columns, this works
+     perfectly and the catch block is skipped.
+   - catch (insertError) - if the INSERT fails, we check WHY it failed.
+   - insertError.code === "42P01"
+     PostgreSQL error code 42P01 means "table does not exist". This
+     happens if the database migration was never run.
+   - insertError.code === "42703"
+     Code 42703 means "column does not exist". This happens if the table
+     exists but has the wrong columns (e.g. from an older version).
+   - await pool.query("DROP TABLE IF EXISTS reported_messages")
+     Drop the old broken table if it exists.
+   - await pool.query("CREATE TABLE reported_messages (...)")
+     Create a fresh table with the correct columns.
+   - result = await pool.query(insertQuery, insertValues)
+     Try the INSERT again - this time it will work because we just
+     created the table.
+   - else { throw insertError; }
+     If the error was something ELSE (like a network problem), we re-throw
+     it so the outer error handler can deal with it. We only auto-fix
+     table structure problems.
+   - This pattern makes the app resilient - it works even if the database
+     has not been set up perfectly, which is especially useful during
+     development and deployment.
+
+
+DEFENCE TALKING POINTS
+-----------------------
+
+- "I implemented server-side moderation because any client-side filtering
+  can be bypassed. A user could open the browser developer tools and
+  remove the filter, or send messages directly to the WebSocket server.
+  By censoring words on the server, the filter cannot be circumvented
+  no matter what the user does on their end. This is a fundamental
+  security principle - never trust the client."
+
+- "The middleware pattern is one of the most important concepts in
+  Express.js. My requireAuth middleware acts as a gatekeeper that runs
+  before any protected route. It extracts the JWT token, verifies it,
+  and attaches the user info to the request. If the token is invalid,
+  the route handler never executes. I wrote this once and reuse it
+  across all routes that need authentication, which follows the DRY
+  (Don't Repeat Yourself) principle."
+
+- "The banning system works at two levels. First, the is_banned column
+  in the users table is a boolean flag that persists across sessions.
+  Second, every time a user tries to send a chat message, the server
+  queries the database to check this flag in real-time. This means if
+  an admin bans a user, the ban takes effect immediately on the very
+  next message, without the banned user needing to refresh or reconnect."
+
+- "I built a self-healing database pattern for the reported_messages table.
+  The code tries to insert a report normally, and if the table does not
+  exist, it automatically creates it and retries. This means the app works
+  even if the database migration script was never run. This defensive
+  coding approach makes the application more robust and easier to deploy."
+
+- "The moderation system has three layers: automated censoring (replacing
+  bad words with asterisks in real-time), user reporting (any user can
+  flag a message with a reason), and admin action (admins can view reports
+  and ban offending users). This layered approach mirrors how real social
+  platforms handle content moderation."
+
 ============================================================
 END OF DOCUMENT
 ============================================================

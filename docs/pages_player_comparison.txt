@@ -61,4 +61,68 @@ This checks a player's stats and returns a label:
   IF dribbles >= 60 AND goals >= 8 = "Skillful Attacker"
   Otherwise: use a default based on their position
 
+COMPLEX CODE EXPLAINED
+------------------------
+
+1. Two-Player Selection System
+   The page has two separate dropdown variables (playerA and
+   playerB), each stored with useState. When both are selected,
+   the comparison table appears. The code checks: if (playerA &&
+   playerB) then show the table, otherwise show a message asking
+   the user to pick both players. Each dropdown filters the full
+   200-player list independently, so you can search by name in
+   either one. The key detail: both dropdowns share the same
+   player data, but they store their selection separately so
+   picking Player A doesn't affect Player B.
+
+2. Side-by-Side Stat Comparison with Highlighting
+   For every stat row, we call compareStats(valueA, valueB). This
+   function returns "A", "B", or "tie". The JSX then uses this
+   result to set the CSS class: if result is "A", Player A's cell
+   gets a green background (className="highlight-win"), and Player
+   B's cell stays normal. This is done with a ternary operator:
+     className={result === "A" ? "highlight-win" : ""}
+   The green highlighting is what makes the comparison instantly
+   readable -- your eye goes straight to who's better at each stat.
+
+3. getPlaystyle Function Logic
+   This function takes a player's stats and returns a text label
+   like "Clinical Finisher". It works with a chain of if/else
+   statements checking multiple conditions at once:
+     if (goals >= 15 AND shotAccuracy > 15%) return "Clinical Finisher"
+     if (assists >= 10 AND keyPasses >= 40) return "Creative Playmaker"
+   The conditions are checked in order from most specific to most
+   general. If no specific condition matches, a default label is
+   assigned based on the player's position (e.g. all remaining
+   midfielders become "Box-to-Box Midfielder"). This gives every
+   player a meaningful label.
+
+DEFENCE TALKING POINTS
+------------------------
+
+- "The comparison feature is inspired by real scouting tools used
+  in professional football. Websites like FBref and Transfermarkt
+  offer similar comparisons. It helps users make informed judgments
+  about which player is stronger in specific areas."
+
+- "I compare 15+ different stats across four categories: basic info,
+  attacking, defensive, and discipline. This comprehensive approach
+  means users can evaluate players from every angle, not just goals
+  and assists."
+
+- "The green highlighting uses conditional CSS classes, which is a
+  fundamental React pattern. It makes the data instantly readable --
+  users don't need to compare numbers manually because the visual
+  cue tells them immediately who's better."
+
+- "The playstyle detection function is a form of classification --
+  it categorises players into types based on their statistical
+  profile. This adds an extra layer of insight beyond raw numbers
+  and helps users understand what role a player fills."
+
+- "Both dropdowns share the same data source but maintain independent
+  state. This demonstrates good React state management -- I didn't
+  duplicate the data, I just used two separate useState variables
+  pointing to different selections from the same array."
+
 ============================================================

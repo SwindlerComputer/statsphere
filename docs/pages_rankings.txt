@@ -128,4 +128,62 @@ MOBILE VERSION:
   the rank badge, team name, score, and 3 stat bars.
   The podium still shows but with smaller text.
 
+COMPLEX CODE EXPLAINED
+------------------------
+Here are the trickiest parts of this page in plain English:
+
+1. calculateOverall Formula
+   The function takes a team object and calculates a single score using
+   weighted addition: (attack x 0.35) + (defense x 0.30) + (form x 0.20)
+   + (leagueBonus x 0.15). Each weight is a decimal that represents how
+   important that stat is. Attack gets the highest weight (35%) because
+   scoring goals matters most. The result is rounded to one decimal place
+   using .toFixed(1). This weighted average approach is the same concept
+   FIFA and other sports organisations use for rankings.
+
+2. .sort() Comparison Function
+   After calculating every team's score, we sort them using JavaScript's
+   .sort() method with a custom comparison function:
+   teams.sort(function(a, b) { return b.overall - a.overall })
+   This tells JavaScript: "Compare two teams. If b's score minus a's
+   score is positive, put b first." This sorts from highest to lowest.
+   Without this custom function, .sort() would sort alphabetically, which
+   is not what we want for rankings.
+
+3. getTierLabel Logic and League Bonus Concept
+   getTierLabel divides teams into tiers based on their position. If a
+   team is in the top 25% of rankings, it gets "Elite". Next 25% is
+   "Strong", then "Mid", then "Developing". The league bonus adds extra
+   points for teams in harder leagues. A team in the Premier League gets
+   15 bonus points while a Saudi Pro League team gets only 6. This means
+   two teams with identical stats will rank differently based on how
+   tough their league competition is, which is realistic.
+
+DEFENCE TALKING POINTS
+------------------------
+Here is what to say when presenting the Rankings feature:
+
+- "I created a custom ranking algorithm using a weighted scoring formula.
+  Attack contributes 35%, defense 30%, form 20%, and a league difficulty
+  bonus 15%. These weights were chosen to reflect how real football
+  analysis values different team qualities."
+
+- "The league bonus system adds realism to the rankings. A team playing
+  in the Premier League faces tougher competition weekly, so they receive
+  a higher bonus than a team in a weaker league. This mirrors how UEFA
+  coefficient works in real football."
+
+- "Teams are sorted using JavaScript's .sort() with a custom comparator
+  function that orders by overall score descending. I also implemented
+  tier labels (Elite, Strong, Mid, Developing) that dynamically adjust
+  based on the total number of teams being displayed."
+
+- "The page includes visual elements like colour-coded stat bars, a
+  podium for the top 3 teams, and a league filter dropdown. This makes
+  the data easy to understand at a glance."
+
+- "On mobile, the full table is replaced with compact cards that show
+  the key information without horizontal scrolling, demonstrating
+  responsive design considerations."
+
 ============================================================

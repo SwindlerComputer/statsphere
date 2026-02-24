@@ -73,4 +73,67 @@ The rules are position-aware:
 - Defenders are expected to make more tackles
 - Midfielders are expected to create more assists
 
+COMPLEX CODE EXPLAINED
+------------------------
+
+1. Recharts Integration (BarChart and RadarChart)
+   Recharts is a React charting library. Instead of drawing charts
+   manually with canvas or SVG, we use pre-built components like
+   <BarChart>, <Bar>, <RadarChart>, and <Radar>. We pass the
+   player's stats as a "data" array -- for example:
+     [{ name: "Goals", value: 25 }, { name: "Assists", value: 12 }]
+   Recharts reads this array and draws the bars or radar shape
+   automatically. The RadarChart is especially useful because it
+   shows multiple skills at once in a spider-web shape -- a big
+   shape means the player is well-rounded, a pointy shape means
+   they excel in only a few areas.
+
+2. Rule-Based Analysis (if/else for Strengths and Weaknesses)
+   The "AI analysis" is actually a series of if/else statements
+   that check each player's stats against thresholds. For example:
+     if (player.goals >= 20) strengths.push("Elite Finisher")
+     if (player.position === "Forward" && player.goals < 5)
+       weaknesses.push("Poor Goal Output")
+   The system is "position-aware" -- a defender with 3 goals is
+   fine, but a forward with 3 goals is a weakness. Each rule is
+   simple on its own, but together they create a detailed profile.
+   This is a real AI technique called a "rule-based expert system."
+
+3. Player Selection Dropdown
+   The dropdown is not a basic HTML <select>. It's a searchable
+   dropdown: users can type a name and the list filters in real
+   time. When a player is selected, their ID is stored in state
+   using useState, and the entire page re-renders with that
+   player's data -- the stat card updates, charts redraw, and
+   the rule-based analysis runs again. This all happens because
+   React re-renders components whenever state changes.
+
+DEFENCE TALKING POINTS
+------------------------
+
+- "I used Recharts because it integrates natively with React. Unlike
+  Chart.js which manipulates the DOM directly, Recharts uses React
+  components, which means the charts update automatically when the
+  data changes. This is the right tool choice for a React project."
+
+- "The radar chart is particularly effective for player analysis
+  because it lets you see a player's complete skill profile at a
+  glance. Scouts and analysts in real football use radar charts --
+  websites like FBref and StatsBomb use this exact visualisation."
+
+- "The rule-based system is a legitimate form of AI. It's called a
+  rule-based expert system, and it's used in real applications like
+  medical diagnosis tools. My system has rules that are position-
+  aware, so it evaluates forwards differently from defenders."
+
+- "I chose to combine data (stats card), visualisation (charts),
+  and analysis (strengths/weaknesses) on one page because it gives
+  the user a complete picture without navigating away. This follows
+  the dashboard design principle of 'details on demand.'"
+
+- "The strengths and weaknesses are generated dynamically -- they
+  change based on the selected player. This means the system works
+  for all 200 players without any hardcoded text, which demonstrates
+  scalability."
+
 ============================================================

@@ -91,4 +91,71 @@ KEY REACT CONCEPTS USED
 - .filter(): Filters fixtures by status
 - .map(): Loops through fixtures to create cards
 
+COMPLEX CODE EXPLAINED
+------------------------
+
+1. Status Filter (All / Finished / Scheduled)
+   The page has a second dropdown for filtering by match status.
+   The selected status is stored in a useState variable called
+   statusFilter. When rendering, the fixtures array goes through
+   .filter(): if statusFilter is "All", every match passes through;
+   if it's "FT", only matches where fixture.status === "FT" are
+   kept; if it's "NS", only future matches pass. This filter runs
+   on the frontend (client-side) because all fixtures are already
+   loaded -- no extra API call is needed. The filter combines with
+   the competition dropdown, so you can see "only upcoming La Liga
+   matches," for example.
+
+2. Date Formatting
+   The raw date in the JSON is stored as "2025-08-16" (ISO format),
+   which isn't user-friendly. The code converts this into a
+   readable format like "16 Aug 2025" using JavaScript's Date
+   object and toLocaleDateString(). The steps are:
+     const dateObj = new Date("2025-08-16")
+     const formatted = dateObj.toLocaleDateString("en-GB",
+       { day: "numeric", month: "short", year: "numeric" })
+   This is important because different countries write dates
+   differently (US: 08/16/2025 vs UK: 16/08/2025). Using
+   toLocaleDateString with a locale ensures consistent formatting.
+
+3. Competition Dropdown with Dynamic Fetch
+   Like the Standings page, the competition dropdown triggers a new
+   API call whenever the user picks a different league. The selected
+   value is stored in useState, and useEffect watches it as a
+   dependency. When it changes, useEffect fires a new fetch to
+   GET /api/football/fixtures?competition=la_liga (or whichever
+   league was picked). The old fixtures are replaced with the new
+   ones, and the status filter resets to "All" so the user sees
+   everything for the new league first.
+
+DEFENCE TALKING POINTS
+------------------------
+
+- "Fixtures show both past results and upcoming matches, which is
+  essential for a complete football app. Users want to know what
+  happened last weekend and what's coming next -- this page serves
+  both needs with a single interface."
+
+- "The status filter lets users focus on what matters to them. A
+  user checking results only cares about completed matches, while
+  someone planning to watch a game only cares about upcoming ones.
+  This is a practical UX feature that reduces information overload."
+
+- "Date formatting seems simple but it's actually an important
+  detail. Raw ISO dates like '2025-08-16' are not user-friendly.
+  I used toLocaleDateString() to convert them into readable format,
+  which shows attention to the user experience beyond just making
+  things work."
+
+- "The page supports 8 different competitions with the same code.
+  I didn't build 8 separate pages -- one component handles all
+  leagues by changing the API query parameter. This demonstrates
+  code reusability and the DRY (Don't Repeat Yourself) principle."
+
+- "I reset the status filter to 'All' when the user switches
+  leagues. This is a small UX detail that prevents confusion --
+  if someone was viewing only completed Premier League matches and
+  switches to La Liga, they should see all La Liga fixtures first,
+  not an empty page because La Liga has no completed matches yet."
+
 ============================================================

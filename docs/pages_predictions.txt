@@ -176,9 +176,8 @@ KEY VARIABLES (Backend - server.js)
   drawPercent       - draw probability (10-35)
   predictedScoreA   - rounded expected goals
 
-============================================================
 WHAT THE FRONTEND SHOWS
-============================================================
+-----------------------------
 1. Predicted winner
 2. Predicted score (e.g. "2 - 1")
 3. Win/Draw/Loss percentages with a coloured bar
@@ -186,5 +185,70 @@ WHAT THE FRONTEND SHOWS
 5. Team rating comparison bars (attack, defense, form)
 6. Full calculation breakdown table
 7. League weights reference
+
+COMPLEX CODE EXPLAINED
+------------------------
+
+1. POST Request to Backend
+   Unlike most pages that use GET requests (just fetching data),
+   the Predictions page sends a POST request. This is because the
+   user is submitting data (Team A and Team B names) to the server
+   and asking it to compute something. The frontend uses fetch()
+   with method: "POST" and sends the team names in the request body
+   as JSON: { teamA: "Arsenal", teamB: "Chelsea" }. The backend
+   receives this, runs the prediction formula, and sends back the
+   result. POST is the correct HTTP method here because we're asking
+   the server to process data, not just retrieve it.
+
+2. Expected Goals Formula
+   The core of the prediction is: expectedGoals = attackStrength *
+   opponentDefenseWeakness * 2.7. The 2.7 is the average number of
+   total goals in a real football match (a well-known statistic).
+   attackStrength is a number between 0 and 1 (team's attack rating
+   divided by 100, multiplied by league weight). defenseWeakness is
+   also 0 to 1 (calculated as 1 - defense/100, so a team with 90
+   defense only has 0.10 weakness). Multiplying these together with
+   2.7 gives a realistic expected goal count. Then we apply form
+   bonus and home advantage on top.
+
+3. Probability Calculation and League Weights
+   After calculating expected goals for both teams, we work out win
+   percentages: ratio = xG_A / (xG_A + xG_B), then winA = ratio *
+   80. The "80" cap means no team can have more than 80% win chance,
+   which is realistic (upsets always happen in football). The draw
+   percentage fills the gap: draw = 100 - winA - winB, clamped
+   between 10% and 35%. League weights (e.g. Premier League = 1.0,
+   Saudi = 0.7) scale the attack strength, so a team from a harder
+   league gets more credit for the same attack rating. This makes
+   cross-league predictions fairer.
+
+DEFENCE TALKING POINTS
+------------------------
+
+- "The prediction model uses a mathematical approach based on real
+  football statistics. The 2.7 average goals per match is a well-
+  documented figure from football analytics. I built the formula
+  around real-world data, not made-up numbers."
+
+- "I used a POST request instead of GET because the frontend is
+  sending data to the server for processing. This follows RESTful
+  API conventions -- GET is for retrieving data, POST is for
+  submitting data. This shows I understand HTTP methods and when
+  to use each one."
+
+- "League weights make the model more realistic. Without them, a
+  team from a weaker league with high stats would be predicted to
+  beat a top European team, which doesn't match reality. The weights
+  act as a normalisation factor across different league difficulties."
+
+- "The home advantage boost of 10% is based on real data -- studies
+  show home teams win about 46% of matches. This small adjustment
+  makes predictions more accurate and shows that I considered real
+  football dynamics, not just raw numbers."
+
+- "The probability percentages are capped (max 80% win, draw between
+  10-35%) to prevent unrealistic results. In real football, there's
+  always a chance of an upset, so no team should ever have a 99%
+  win probability. This demonstrates thoughtful model design."
 
 ============================================================

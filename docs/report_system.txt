@@ -87,4 +87,64 @@ Admins can also:
 Admins are set in the .env file:
   ADMIN_EMAILS="admin@example.com,mod@example.com"
 
+COMPLEX CODE EXPLAINED
+------------------------
+Here are the trickiest parts of this system in plain English:
+
+1. requireAuth Middleware (checking JWT before route runs)
+   In Express.js, middleware is a function that runs BEFORE the main route
+   handler. requireAuth intercepts every request to protected routes (like
+   /api/mod/report) and checks if the user sent a valid JWT token in the
+   Authorization header. If the token is missing or invalid, it immediately
+   sends back a 401 "Unauthorized" error and the route never runs. Think
+   of it like a bouncer at a club door - you must show valid ID before
+   you are allowed in. This keeps the report endpoint safe from people
+   who are not logged in.
+
+2. try-catch with Specific PostgreSQL Error Codes (42P01, 42703)
+   The backend wraps the database INSERT inside a try-catch block. If the
+   insert fails, it checks the specific PostgreSQL error code. Code 42P01
+   means "table does not exist" (undefined_table) and 42703 means "column
+   does not exist" (undefined_column). If the error is 42P01, the backend
+   automatically creates the reported_messages table and retries the
+   insert. This is smarter than always running CREATE TABLE IF NOT EXISTS
+   because some cloud databases restrict table creation permissions, so
+   we only attempt it when actually needed.
+
+3. Table Auto-Creation Fallback
+   This is a defensive programming pattern. Instead of assuming the
+   database table always exists, the code tries the insert first (optimistic
+   approach). If it fails because the table is missing, it creates the
+   table on the fly and retries. This makes the app more resilient -
+   it can recover from missing tables without crashing. It also means
+   you do not need to run migration scripts manually before the app works.
+
+DEFENCE TALKING POINTS
+------------------------
+Here is what to say when presenting the Report System:
+
+- "The report flow works end-to-end: a user clicks Report, fills in a
+  category and reason in a modal popup, the frontend sends a POST request
+  with a JWT token, the backend middleware verifies authentication, and
+  the report is stored in PostgreSQL. This demonstrates a complete
+  full-stack feature from UI to database."
+
+- "I used Express middleware (requireAuth) to protect the report endpoint.
+  This is a standard pattern in production applications where certain
+  routes should only be accessible to authenticated users."
+
+- "The backend uses error-code-specific handling for PostgreSQL errors.
+  If the reports table does not exist (error 42P01), it auto-creates
+  the table and retries. This defensive approach means the app handles
+  edge cases gracefully rather than just crashing."
+
+- "The database schema stores the reporter's user ID, the message text,
+  the reason for reporting, and a timestamp. This gives admins all the
+  context they need to make moderation decisions."
+
+- "I also built admin endpoints for viewing reports, banning users, and
+  unbanning users. Admin access is controlled through an environment
+  variable that lists admin email addresses, keeping it configurable
+  without code changes."
+
 ============================================================

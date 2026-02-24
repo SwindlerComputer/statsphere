@@ -8,33 +8,92 @@ URL: /profile
 WHAT THIS PAGE DOES
 --------------------
 When a user is logged in, they can visit their profile to:
-1. See their username and email
-2. Pick a favorite team from a dropdown
-3. Pick a favorite league from a dropdown
-4. Search and add up to 5 favorite players
+1. See their user info (avatar with first letter, name, email)
+2. Pick a favorite team by clicking "+ Add" and choosing from a
+   searchable grid of team buttons
+3. Pick a favorite league by clicking "+ Add" and choosing from
+   a grid of league buttons
+4. Search and add up to 5 favorite players by clicking "+ Add",
+   typing a name, and clicking "+ Add" next to each result
+5. See a summary card at the bottom showing all their favorites
 
 All favorites are saved in the browser using localStorage.
+If the user is NOT logged in, the page shows a message with
+links to the Login and Register pages.
 
 HOW IT WORKS (STEP BY STEP)
 -----------------------------
-1. Page checks if the user is logged in.
-   If NOT logged in, it shows "Please log in" message.
+1. Page checks if the user is logged in (user prop from App.js).
+   If NOT logged in, it shows "You need to be logged in" with
+   links to /login and /register.
 
-2. If logged in, it shows:
-   - A card with their username and email
-   - A dropdown for picking favorite team
-   - A dropdown for picking favorite league
-   - A search box for finding and adding favorite players
+2. If logged in, the page displays these sections in order:
+   a. User Info Card - avatar circle with the first letter of
+      their name, plus their username and email
+   b. Favorite Team section
+   c. Favorite League section
+   d. Favorite Players section
+   e. Summary card (only appears when at least one favorite is set)
 
-3. When the user picks a team/league, it's saved immediately
-   to localStorage.
+3. When the page first loads, two useEffect hooks run:
+   - One fetches all players from the backend API
+   - One loads saved favorites from localStorage
 
-4. For favorite players:
-   a. User types a name in the search box
-   b. After 2 characters, a dropdown shows matching players
-   c. User clicks a player to add them (max 5 players)
-   d. User can click "Remove" to remove a player
-   e. List is saved to localStorage after every change
+FAVORITE TEAM SECTION
+-----------------------
+- Shows the current favorite team (or "No favorite team yet")
+- A button says "+ Add" (or "Change" if one is already set)
+- Clicking the button opens a picker panel with:
+  * A search box to filter teams by name
+  * A grid of team buttons (2 columns on mobile, 3 on desktop)
+  * Clicking a team selects it, saves to localStorage, and
+    closes the picker
+- The current favorite is highlighted in cyan
+- A "Remove" button lets the user clear their choice
+
+FAVORITE LEAGUE SECTION
+-------------------------
+- Works the same way as the team section
+- Shows league buttons in a 2-column grid
+- The current favorite is highlighted in green
+- Leagues available: Premier League, La Liga, Serie A,
+  Bundesliga, Ligue 1, Saudi Pro League, Super Lig,
+  Champions League
+
+FAVORITE PLAYERS SECTION
+--------------------------
+- Shows a count of how many players are saved (e.g. "2/5")
+- Maximum of 5 favorite players allowed
+- Clicking "+ Add" opens a search panel with a text input
+- User types at least 2 characters to trigger a search
+- Matching players appear in a list with their name and team
+- Each result has a "+ Add" button (or "Added" if already saved)
+- Players are shown as numbered cards with a Remove button
+- The "+ Add" button is hidden once 5 players are saved
+
+HOW THE PICKER PANELS WORK
+-----------------------------
+The openPicker state variable controls which panel is visible.
+It can be one of four values:
+  ""        = no picker open (default)
+  "team"    = team picker is open
+  "league"  = league picker is open
+  "player"  = player search is open
+
+Only ONE picker can be open at a time. Clicking "+ Add" on any
+section sets openPicker to that section's name. Clicking "Cancel"
+(or selecting an item) sets it back to "". This means opening
+the team picker automatically closes the league or player picker.
+
+SUMMARY CARD
+--------------
+At the bottom of the page, a summary card appears when at least
+one favorite is set. It shows:
+  Team:    Arsenal (or whatever they picked)
+  League:  Premier League
+  Players: Mbappe, Haaland, Salah (comma-separated list)
+
+This gives a quick overview of all their choices in one place.
 
 WHERE ARE FAVORITES SAVED?
 ----------------------------
@@ -65,19 +124,99 @@ For objects/arrays, we convert to JSON string first:
 
 KEY VARIABLES
 --------------
-  user             - the logged in user (comes from App.js)
-  allPlayers       - all 200 players from the backend
-  favoritePlayers  - array of favorite player objects (max 5)
+  user             - the logged in user object (from App.js prop)
+  allPlayers       - all players fetched from the backend API
+  playerSearch     - text the user typed in the player search box
+  favoritePlayers  - array of saved player objects (max 5)
   favoriteTeam     - string with the selected team name
   favoriteLeague   - string with the selected league name
-  playerSearch     - text the user is typing in the search box
-  searchResults    - players that match the search (max 10 shown)
+  openPicker       - which picker is open: "team", "league",
+                     "player", or "" (none)
+  saved            - true/false, shows "Saved!" banner for 2 seconds
+  teamSearch       - text for filtering the team grid
+  leagueSearch     - text for filtering the league grid
+  searchResults    - players matching the search (max 8 shown)
+  filteredTeams    - teams matching the team search filter
+  filteredLeagues  - leagues matching the league search filter
 
 KEY FUNCTIONS
 --------------
-  addFavoritePlayer(player)    - adds a player to favorites
-  removeFavoritePlayer(id)     - removes a player from favorites
-  handleTeamChange(e)          - saves selected team to localStorage
-  handleLeagueChange(e)        - saves selected league to localStorage
+  addFavoritePlayer(player)  - adds a player to favorites (max 5),
+                               saves to localStorage, shows "Saved!"
+  removeFavoritePlayer(id)   - removes a player by ID using .filter(),
+                               updates localStorage
+  selectTeam(teamName)       - sets favorite team, saves to localStorage,
+                               closes the picker
+  removeTeam()               - clears the favorite team from state
+                               and localStorage
+  selectLeague(leagueName)   - sets favorite league, saves to localStorage,
+                               closes the picker
+  removeLeague()             - clears the favorite league from state
+                               and localStorage
+  showSaved()                - shows the "Saved!" banner, then hides it
+                               after 2 seconds using setTimeout
+
+COMPLEX CODE EXPLAINED
+------------------------
+Here are the trickiest parts of this page in plain English:
+
+1. openPicker State for Panel Visibility
+   The openPicker variable is a string that acts like a switch for three
+   different panels. When it equals "team", only the team picker grid is
+   shown. When it equals "league", only the league picker shows. When it
+   equals "player", only the player search appears. When it equals ""
+   (empty string), all pickers are hidden. The button click toggles it:
+   if openPicker is already "team" and you click the team button again,
+   it sets openPicker to "" (closing it). If it is something else, it
+   sets openPicker to "team" (opening it and closing whatever else was
+   open). This is simpler than having three separate true/false variables
+   because it automatically ensures only one panel is open at a time.
+
+2. Player Search with indexOf and Filtering
+   When the user types in the player search box, the code loops through
+   ALL players from the backend and checks if each player's name contains
+   the search text. It uses toLowerCase() on both strings so the search
+   is case-insensitive (typing "mba" finds "Mbappe"). The indexOf method
+   returns the position where the match starts, or -1 if there is no
+   match. We only search after 2 characters to avoid showing too many
+   results, and we cap at 8 results to keep the list manageable.
+
+3. localStorage with JSON.stringify and JSON.parse
+   localStorage can only store strings, but favoritePlayers is an array
+   of objects. To save it, we use JSON.stringify() which converts the
+   array into a text string like '[{"id":1,"name":"Mbappe"}]'. To load
+   it back, we use JSON.parse() which converts that text back into a
+   real JavaScript array. The loading is wrapped in a try-catch block
+   because if the stored data is corrupted or invalid JSON, JSON.parse
+   would crash the page. The try-catch prevents that by catching the
+   error silently.
+
+DEFENCE TALKING POINTS
+------------------------
+Here is what to say when presenting the Profile page:
+
+- "The Profile page lets users personalise their experience by selecting
+  a favorite team, league, and up to 5 favorite players. I used picker
+  panels with search functionality so users can find what they want
+  quickly, even with a large list of teams or players."
+
+- "I used a single openPicker state variable to control which picker
+  panel is visible. This is cleaner than using separate boolean states
+  for each panel because it guarantees only one panel can be open at a
+  time, preventing confusing UI states."
+
+- "All favorites persist using localStorage, which means the user's
+  choices survive page refreshes and browser restarts without needing
+  a database. This was a deliberate design choice to keep the feature
+  lightweight and fast while still providing data persistence."
+
+- "The player search filters results in real time as the user types,
+  using case-insensitive string matching. I limited results to 8 and
+  required at least 2 characters before searching to keep the
+  interface clean and performant."
+
+- "I also added a summary card at the bottom that consolidates all the
+  user's favorites in one view. This provides immediate visual feedback
+  and confirms their selections without scrolling back up."
 
 ============================================================

@@ -116,34 +116,55 @@ function requireAdmin(req, res, next) {
 // ========================================
 // Any logged-in user can report a message.
 // The report is saved to the database.
+//
+// WHAT HAPPENS:
+// 1. First we TRY to insert the report into the database
+// 2. If the table doesn't exist, we CREATE it and try again
+// 3. This way it works even if the migration was never run
 router.post("/report", requireAuth, async function (req, res) {
   try {
     var messageId = req.body.messageId;
     var messageText = req.body.messageText;
     var reason = req.body.reason;
 
+    // Check the user gave a reason
     if (!reason || reason.trim() === "") {
       return res.status(400).json({ error: "Please provide a reason for the report" });
     }
 
-    // Create the table if it doesn't exist yet
-    // This way we don't need to run migration manually
-    await pool.query(
-      "CREATE TABLE IF NOT EXISTS reported_messages (" +
-      "  id SERIAL PRIMARY KEY," +
-      "  reporter_user_id INTEGER NOT NULL," +
-      "  message_id BIGINT," +
-      "  message_text TEXT," +
-      "  reason TEXT NOT NULL," +
-      "  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-      ")"
-    );
+    // The INSERT query we want to run
+    var insertQuery = "INSERT INTO reported_messages (reporter_user_id, message_id, message_text, reason) VALUES ($1, $2, $3, $4) RETURNING *";
+    var insertValues = [req.user.id, messageId || null, messageText || "", reason.trim()];
 
-    // Save the report to the database
-    var result = await pool.query(
-      "INSERT INTO reported_messages (reporter_user_id, message_id, message_text, reason) VALUES ($1, $2, $3, $4) RETURNING *",
-      [req.user.id, messageId || null, messageText || "", reason.trim()]
-    );
+    var result;
+
+    try {
+      // Try to insert the report directly
+      result = await pool.query(insertQuery, insertValues);
+    } catch (insertError) {
+      // If the table doesn't exist, create it and try again
+      // PostgreSQL error code 42P01 = "undefined_table"
+      if (insertError.code === "42P01") {
+        console.log("reported_messages table not found, creating it now...");
+
+        await pool.query(
+          "CREATE TABLE IF NOT EXISTS reported_messages (" +
+          "  id SERIAL PRIMARY KEY," +
+          "  reporter_user_id INTEGER NOT NULL," +
+          "  message_id BIGINT," +
+          "  message_text TEXT," +
+          "  reason TEXT NOT NULL," +
+          "  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+          ")"
+        );
+
+        // Try the insert again now that the table exists
+        result = await pool.query(insertQuery, insertValues);
+      } else {
+        // Some other database error - throw it so outer catch handles it
+        throw insertError;
+      }
+    }
 
     res.json({
       success: true,
@@ -151,8 +172,8 @@ router.post("/report", requireAuth, async function (req, res) {
       report: result.rows[0]
     });
   } catch (err) {
-    console.error("Error reporting message:", err);
-    res.status(500).json({ error: "Failed to submit report. Please try again." });
+    console.error("Error reporting message:", err.message || err);
+    res.status(500).json({ error: "Server error: " + (err.message || "Unknown error") });
   }
 });
 

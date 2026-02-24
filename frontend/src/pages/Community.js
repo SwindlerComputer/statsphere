@@ -103,7 +103,7 @@ export default function Community({ user }) {
     setReportLoading(false);
   }
 
-  // Submit the report
+  // Submit the report to the backend
   function submitReport() {
     if (!reportReason.trim()) {
       setError("Please enter a reason for the report");
@@ -113,41 +113,56 @@ export default function Community({ user }) {
 
     setReportLoading(true);
 
+    // Combine category and reason into one string
     var fullReason = "[" + reportCategory.toUpperCase() + "] " + reportReason.trim();
 
     // Build the headers object
-    // We always need Content-Type, and if user has a token we add it too
+    // Content-Type tells the backend we are sending JSON
+    // Authorization sends the user's login token
     var savedToken = localStorage.getItem("token");
     var headers = { "Content-Type": "application/json" };
     if (savedToken) {
       headers["Authorization"] = "Bearer " + savedToken;
     }
 
+    // Send the report to the backend
     fetch(API_BASE + "/api/mod/report", {
       method: "POST",
       headers: headers,
       credentials: "include",
       body: JSON.stringify({
-        messageId: reportMessage.id,
-        messageText: reportMessage.text,
+        messageId: reportMessage ? reportMessage.id : null,
+        messageText: reportMessage ? reportMessage.text : "",
         reason: fullReason
       })
     })
-      .then(function (res) { return res.json(); })
+      .then(function (res) {
+        // Parse the JSON response from the backend
+        return res.json().then(function (data) {
+          // Attach the HTTP status so we can check it
+          data._status = res.status;
+          return data;
+        });
+      })
       .then(function (data) {
         if (data.success) {
+          // Report was saved successfully
           setSuccess("Report submitted! Our team will review it.");
           setTimeout(function () { setSuccess(""); }, 4000);
           closeReportModal();
         } else {
-          setError(data.error || "Failed to submit report");
-          setTimeout(function () { setError(""); }, 3000);
+          // Backend returned an error - show what it said
+          var errorMsg = data.error || data.message || "Failed to submit report";
+          setError(errorMsg);
+          setTimeout(function () { setError(""); }, 5000);
           setReportLoading(false);
         }
       })
-      .catch(function () {
-        setError("Failed to submit report. Please try again.");
-        setTimeout(function () { setError(""); }, 3000);
+      .catch(function (err) {
+        // Network error or the fetch itself failed
+        console.error("Report fetch error:", err);
+        setError("Could not connect to server. Check your internet connection.");
+        setTimeout(function () { setError(""); }, 5000);
         setReportLoading(false);
       });
   }

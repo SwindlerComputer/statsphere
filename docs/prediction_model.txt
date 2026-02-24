@@ -1,0 +1,204 @@
+============================================================
+STATSPHERE - BALLON D'OR PREDICTION MODEL
+============================================================
+Written for: Final Year Project Defence
+============================================================
+
+OVERVIEW
+--------
+StatSphere predicts who is most likely to win the Ballon d'Or award
+using TWO approaches:
+
+  1. Frontend Rule-Based Scoring (BallonDor.js)
+     - Simple weighted formula calculated in the browser
+     - No machine learning needed
+
+  2. Machine Learning Model (ml/ folder)
+     - Python-based scikit-learn regression model
+     - Trained on player statistics
+     - Outputs a predicted score for each player
+
+Both approaches rank players from highest to lowest predicted score.
+
+
+PART 1: FRONTEND RULE-BASED SCORING (BallonDor.js)
+----------------------------------------------------
+
+Location: frontend/src/pages/BallonDor.js
+
+This is a simple mathematical formula that calculates a score
+for each player based on their stats.
+
+THE FORMULA:
+  Score = [(Goals x 4) + (Assists x 3) + (xG x 2) + (xA x 2) + (Goals/90 x 50)] x League Weight
+
+Each stat has a "weight" (multiplier) showing its importance:
+  - Goals × 4       → Goals are the most important (highest weight)
+  - Assists × 3     → Assists are important but less than goals
+  - xG × 2          → Expected goals show shot quality
+  - xA × 2          → Expected assists show creative ability
+  - Goals/90 × 50   → Consistency (scoring rate per game)
+
+LEAGUE WEIGHTS:
+  The Ballon d'Or considers league difficulty.
+  Scoring 20 goals in the Premier League is harder than in weaker leagues.
+
+  Premier League:    1.0  (100% - hardest league)
+  La Liga:           0.95 (95%)
+  Serie A:           0.90 (90%)
+  Bundesliga:        0.90 (90%)
+  Ligue 1:           0.85 (85%)
+  Super Lig:         0.75 (75%)
+  Saudi Pro League:  0.70 (70% - easiest league)
+
+EXAMPLE CALCULATION:
+  Player: Cristiano Ronaldo (Al Nassr, Saudi Pro League)
+    Goals = 22, Assists = 7, xG = 19.4, xA = 5.2, Goals/90 = 0.85
+
+  Step 1: Goals points     = 22 × 4  = 88
+  Step 2: Assists points   = 7 × 3   = 21
+  Step 3: xG points        = 19.4 × 2 = 38.8
+  Step 4: xA points        = 5.2 × 2  = 10.4
+  Step 5: Consistency      = 0.85 × 50 = 42.5
+  Step 6: Raw total        = 88 + 21 + 38.8 + 10.4 + 42.5 = 200.7
+  Step 7: Apply league weight = 200.7 × 0.7 = 140.5
+
+  Final Score: 140.5
+
+HOW THE RANKING WORKS:
+  1. Calculate score for each player
+  2. Sort all players by score (highest first)
+  3. Display with medals: Gold, Silver, Bronze for top 3
+  4. Show score breakdown for the #1 ranked player
+
+
+PART 2: MACHINE LEARNING MODEL (Python)
+-----------------------------------------
+
+Location: /ml/
+
+This is a proper machine learning approach using Python.
+It trains a regression model to predict Ballon d'Or scores.
+
+FILES:
+  - train.py          → Trains the model on player data
+  - predict.py        → Uses trained model to make predictions
+  - features.py       → Feature engineering (data preparation)
+  - model.pkl         → Saved trained model (pickle file)
+  - feature_columns.pkl → Saved list of features used
+  - data/raw/players.csv         → Raw player data
+  - data/processed/predictions.csv → Output predictions
+
+WHAT IS A REGRESSION MODEL?
+  - A regression model predicts a CONTINUOUS number
+  - Input: Player stats (goals, assists, xG, minutes, etc.)
+  - Output: A predicted score (e.g. 145.3)
+  - The model learns patterns from the training data
+  - Then uses those patterns to predict new scores
+
+FEATURE ENGINEERING (features.py):
+  Raw stats are transformed into useful features:
+
+  1. goals_per_90 = (goals / minutes_played) × 90
+     → Shows how often a player scores per full game
+
+  2. assists_per_90 = (assists / minutes_played) × 90
+     → Shows how often a player creates goals per full game
+
+  3. league_weight = weight based on league name
+     → Same league weights as the frontend formula
+
+  These features help the model understand player quality better
+  than just looking at raw numbers.
+
+TRAINING PROCESS (train.py):
+  Step 1: Load player data from CSV file
+  Step 2: Add calculated features (goals_per_90, etc.)
+  Step 3: Select feature columns (inputs to the model)
+  Step 4: Define the target variable (score to predict)
+  Step 5: Train the model using scikit-learn
+  Step 6: Save the trained model to model.pkl
+
+PREDICTION PROCESS (predict.py):
+  Step 1: Load the saved model from model.pkl
+  Step 2: Load new player data from CSV
+  Step 3: Add the same calculated features
+  Step 4: Pass features through the model
+  Step 5: Model outputs a predicted score for each player
+  Step 6: Sort by score (highest first)
+  Step 7: Save ranked predictions to CSV
+
+MODEL TYPE:
+  The model uses scikit-learn's regression algorithm.
+  Scikit-learn is a popular Python library for machine learning.
+  The model file (model.pkl) is saved using Python's pickle module,
+  which serialises the trained model so it can be loaded later.
+
+
+PART 3: PLAYER INSIGHTS RULE-BASED SYSTEM (NEW)
+--------------------------------------------------
+
+Location: frontend/src/pages/PlayerInsights.js
+
+This is a different kind of prediction system - a "rule-based expert system"
+that analyses individual player strengths and weaknesses.
+
+HOW IT WORKS:
+  - Simple IF/THEN rules check each stat against threshold values
+  - Different rules apply to different positions
+  - Results are displayed as "Strengths" and "Weaknesses"
+
+EXAMPLE RULES:
+  IF goals >= 20       THEN strength = "Elite Finisher"
+  IF goals >= 12       THEN strength = "Clinical Scorer"
+  IF assists >= 12     THEN strength = "Elite Playmaker"
+  IF tackles >= 80     THEN strength = "Defensive Wall"
+  IF passes >= 2000    THEN strength = "Pass Master"
+  IF rating >= 8.0     THEN strength = "World Class Rating"
+
+  IF forward AND goals < 5    THEN weakness = "Poor Goal Output"
+  IF defender AND tackles < 40 THEN weakness = "Weak Defensively"
+  IF midfielder AND assists < 3 THEN weakness = "Low Creativity"
+
+WHAT IS A RULE-BASED EXPERT SYSTEM?
+  - One of the oldest forms of artificial intelligence
+  - Humans define the rules (not learned from data)
+  - Simple but effective for well-defined domains
+  - Easy to understand and explain
+  - Used in medical diagnosis, fraud detection, sports analysis
+
+COMPARISON OF APPROACHES:
+  +------------------+-------------------+---------------------------+
+  | Feature          | Rule-Based        | Machine Learning          |
+  +------------------+-------------------+---------------------------+
+  | How it learns    | Human writes rules| Learns from data          |
+  | Transparency     | Very clear        | "Black box"               |
+  | Flexibility      | Limited to rules  | Finds hidden patterns     |
+  | Data needed      | None              | Lots of training data     |
+  | Best for         | Simple analysis   | Complex predictions       |
+  +------------------+-------------------+---------------------------+
+
+StatSphere uses BOTH approaches to give users different perspectives
+on player performance.
+
+
+MATCH PREDICTION SYSTEM
+------------------------
+Location: backend/server.js (POST /api/predict-match)
+
+A simpler prediction system for predicting match outcomes:
+
+Formula:
+  Team Score = (Attack × 0.4) + (Defense × 0.3) + (Form × 5)
+
+  - Compare Team A score vs Team B score
+  - Higher score = predicted winner
+  - If scores are equal = predicted draw
+  - Confidence = the difference between scores
+
+This is a simple weighted formula (not machine learning).
+
+============================================================
+END OF DOCUMENT
+============================================================
+

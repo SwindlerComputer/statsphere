@@ -32,9 +32,30 @@ export default function Register() {
     return { label: "Strong", color: "bg-green-500", percent: 100 };
   }
 
+  // Get the text color for the strength label
+  function getStrengthTextColor(percent) {
+    if (percent <= 25) return "text-red-400";
+    if (percent <= 50) return "text-yellow-400";
+    if (percent <= 75) return "text-blue-400";
+    return "text-green-400";
+  }
+
   // Validate email format
+  // A valid email must have: something @ something . something
+  // For example: john@example.com
   function isValidEmail(emailStr) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+    // Check it has an @ sign
+    var atIndex = emailStr.indexOf("@");
+    if (atIndex < 1) return false;
+
+    // Check it has a dot after the @
+    var dotIndex = emailStr.indexOf(".", atIndex);
+    if (dotIndex < 0) return false;
+
+    // Check there's something after the dot
+    if (dotIndex >= emailStr.length - 1) return false;
+
+    return true;
   }
 
   // Handle form submission
@@ -177,7 +198,7 @@ export default function Register() {
                     style={{ width: strength.percent + "%" }}
                   ></div>
                 </div>
-                <p className={"text-xs mt-1 " + (strength.percent <= 25 ? "text-red-400" : strength.percent <= 50 ? "text-yellow-400" : strength.percent <= 75 ? "text-blue-400" : "text-green-400")}>
+                <p className={"text-xs mt-1 " + getStrengthTextColor(strength.percent)}>
                   Strength: {strength.label}
                 </p>
               </div>

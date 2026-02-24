@@ -1,15 +1,12 @@
 // ========================================
 // footballApiRoutes.js - Mock Football Data Endpoints
 // ========================================
-// UPDATED: No longer uses external APIs (RapidAPI).
-// All data is now served from local JSON files (mock datasets).
-//
-// This makes the app fully self-contained - no API keys needed,
-// no rate limits, no subscription costs, and works offline.
+// All data comes from local JSON files (no external APIs).
 //
 // ENDPOINTS:
-// GET /api/football/standings  → League standings (from mockStandings.json)
-// GET /api/football/fixtures   → Match fixtures (from mockFixtures.json)
+// GET /api/football/standings  - League standings
+// GET /api/football/fixtures   - Match fixtures
+// GET /api/football/competitions - List of competitions
 // ========================================
 
 import express from "express";
@@ -17,83 +14,89 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const router = express.Router();
+var router = express.Router();
 
-// Fix __dirname for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Fix __dirname for ES Modules (needed because we use import instead of require)
+var __filename = fileURLToPath(import.meta.url);
+var __dirname = path.dirname(__filename);
 
-console.log("✅ Football API routes loaded (using mock data - no external APIs)");
+console.log("Football API routes loaded (using mock data)");
 
 // ========================================
 // HELPER: Load a JSON file from the data folder
 // ========================================
 function loadJSON(filename) {
-  const filePath = path.join(__dirname, "..", "data", filename);
-  const jsonData = fs.readFileSync(filePath, "utf8");
+  var filePath = path.join(__dirname, "..", "data", filename);
+  var jsonData = fs.readFileSync(filePath, "utf8");
   return JSON.parse(jsonData);
 }
 
 // ========================================
-// Mapping of competition names to display names
+// Competition name lookup
 // ========================================
-const COMPETITIONS = {
-  "premier-league": "Premier League",
-  "la-liga": "La Liga",
-  "bundesliga": "Bundesliga",
-  "serie-a": "Serie A",
-  "ligue-1": "Ligue 1",
-  "champions-league": "Champions League",
-  "world-cup-2026": "World Cup 2026"
-};
+// Maps URL-friendly IDs to display names
+// Example: "premier-league" -> "Premier League"
+function getCompetitionName(competitionId) {
+  if (competitionId === "premier-league") return "Premier League";
+  if (competitionId === "la-liga") return "La Liga";
+  if (competitionId === "bundesliga") return "Bundesliga";
+  if (competitionId === "serie-a") return "Serie A";
+  if (competitionId === "ligue-1") return "Ligue 1";
+  if (competitionId === "champions-league") return "Champions League";
+  if (competitionId === "world-cup-2026") return "World Cup 2026";
+  // Old numeric IDs (for backwards compatibility)
+  if (competitionId === "39") return "Premier League";
+  if (competitionId === "140") return "La Liga";
+  if (competitionId === "78") return "Bundesliga";
+  if (competitionId === "135") return "Serie A";
+  if (competitionId === "61") return "Ligue 1";
+  return competitionId;
+}
 
 // ========================================
 // GET /api/football/competitions
 // ========================================
-// Returns list of available competitions for dropdowns
-router.get("/competitions", (req, res) => {
-  const competitions = Object.entries(COMPETITIONS).map(function ([id, name]) {
-    return { id: id, name: name };
-  });
+// Returns the list of competitions for dropdown menus
+router.get("/competitions", function (req, res) {
+  var competitions = [
+    { id: "premier-league", name: "Premier League" },
+    { id: "la-liga", name: "La Liga" },
+    { id: "bundesliga", name: "Bundesliga" },
+    { id: "serie-a", name: "Serie A" },
+    { id: "ligue-1", name: "Ligue 1" },
+    { id: "champions-league", name: "Champions League" },
+    { id: "world-cup-2026", name: "World Cup 2026" }
+  ];
   res.json(competitions);
 });
 
 // ========================================
 // GET /api/football/standings
 // ========================================
-// Returns league standings from mock data.
-// Query params:
-//   ?competition=premier-league (default)
-//
-// Response format matches what the frontend expects.
-router.get("/standings", (req, res) => {
+// Returns league standings for a given competition.
+// Use like: /api/football/standings?competition=premier-league
+router.get("/standings", function (req, res) {
   try {
-    const competitionId = req.query.competition || req.query.leagueId || "premier-league";
-    const allStandings = loadJSON("mockStandings.json");
+    // Get the competition from the URL query
+    var competitionId = req.query.competition || req.query.leagueId || "premier-league";
+    var competitionName = getCompetitionName(competitionId);
 
-    // Map old numeric IDs to new string IDs for backwards compatibility
-    const idMap = {
-      "39": "Premier League",
-      "140": "La Liga",
-      "78": "Bundesliga",
-      "135": "Serie A",
-      "61": "Ligue 1"
-    };
+    // Load all standings from the JSON file
+    var allStandings = loadJSON("mockStandings.json");
 
-    // Determine the competition name to look up
-    let competitionName = COMPETITIONS[competitionId] || idMap[competitionId] || competitionId;
+    // Find the standings for the requested competition
+    var standings = allStandings[competitionName];
 
-    // Get standings for the requested competition
-    const standings = allStandings[competitionName];
-
+    // If no standings found, return empty
     if (!standings) {
       return res.json({ response: [{ league: { standings: [[]] } }] });
     }
 
-    // Format into the structure the frontend expects
-    // (matches the old RapidAPI response format for backwards compatibility)
-    const formattedStandings = standings.map(function (team) {
-      return {
+    // Format each team into the structure the frontend expects
+    var formattedStandings = [];
+    for (var i = 0; i < standings.length; i++) {
+      var team = standings[i];
+      formattedStandings.push({
         rank: team.rank,
         team: { id: team.rank, name: team.team, logo: "" },
         points: team.points,
@@ -105,9 +108,10 @@ router.get("/standings", (req, res) => {
           lose: team.lost,
           goals: { for: team.goalsFor, against: team.goalsAgainst }
         }
-      };
-    });
+      });
+    }
 
+    // Send back in the format the frontend expects
     res.json({
       response: [{
         league: {
@@ -126,37 +130,30 @@ router.get("/standings", (req, res) => {
 // ========================================
 // GET /api/football/fixtures
 // ========================================
-// Returns match fixtures from mock data.
-// Query params:
-//   ?competition=premier-league (default)
-//
-// Response format matches what the frontend expects.
-router.get("/fixtures", (req, res) => {
+// Returns match fixtures for a given competition.
+// Use like: /api/football/fixtures?competition=premier-league
+router.get("/fixtures", function (req, res) {
   try {
-    const competitionId = req.query.competition || req.query.leagueId || "premier-league";
-    const allFixtures = loadJSON("mockFixtures.json");
+    // Get the competition from the URL query
+    var competitionId = req.query.competition || req.query.leagueId || "premier-league";
+    var competitionName = getCompetitionName(competitionId);
 
-    // Map old numeric IDs to new string IDs for backwards compatibility
-    const idMap = {
-      "39": "Premier League",
-      "140": "La Liga",
-      "78": "Bundesliga",
-      "135": "Serie A",
-      "61": "Ligue 1"
-    };
+    // Load all fixtures from the JSON file
+    var allFixtures = loadJSON("mockFixtures.json");
 
-    let competitionName = COMPETITIONS[competitionId] || idMap[competitionId] || competitionId;
+    // Find fixtures for the requested competition
+    var fixtures = allFixtures[competitionName];
 
-    const fixtures = allFixtures[competitionName];
-
+    // If no fixtures found, return empty
     if (!fixtures) {
       return res.json({ response: [] });
     }
 
-    // Format into the structure the frontend expects
-    // (matches the old RapidAPI response format for backwards compatibility)
-    const formattedFixtures = fixtures.map(function (match) {
-      return {
+    // Format each match into the structure the frontend expects
+    var formattedFixtures = [];
+    for (var i = 0; i < fixtures.length; i++) {
+      var match = fixtures[i];
+      formattedFixtures.push({
         fixture: {
           id: match.id,
           date: match.date,
@@ -171,8 +168,8 @@ router.get("/fixtures", (req, res) => {
           away: match.awayScore
         },
         round: match.round
-      };
-    });
+      });
+    }
 
     res.json({ response: formattedFixtures });
   } catch (err) {

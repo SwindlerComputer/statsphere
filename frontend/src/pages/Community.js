@@ -49,8 +49,10 @@ export default function Community({ user }) {
       setLoading(false);
     });
 
+    // When a new message arrives, add it to the end of the messages array
+    // .concat() adds an item to an array and returns a new array
     newSocket.on("new_message", function (message) {
-      setMessages(function (prev) { return [...prev, message]; });
+      setMessages(function (prev) { return prev.concat(message); });
     });
 
     newSocket.on("error_message", function (errorText) {
@@ -113,13 +115,17 @@ export default function Community({ user }) {
 
     var fullReason = "[" + reportCategory.toUpperCase() + "] " + reportReason.trim();
 
+    // Build the headers object
+    // We always need Content-Type, and if user has a token we add it too
     var savedToken = localStorage.getItem("token");
+    var headers = { "Content-Type": "application/json" };
+    if (savedToken) {
+      headers["Authorization"] = "Bearer " + savedToken;
+    }
+
     fetch(API_BASE + "/api/mod/report", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(savedToken ? { "Authorization": "Bearer " + savedToken } : {})
-      },
+      headers: headers,
       credentials: "include",
       body: JSON.stringify({
         messageId: reportMessage.id,

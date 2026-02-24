@@ -114,17 +114,13 @@ function App() {
               )}
             </div>
 
-            {/* Hamburger button (mobile only) */}
+            {/* Menu button (mobile only) */}
+            {/* Shows "Menu" when closed, "Close" when open */}
             <button
               onClick={function () { setMenuOpen(!menuOpen); }}
-              className="md:hidden p-2 rounded hover:bg-gray-700 transition"
-              aria-label="Toggle menu"
+              className="md:hidden px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition text-sm"
             >
-              <div className="space-y-1.5">
-                <span className={"block w-6 h-0.5 bg-white transition-all " + (menuOpen ? "rotate-45 translate-y-2" : "")}></span>
-                <span className={"block w-6 h-0.5 bg-white transition-all " + (menuOpen ? "opacity-0" : "")}></span>
-                <span className={"block w-6 h-0.5 bg-white transition-all " + (menuOpen ? "-rotate-45 -translate-y-2" : "")}></span>
-              </div>
+              {menuOpen ? "Close" : "Menu"}
             </button>
           </div>
 

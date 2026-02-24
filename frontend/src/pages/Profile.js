@@ -75,7 +75,9 @@ export default function Profile({ user }) {
       return;
     }
 
-    var updated = [...favoritePlayers, { id: player.id, name: player.name, team: player.team }];
+    // .concat() adds a new item to the array and returns a new array
+    var newPlayer = { id: player.id, name: player.name, team: player.team };
+    var updated = favoritePlayers.concat(newPlayer);
     setFavoritePlayers(updated);
     localStorage.setItem("favoritePlayers", JSON.stringify(updated));
     setPlayerSearch("");

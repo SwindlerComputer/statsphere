@@ -1,0 +1,169 @@
+============================================================
+STATSPHERE - MODERATION SYSTEM
+============================================================
+Written for: Final Year Project Defence
+============================================================
+
+OVERVIEW
+--------
+StatSphere has a moderation system to keep the community chat safe.
+It includes:
+  1. Bad word filtering (automatic censoring)
+  2. Message reporting (users can flag bad messages)
+  3. User banning (admins can ban/unban users)
+
+Key Files:
+  - backend/server.js          → Bad word filter + chat validation
+  - backend/api/modRoutes.js   → Report/ban API endpoints
+  - frontend/src/pages/Community.js → Report button UI
+
+
+PART 1: BAD WORD FILTERING (AUTOMATIC CENSORING)
+--------------------------------------------------
+
+How it works:
+  - The server has an array of banned words (bannedWords)
+  - When a user sends a chat message, the server checks it BEFORE broadcasting
+  - Any banned word is replaced with asterisks (***)
+  - The message is still sent, but offensive words are hidden
+
+Example:
+  User sends: "You are a racist idiot"
+  Server censors: "You are a ****** idiot"
+
+The censor function (censorMessage):
+  1. Takes the message text as input
+  2. Loops through every word in the bannedWords array
+  3. Uses a case-insensitive regex to find matches
+  4. Replaces each match with asterisks of the same length
+  5. Returns the censored text
+
+Code Logic:
+  function censorMessage(text) {
+    for each bannedWord:
+      find all occurrences (case-insensitive)
+      replace with "*".repeat(word.length)
+    return censored text
+  }
+
+The banned words list includes:
+  - Racial slurs
+  - Homophobic terms
+  - Swear words
+  - Harassment phrases
+  - Spam keywords
+
+Why censoring instead of blocking?
+  - Blocking can frustrate users (they don't know what went wrong)
+  - Censoring lets the conversation flow while hiding bad words
+  - Other users can still understand the context of the message
+  - The original message is logged on the server for moderation review
+
+
+PART 2: MESSAGE REPORTING (USER REPORTS)
+-----------------------------------------
+
+Any logged-in user can report a message they find inappropriate.
+
+How it works:
+  1. Each message in the chat has a small "Report" button (⚠️)
+  2. When clicked, a prompt asks: "Why are you reporting this message?"
+  3. The report is sent to the backend: POST /api/mod/report
+  4. Backend saves the report to the reported_messages table in the database
+
+Report data saved:
+  - reporter_user_id → Who made the report
+  - message_id       → ID of the reported message
+  - message_text     → Copy of the message text
+  - reason           → Why the user reported it
+  - created_at       → When the report was made
+
+The report endpoint requires authentication (user must be logged in).
+The JWT token is verified using the requireAuth middleware.
+
+Database Table:
+  reported_messages
+  +-----------------+----------+------------------------------+
+  | Column          | Type     | Description                  |
+  +-----------------+----------+------------------------------+
+  | id              | SERIAL   | Auto-incrementing ID         |
+  | reporter_user_id| INTEGER  | ID of the user who reported  |
+  | message_id      | BIGINT   | ID of the chat message       |
+  | message_text    | TEXT     | Copy of the message content  |
+  | reason          | TEXT     | Why it was reported          |
+  | created_at      | TIMESTAMP| When the report was created  |
+  +-----------------+----------+------------------------------+
+
+
+PART 3: ADMIN MODERATION (BAN/UNBAN)
+--------------------------------------
+
+Admins can view reports and ban users who break the rules.
+
+Who is an admin?
+  - Admin emails are defined in the .env file:
+    ADMIN_EMAILS="admin@example.com,mod@example.com"
+  - When a request comes in, the server checks if the user's email
+    is in this list
+
+Admin endpoints:
+  - GET  /api/mod/reports    → View all reports (newest first)
+  - POST /api/mod/ban-user   → Ban a user (set is_banned = true)
+  - POST /api/mod/unban-user → Unban a user (set is_banned = false)
+
+How banning works:
+  1. Admin sees reports and decides to ban a user
+  2. Sends POST to /api/mod/ban-user with { userId: 123 }
+  3. Backend sets is_banned = true in the users table
+  4. Next time the banned user tries to send a message:
+     - Server checks is_banned in the database
+     - If true, message is rejected
+     - User sees: "You are banned from sending messages"
+  5. Admin can unban the user later using /api/mod/unban-user
+
+The ban check happens at the WebSocket level:
+  - When a message is received, the server queries:
+    SELECT is_banned FROM users WHERE id = $1
+  - If is_banned is true, the message is not sent
+
+
+MODERATION FLOW DIAGRAM
+-------------------------
+
+  [User sends bad message]
+        |
+        v
+  [Server censors banned words] → Broadcasts censored message
+        |
+        v
+  [Other user sees message] → Clicks ⚠️ Report
+        |
+        v
+  [Report saved to database]
+        |
+        v
+  [Admin views reports] → GET /api/mod/reports
+        |
+        v
+  [Admin bans user] → POST /api/mod/ban-user
+        |
+        v
+  [Banned user cannot send messages anymore]
+
+
+VALIDATION CHECKS ON EACH MESSAGE
+-----------------------------------
+Before any message is broadcast, the server checks:
+  1. Is the user logged in? (socket.user exists)
+  2. Is the user banned? (is_banned in database)
+  3. Is the message empty? (messageText.trim() !== "")
+  4. Is the message too long? (max 200 characters)
+  5. Is the user sending too fast? (rate limit: 2 seconds)
+  6. Censor any banned words
+
+Only after ALL checks pass is the message broadcast to everyone.
+
+============================================================
+END OF DOCUMENT
+============================================================
+

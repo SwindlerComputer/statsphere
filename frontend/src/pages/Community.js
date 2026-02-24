@@ -1,135 +1,120 @@
 // ========================================
 // Community.js - Real-Time Chat Page
 // ========================================
-// This page uses WebSockets (Socket.IO) for live chat.
-// 
-// HOW IT WORKS:
-// 1. When page loads, we connect to the server via WebSocket
-// 2. Server sends us all existing messages (chat_history)
-// 3. When someone sends a message, server broadcasts it to everyone (new_message)
-// 4. Only logged-in users can send messages, guests can only view
-//
-// SOCKET.IO EVENTS:
-// - socket.emit("event", data)  = Send data TO server
-// - socket.on("event", callback) = Listen for data FROM server
+// Uses WebSockets (Socket.IO) for live chat.
+// Includes a report modal for reporting messages.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
-// API_BASE = backend URL from .env file
-const API_BASE = process.env.REACT_APP_API_URL;
+var API_BASE = process.env.REACT_APP_API_URL;
 
 export default function Community({ user }) {
-  // Store all chat messages
-  const [messages, setMessages] = useState([]);
-  // Store the message being typed
-  const [newMessage, setNewMessage] = useState("");
-  // Store the socket connection
-  const [socket, setSocket] = useState(null);
-  // Store error messages
-  const [error, setError] = useState("");
-  // Store success message (for report confirmation)
-  const [success, setSuccess] = useState("");
-  // Loading state - true until chat history is received
-  const [loading, setLoading] = useState(true);
+  var [messages, setMessages] = useState([]);
+  var [newMessage, setNewMessage] = useState("");
+  var [socket, setSocket] = useState(null);
+  var [error, setError] = useState("");
+  var [success, setSuccess] = useState("");
+  var [loading, setLoading] = useState(true);
 
-  // ========================================
-  // STEP 2: Connect to WebSocket server
-  // ========================================
-  useEffect(() => {
-    // Create socket connection to backend
-    // withCredentials: true sends cookies (for JWT auth)
-    // Also send token from localStorage (backup when cookies are blocked)
-    let savedToken = localStorage.getItem("token");
-    let newSocket = io(API_BASE, {
+  // Report modal state
+  var [showReportModal, setShowReportModal] = useState(false);
+  var [reportMessage, setReportMessage] = useState(null);
+  var [reportReason, setReportReason] = useState("");
+  var [reportCategory, setReportCategory] = useState("inappropriate");
+  var [reportLoading, setReportLoading] = useState(false);
+
+  // Ref for auto-scrolling to bottom
+  var chatEndRef = useRef(null);
+
+  // Auto-scroll when new messages arrive
+  function scrollToBottom() {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  // Connect to WebSocket server
+  useEffect(function () {
+    var savedToken = localStorage.getItem("token");
+    var newSocket = io(API_BASE, {
       withCredentials: true,
       auth: savedToken ? { token: savedToken } : {}
     });
 
-    // Save socket to state
     setSocket(newSocket);
 
-    // ========================================
-    // LISTEN: Receive chat history when we connect
-    // ========================================
-    newSocket.on("chat_history", (history) => {
-      console.log("Received chat history:", history.length, "messages");
+    newSocket.on("chat_history", function (history) {
       setMessages(history);
-      setLoading(false); // Done loading, show messages
+      setLoading(false);
     });
 
-    // ========================================
-    // LISTEN: Receive new messages in real-time
-    // ========================================
-    newSocket.on("new_message", (message) => {
-      console.log("New message received:", message);
-      // Add new message to the end of messages array
-      setMessages((prevMessages) => [...prevMessages, message]);
+    newSocket.on("new_message", function (message) {
+      setMessages(function (prev) { return [...prev, message]; });
     });
 
-    // ========================================
-    // LISTEN: Receive error messages
-    // ========================================
-    newSocket.on("error_message", (errorText) => {
+    newSocket.on("error_message", function (errorText) {
       setError(errorText);
-      // Clear error after 3 seconds
-      setTimeout(() => setError(""), 3000);
+      setTimeout(function () { setError(""); }, 3000);
     });
 
-    // ========================================
-    // CLEANUP: Disconnect when leaving page
-    // ========================================
-    return () => {
+    return function () {
       newSocket.disconnect();
     };
   }, []);
 
-  // ========================================
-  // STEP 3: Send a message
-  // ========================================
+  // Scroll to bottom when messages change
+  useEffect(function () {
+    scrollToBottom();
+  }, [messages]);
+
+  // Send a message
   function handleSendMessage(e) {
     e.preventDefault();
-    
-    // Don't send empty messages
-    if (newMessage.trim() === "") {
-      return;
-    }
-
-    // Send message to server via WebSocket
+    if (newMessage.trim() === "") return;
     socket.emit("send_message", newMessage);
-
-    // Clear the input box
     setNewMessage("");
   }
 
-  // Format timestamp to readable time (e.g. "14:30")
+  // Format timestamp
   function formatTime(timestamp) {
-    let date = new Date(timestamp);
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
-    // Add leading zero if needed (e.g. 9 -> 09)
-    if (minutes < 10) {
-      minutes = "0" + minutes;
-    }
+    var date = new Date(timestamp);
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    if (minutes < 10) minutes = "0" + minutes;
     return hours + ":" + minutes;
   }
 
-  // ========================================
-  // STEP 4: Report a message
-  // ========================================
-  function handleReportMessage(message) {
-    // Ask user for reason
-    const reason = prompt("Why are you reporting this message?");
-    
-    // If user cancelled or didn't enter reason, do nothing
-    if (!reason || reason.trim() === "") {
+  // Open the report modal
+  function openReportModal(msg) {
+    setReportMessage(msg);
+    setReportReason("");
+    setReportCategory("inappropriate");
+    setShowReportModal(true);
+  }
+
+  // Close the report modal
+  function closeReportModal() {
+    setShowReportModal(false);
+    setReportMessage(null);
+    setReportReason("");
+    setReportLoading(false);
+  }
+
+  // Submit the report
+  function submitReport() {
+    if (!reportReason.trim()) {
+      setError("Please enter a reason for the report");
+      setTimeout(function () { setError(""); }, 3000);
       return;
     }
-    
-    // Send report to backend
-    // Send token in header too (backup for when cookies are blocked)
+
+    setReportLoading(true);
+
+    var fullReason = "[" + reportCategory.toUpperCase() + "] " + reportReason.trim();
+
     var savedToken = localStorage.getItem("token");
-    fetch(`${API_BASE}/api/mod/report`, {
+    fetch(API_BASE + "/api/mod/report", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -137,129 +122,192 @@ export default function Community({ user }) {
       },
       credentials: "include",
       body: JSON.stringify({
-        messageId: message.id,
-        messageText: message.text,
-        reason: reason.trim()
+        messageId: reportMessage.id,
+        messageText: reportMessage.text,
+        reason: fullReason
       })
     })
-      .then(res => res.json())
-      .then(data => {
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
         if (data.success) {
-          setSuccess("Report submitted successfully");
-          // Clear success message after 3 seconds
-          setTimeout(() => setSuccess(""), 3000);
+          setSuccess("Report submitted! Our team will review it.");
+          setTimeout(function () { setSuccess(""); }, 4000);
+          closeReportModal();
         } else {
           setError(data.error || "Failed to submit report");
-          setTimeout(() => setError(""), 3000);
+          setTimeout(function () { setError(""); }, 3000);
+          setReportLoading(false);
         }
       })
-      .catch(err => {
-        console.error("Error reporting message:", err);
-        setError("Failed to submit report");
-        setTimeout(() => setError(""), 3000);
+      .catch(function () {
+        setError("Failed to submit report. Please try again.");
+        setTimeout(function () { setError(""); }, 3000);
+        setReportLoading(false);
       });
   }
 
   return (
-    <div className="w-full max-w-2xl px-2">
+    <div className="w-full max-w-2xl mx-auto px-2">
       <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-2 text-center">
-        💬 Community Chat
+        Community Chat
       </h1>
-      {/* Show login status */}
+
+      {/* Login status */}
       <div className="bg-gray-800 rounded-lg p-3 mb-4 text-center">
         {user ? (
-          <p className="text-green-400">
-            ✅ Logged in as <span className="font-bold">{user.name}</span>
+          <p className="text-green-400 text-sm sm:text-base">
+            Logged in as <span className="font-bold">{user.name}</span>
           </p>
         ) : (
-          <p className="text-gray-400">
-            👁️ Viewing as Guest
+          <p className="text-gray-400 text-sm sm:text-base">
+            Viewing as Guest - <a href="/login" className="text-cyan-400 hover:underline">Login</a> to chat
           </p>
         )}
       </div>
 
-      {/* Chat Messages Box */}
-      <div className="bg-gray-800 rounded-lg p-4 h-96 overflow-y-auto mb-4">
-        {/* Show loading text while waiting for messages from server */}
+      {/* Chat Messages */}
+      <div className="bg-gray-800 rounded-lg p-3 sm:p-4 h-80 sm:h-96 overflow-y-auto mb-4">
         {loading ? (
-          <p className="text-gray-400 text-center mt-20">
-            Loading messages...
-          </p>
+          <p className="text-gray-400 text-center mt-20">Loading messages...</p>
         ) : messages.length === 0 ? (
           <p className="text-gray-500 text-center mt-20">
             No messages yet. Be the first to say hello!
           </p>
         ) : (
-          messages.map((msg) => (
-            <div key={msg.id} className="mb-3">
-              {/* Message Header: Username, Time, and Report Button */}
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-cyan-400 font-semibold text-sm">
-                  {msg.userName || msg.userEmail}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-xs">
-                    {formatTime(msg.timestamp)}
+          messages.map(function (msg) {
+            return (
+              <div key={msg.id} className="mb-3">
+                {/* Message Header */}
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-cyan-400 font-semibold text-xs sm:text-sm">
+                    {msg.userName || msg.userEmail}
                   </span>
-                  {/* Report Button - Only show if user is logged in */}
-                  {user && (
-                    <button
-                      onClick={() => handleReportMessage(msg)}
-                      className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-gray-700"
-                      title="Report this message"
-                    >
-                      ⚠️ Report
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <span className="text-gray-500 text-xs">
+                      {formatTime(msg.timestamp)}
+                    </span>
+                    {user && (
+                      <button
+                        onClick={function () { openReportModal(msg); }}
+                        className="text-xs text-red-400 hover:text-red-300 px-1 sm:px-2 py-1 rounded hover:bg-gray-700"
+                        title="Report this message"
+                      >
+                        Report
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {/* Message Content */}
+                <p className="bg-gray-700 p-2 sm:p-3 rounded-lg text-white text-sm sm:text-base break-words">
+                  {msg.text}
+                </p>
               </div>
-              {/* Message Content */}
-              <p className="bg-gray-700 p-3 rounded-lg text-white">
-                {msg.text}
-              </p>
-            </div>
-          ))
+            );
+          })
         )}
+        <div ref={chatEndRef}></div>
       </div>
 
-      {/* Error Message - Show prominently */}
+      {/* Error Message */}
       {error && (
-        <div className="bg-red-900 border-2 border-red-600 text-red-100 px-4 py-3 rounded-lg mb-2 animate-pulse">
-          <p className="text-center text-sm font-semibold">{error}</p>
+        <div className="bg-red-900 border border-red-600 text-red-100 px-3 py-2 rounded-lg mb-2">
+          <p className="text-center text-sm">{error}</p>
         </div>
       )}
 
       {/* Success Message */}
       {success && (
-        <div className="bg-green-900 border border-green-700 text-green-200 px-4 py-3 rounded-lg mb-2">
+        <div className="bg-green-900 border border-green-700 text-green-200 px-3 py-2 rounded-lg mb-2">
           <p className="text-center text-sm">{success}</p>
         </div>
       )}
 
-      {/* Message Input Form */}
+      {/* Message Input */}
       {user ? (
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <input
             type="text"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message... (max 200 characters)"
+            onChange={function (e) { setNewMessage(e.target.value); }}
+            placeholder="Type your message..."
             maxLength={200}
-            className="flex-1 p-3 rounded bg-gray-700 border border-gray-600 focus:border-cyan-400 focus:outline-none"
+            className="flex-1 p-2 sm:p-3 rounded bg-gray-700 border border-gray-600 focus:border-cyan-400 focus:outline-none text-sm sm:text-base"
           />
           <button
             type="submit"
-            className="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded font-semibold transition"
+            className="bg-cyan-500 hover:bg-cyan-600 px-4 sm:px-6 py-2 sm:py-3 rounded font-semibold transition text-sm sm:text-base"
           >
             Send
           </button>
         </form>
       ) : (
         <div className="bg-gray-800 p-4 rounded-lg text-center">
-          <p className="text-gray-400 mb-2">You must be logged in to send messages</p>
-          <a href="/login" className="text-cyan-400 hover:underline">
-            Login here
-          </a>
+          <p className="text-gray-400 mb-2 text-sm">You must be logged in to send messages</p>
+          <a href="/login" className="text-cyan-400 hover:underline">Login here</a>
+        </div>
+      )}
+
+      {/* ========================================
+          REPORT MODAL
+          ======================================== */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
+          <div className="bg-gray-800 rounded-lg p-4 sm:p-6 w-full max-w-md">
+            <h2 className="text-lg sm:text-xl font-bold text-red-400 mb-4">Report Message</h2>
+
+            {/* Show the message being reported */}
+            <div className="bg-gray-700 p-3 rounded mb-4">
+              <p className="text-xs text-gray-400 mb-1">Message from {reportMessage.userName}:</p>
+              <p className="text-sm text-white break-words">"{reportMessage.text}"</p>
+            </div>
+
+            {/* Category dropdown */}
+            <label className="block text-sm text-gray-300 mb-1">Category:</label>
+            <select
+              value={reportCategory}
+              onChange={function (e) { setReportCategory(e.target.value); }}
+              className="w-full p-2 sm:p-3 rounded bg-gray-700 border border-gray-600 text-white mb-4 text-sm sm:text-base"
+            >
+              <option value="inappropriate">Inappropriate Content</option>
+              <option value="harassment">Harassment / Bullying</option>
+              <option value="hate-speech">Hate Speech</option>
+              <option value="spam">Spam</option>
+              <option value="other">Other</option>
+            </select>
+
+            {/* Reason text input */}
+            <label className="block text-sm text-gray-300 mb-1">Why are you reporting this?</label>
+            <textarea
+              value={reportReason}
+              onChange={function (e) { setReportReason(e.target.value); }}
+              placeholder="Describe why this message should be reviewed..."
+              rows="3"
+              maxLength={300}
+              className="w-full p-2 sm:p-3 rounded bg-gray-700 border border-gray-600 text-white mb-4 resize-none text-sm sm:text-base"
+            />
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={closeReportModal}
+                className="flex-1 p-2 sm:p-3 rounded bg-gray-600 hover:bg-gray-500 transition text-sm sm:text-base"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReport}
+                disabled={reportLoading}
+                className={
+                  "flex-1 p-2 sm:p-3 rounded font-semibold transition text-sm sm:text-base " +
+                  (reportLoading
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-red-500 hover:bg-red-600 text-white")
+                }
+              >
+                {reportLoading ? "Submitting..." : "Submit Report"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

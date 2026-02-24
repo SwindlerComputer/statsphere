@@ -111,18 +111,28 @@ function requireAdmin(req, res, next) {
 // Report a message (any logged-in user can report)
 router.post("/report", requireAuth, async (req, res) => {
   try {
-    // Get data from request body
-    const { messageId, messageText, reason } = req.body;
+    var { messageId, messageText, reason } = req.body;
     
-    // Check if required fields are present
-    if (!messageText || !reason) {
-      return res.status(400).json({ error: "Message text and reason are required" });
+    if (!reason || reason.trim() === "") {
+      return res.status(400).json({ error: "Please provide a reason for the report" });
     }
+
+    // Try to create the table if it doesn't exist yet
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS reported_messages (
+        id SERIAL PRIMARY KEY,
+        reporter_user_id INTEGER NOT NULL,
+        message_id BIGINT,
+        message_text TEXT,
+        reason TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
     
     // Insert report into database
-    const result = await pool.query(
+    var result = await pool.query(
       "INSERT INTO reported_messages (reporter_user_id, message_id, message_text, reason) VALUES ($1, $2, $3, $4) RETURNING *",
-      [req.user.id, messageId || null, messageText, reason]
+      [req.user.id, messageId || null, messageText || "", reason.trim()]
     );
     
     res.json({ 
@@ -132,7 +142,7 @@ router.post("/report", requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error("Error reporting message:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Failed to submit report. Please try again." });
   }
 });
 

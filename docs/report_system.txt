@@ -1,0 +1,85 @@
+============================================================
+STATSPHERE - REPORT SYSTEM (MODERATION)
+============================================================
+Files:
+  Frontend: frontend/src/pages/Community.js
+  Backend:  backend/api/modRoutes.js
+  Database: backend/migrations/add_moderation.sql
+============================================================
+
+WHAT THE REPORT SYSTEM DOES
+------------------------------
+When a user sees a bad message in the community chat,
+they can click the "Report" button next to the message.
+
+A modal (popup) appears where they:
+1. See which message they're reporting
+2. Pick a category (Inappropriate, Harassment, Hate Speech, Spam, Other)
+3. Type a reason explaining why they're reporting it
+4. Click "Submit Report"
+
+The report is saved in the database so admins can review it.
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+FRONTEND (Community.js):
+1. User clicks "Report" button next to a message
+2. A modal popup appears with the message text
+3. User selects a category from a dropdown
+4. User types a reason in a text box
+5. User clicks "Submit Report"
+6. Frontend sends a POST request to the backend:
+   POST /api/mod/report
+   Body: { messageId, messageText, reason }
+   Header: Authorization: Bearer <token>
+
+BACKEND (modRoutes.js):
+1. The requireAuth middleware checks the JWT token
+2. If user is not logged in, return 401 error
+3. If no reason is provided, return 400 error
+4. Backend creates the reported_messages table if it doesn't exist
+5. Backend inserts the report into the database:
+   INSERT INTO reported_messages (reporter_user_id, message_id, message_text, reason)
+6. Returns { success: true, message: "Report submitted" }
+
+DATABASE (add_moderation.sql):
+  Table: reported_messages
+  Columns:
+  - id (auto-incrementing number)
+  - reporter_user_id (who reported it)
+  - message_id (ID of the chat message)
+  - message_text (copy of the message text)
+  - reason (why it was reported, includes category)
+  - created_at (when the report was made)
+
+KEY VARIABLES (Frontend)
+--------------------------
+  showReportModal   - true/false, controls if modal is visible
+  reportMessage     - the message object being reported
+  reportReason      - text the user typed as reason
+  reportCategory    - dropdown: inappropriate, harassment, etc.
+  reportLoading     - true while the report is being sent
+
+KEY FUNCTIONS (Frontend)
+--------------------------
+  openReportModal(msg)  - shows the modal with the message
+  closeReportModal()    - hides the modal and resets form
+  submitReport()        - sends the report to the backend
+
+KEY FUNCTIONS (Backend)
+------------------------
+  requireAuth(req, res, next) - checks JWT token is valid
+  getUserFromToken(req)       - extracts user from JWT token
+  isAdmin(email)              - checks if email is in ADMIN_EMAILS
+
+ADMIN FEATURES
+----------------
+Admins can also:
+  GET /api/mod/reports     - See all reports
+  POST /api/mod/ban-user   - Ban a user from chatting
+  POST /api/mod/unban-user - Unban a user
+
+Admins are set in the .env file:
+  ADMIN_EMAILS="admin@example.com,mod@example.com"
+
+============================================================

@@ -5,12 +5,11 @@ dotenv.config();
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import pool from "../db.js"; // Shared database connection (supports Supabase + local)
+import pool from "../db.js";
 
 const router = express.Router();
 
 // Helper to create tokens
-// Stores id, email, AND name so they're always available
 const createToken = (user) => {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name },
@@ -21,89 +20,126 @@ const createToken = (user) => {
 
 // REGISTER
 router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
+  var { name, email, password } = req.body;
 
-  // Check all fields are provided
   if (!name || !email || !password)
     return res.status(400).json({ message: "All fields are required" });
 
-  // Check password length
-  if (password.length < 8)
+  // Username must be 3-20 characters, letters/numbers/underscores only
+  name = name.trim();
+  if (name.length < 3 || name.length > 20) {
+    return res.status(400).json({ message: "Username must be 3-20 characters" });
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+    return res.status(400).json({ message: "Username can only contain letters, numbers, and underscores" });
+  }
+
+  // Email validation
+  email = email.trim().toLowerCase();
+  var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Please enter a valid email address" });
+  }
+
+  // Password validation: min 8 chars, at least 1 uppercase, 1 number
+  if (password.length < 8) {
     return res.status(400).json({ message: "Password must be at least 8 characters" });
+  }
+  if (!/[A-Z]/.test(password)) {
+    return res.status(400).json({ message: "Password must contain at least one uppercase letter" });
+  }
+  if (!/[0-9]/.test(password)) {
+    return res.status(400).json({ message: "Password must contain at least one number" });
+  }
 
-  const existing = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
-  if (existing.rows.length > 0)
-    return res.status(409).json({ message: "Email already registered" });
+  try {
+    // Check if email already exists
+    var existing = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
+    if (existing.rows.length > 0)
+      return res.status(409).json({ message: "Email already registered" });
 
-  const hash = await bcrypt.hash(password, 10);
+    // Check if username already exists
+    var existingName = await pool.query("SELECT * FROM users WHERE LOWER(name)=$1", [name.toLowerCase()]);
+    if (existingName.rows.length > 0)
+      return res.status(409).json({ message: "Username already taken" });
 
-  const result = await pool.query(
-    `INSERT INTO users (name, email, password_hash)
-     VALUES ($1, $2, $3)
-     RETURNING id, name, email`,
-    [name, email, hash]
-  );
+    var hash = await bcrypt.hash(password, 10);
 
-  const user = result.rows[0];
-  const token = createToken(user);
+    var result = await pool.query(
+      "INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email",
+      [name, email, hash]
+    );
 
-  // Check if we're running in production (Render sets NODE_ENV=production)
-  const isProd = process.env.NODE_ENV === "production";
+    var user = result.rows[0];
+    var token = createToken(user);
 
-  // Cookie settings for JWT token:
-  // - httpOnly: prevents JavaScript from reading the cookie (security)
-  // - sameSite: "none" in production (allows cross-site cookies between frontend & backend)
-  //             "lax" locally (normal browser behavior)
-  // - secure: true in production (cookies only sent over HTTPS)
-  //           false locally (localhost uses HTTP)
-  // - maxAge: cookie expires in 7 days
-  res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: isProd ? "none" : "lax",
-    secure: isProd,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+    var isProd = process.env.NODE_ENV === "production";
 
-  // Return token in body too (for localStorage fallback when cookies are blocked)
-  res.json({ message: "User registered", user, token });
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: isProd ? "none" : "lax",
+      secure: isProd,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ message: "User registered", user, token });
+
+  } catch (err) {
+    console.error("Registration error:", err);
+    res.status(500).json({ message: "Server error during registration" });
+  }
 });
 
-// LOGIN
+// LOGIN - accepts email OR username
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  var { email, password } = req.body;
 
-  const result = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
-  if (result.rows.length === 0)
-    return res.status(401).json({ message: "Invalid credentials" });
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email/username and password are required" });
+  }
 
-  const user = result.rows[0];
+  try {
+    var loginInput = email.trim();
+    var result;
 
-  const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid)
-    return res.status(401).json({ message: "Invalid credentials" });
+    // Check if user typed an email (contains @) or a username
+    if (loginInput.includes("@")) {
+      result = await pool.query("SELECT * FROM users WHERE LOWER(email)=$1", [loginInput.toLowerCase()]);
+    } else {
+      result = await pool.query("SELECT * FROM users WHERE LOWER(name)=$1", [loginInput.toLowerCase()]);
+    }
 
-  const token = createToken(user);
+    if (result.rows.length === 0)
+      return res.status(401).json({ message: "Invalid credentials" });
 
-  // Check if we're running in production (Render sets NODE_ENV=production)
-  const isProd = process.env.NODE_ENV === "production";
+    var user = result.rows[0];
 
-  // Cookie settings (same as register - see comments there)
-  res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: isProd ? "none" : "lax",
-    secure: isProd,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+    var valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid)
+      return res.status(401).json({ message: "Invalid credentials" });
 
-  // Return token in body too (for localStorage fallback when cookies are blocked)
-  res.json({ message: "Logged in", user: { id: user.id, email: user.email, name: user.name }, token });
+    var token = createToken(user);
+
+    var isProd = process.env.NODE_ENV === "production";
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: isProd ? "none" : "lax",
+      secure: isProd,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ message: "Logged in", user: { id: user.id, email: user.email, name: user.name }, token });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error during login" });
+  }
 });
 
 // LOGOUT
-// clearCookie MUST use the same options as when the cookie was set
-// Otherwise the browser won't remove it (especially in production)
 router.post("/logout", (req, res) => {
-  const isProd = process.env.NODE_ENV === "production";
+  var isProd = process.env.NODE_ENV === "production";
   res.clearCookie("token", {
     httpOnly: true,
     sameSite: isProd ? "none" : "lax",
@@ -116,7 +152,7 @@ router.post("/logout", (req, res) => {
 import { authMiddleware } from "./authMiddleware.js";
 
 router.get("/me", authMiddleware, async (req, res) => {
-  const result = await pool.query(
+  var result = await pool.query(
     "SELECT id, name, email FROM users WHERE id=$1",
     [req.user.id]
   );

@@ -1,0 +1,94 @@
+============================================================
+STATSPHERE - RESPONSIVE DESIGN
+============================================================
+How the app works on all screen sizes
+============================================================
+
+WHAT IS RESPONSIVE DESIGN?
+----------------------------
+Responsive design means the website looks good on ALL devices:
+- Mobile phones (small screens, ~375px wide)
+- Tablets (medium screens, ~768px wide)
+- Laptops/desktops (large screens, ~1024px+ wide)
+
+We use Tailwind CSS breakpoints to change the layout
+depending on screen size.
+
+TAILWIND BREAKPOINTS
+----------------------
+Tailwind uses these size names:
+  sm  = 640px and above  (large phones / small tablets)
+  md  = 768px and above  (tablets)
+  lg  = 1024px and above (laptops)
+  xl  = 1280px and above (desktops)
+
+HOW IT WORKS:
+  "text-sm sm:text-base"
+  This means: text is small by default, but becomes
+  normal size on screens 640px and wider.
+
+  "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+  This means: 1 column on mobile, 2 on tablet, 3 on laptop.
+
+NAVIGATION (HAMBURGER MENU)
+------------------------------
+File: App.js
+
+On MOBILE (below 768px):
+  - Only the logo and a hamburger icon (3 lines) show
+  - Clicking the hamburger opens a dropdown menu
+  - All page links are listed vertically
+  - Login/logout options at the bottom
+
+On DESKTOP (768px and above):
+  - All page links show in a horizontal row
+  - User info and logout button on the right
+  - No hamburger icon needed
+
+Code that controls this:
+  "hidden md:flex"  = hidden on mobile, visible on desktop
+  "md:hidden"       = visible on mobile, hidden on desktop
+  menuOpen state    = true/false, toggles the mobile menu
+
+KEY RESPONSIVE PATTERNS USED
+-------------------------------
+
+1. FLEXIBLE TEXT SIZES
+   "text-sm sm:text-base" - smaller text on mobile
+   "text-2xl sm:text-3xl" - smaller headings on mobile
+
+2. FLEXIBLE GRIDS
+   "grid-cols-1 sm:grid-cols-2" - stack on mobile, side by side on tablet
+   "grid-cols-2 sm:grid-cols-4" - 2 columns mobile, 4 on desktop
+
+3. FLEXIBLE LAYOUTS
+   "flex-col sm:flex-row" - vertical on mobile, horizontal on desktop
+
+4. HORIZONTAL SCROLL FOR TABLES
+   "overflow-x-auto" - if table is too wide, user can scroll sideways
+
+5. PADDING AND SPACING
+   "p-3 sm:p-4 md:p-6" - less padding on mobile, more on desktop
+   "px-2 sm:px-4" - less side padding on mobile
+
+6. MAX WIDTH CONTAINERS
+   "w-full max-w-6xl mx-auto" - content doesn't get too wide on big screens
+
+7. RESPONSIVE IMAGES AND CHARTS
+   ResponsiveContainer from Recharts automatically resizes charts
+
+PAGES AND THEIR RESPONSIVE FEATURES
+---------------------------------------
+Dashboard:      1-col mobile, 2-col tablet for match cards
+Players:        Table with overflow-x-auto, smaller text on mobile
+PlayerInsights: Charts resize automatically, 1-col mobile, 2-col desktop
+Comparison:     Stack vertically on mobile, side by side on desktop
+Ballon d'Or:    Cards adapt to screen width
+Predictions:    Dropdowns go full width on mobile
+Standings:      Table scrolls horizontally on mobile
+Fixtures:       1-col mobile, 2-col tablet
+Community:      Shorter chat box on mobile (h-80 vs h-96)
+Login/Register: Full width on mobile, max-w-md on desktop
+Profile:        Single column, full width on all sizes
+
+============================================================

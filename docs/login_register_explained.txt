@@ -1,0 +1,114 @@
+============================================================
+STATSPHERE - LOGIN & REGISTRATION SYSTEM
+============================================================
+Files:
+  Frontend: frontend/src/pages/Login.js
+            frontend/src/pages/Register.js
+  Backend:  backend/auth/authRoutes.js
+            backend/auth/authMiddleware.js
+============================================================
+
+REGISTRATION - HOW IT WORKS
+------------------------------
+1. User fills in: Username, Email, Password, Confirm Password
+
+2. FRONTEND VALIDATION (before sending to server):
+   - Username: 3-20 characters, letters/numbers/underscores only
+   - Email: must contain @ and a domain (e.g. user@example.com)
+   - Password must be at least 8 characters
+   - Password must have at least 1 uppercase letter (A-Z)
+   - Password must have at least 1 number (0-9)
+   - Confirm Password must match Password
+
+3. A PASSWORD STRENGTH BAR shows:
+   - Weak (red):   only 1 requirement met
+   - Fair (yellow): 2 requirements met
+   - Good (blue):  3 requirements met
+   - Strong (green): all 4 requirements met (8+ chars, uppercase, number, special char)
+
+4. Frontend sends: POST /auth/register
+   Body: { name, email, password }
+
+5. BACKEND VALIDATION (double-checks everything):
+   - Username 3-20 chars, only letters/numbers/underscores
+   - Email format is valid
+   - Password: 8+ chars, 1 uppercase, 1 number
+   - Email not already registered
+   - Username not already taken
+
+6. Backend hashes the password using bcrypt
+   "Password1" -> "$2b$10$xJKfY3kR..."
+   (this scrambled version is stored in the database)
+
+7. Backend saves user to PostgreSQL database
+
+8. Backend creates a JWT token and sends it back
+   as both a cookie and in the response body
+
+LOGIN - HOW IT WORKS
+----------------------
+Users can log in with either EMAIL or USERNAME.
+
+1. User types their email OR username + password
+
+2. Frontend sends: POST /auth/login
+   Body: { email: "input", password: "..." }
+   (the "email" field can contain an email or username)
+
+3. Backend checks if the input contains "@":
+   - If YES: looks up user by email
+   - If NO:  looks up user by username
+
+   Code:
+   if (loginInput.includes("@")) {
+     result = pool.query("SELECT * FROM users WHERE email=$1")
+   } else {
+     result = pool.query("SELECT * FROM users WHERE name=$1")
+   }
+
+4. Backend compares password using bcrypt
+   bcrypt.compare("typed password", "stored hash")
+
+5. If match: creates JWT token, sends it back
+   If no match: returns "Invalid credentials"
+
+KEY VARIABLES (Register.js)
+------------------------------
+  name             - the username they typed
+  email            - the email they typed
+  password         - the password they typed
+  confirmPassword  - the confirm password field
+  showPassword     - toggle to show/hide password text
+  msg              - error or success message
+  isSuccess        - true if registration worked
+
+KEY VARIABLES (Login.js)
+--------------------------
+  loginInput   - whatever the user typed (email or username)
+  password     - the password they typed
+  showPassword - toggle to show/hide password
+  msg          - error or success message
+
+PASSWORD STRENGTH FUNCTION
+----------------------------
+function getPasswordStrength():
+  score = 0
+  if length >= 8:  score + 1
+  if has uppercase: score + 1
+  if has number:    score + 1
+  if has special:   score + 1
+
+  score 0-1: Weak (red bar, 25%)
+  score 2:   Fair (yellow bar, 50%)
+  score 3:   Good (blue bar, 75%)
+  score 4:   Strong (green bar, 100%)
+
+JWT TOKENS EXPLAINED
+----------------------
+JWT = JSON Web Token. Its like a digital ID card.
+When you log in, the server gives you a token.
+This token is stored in a cookie AND localStorage.
+Every time you visit a page, the token proves who you are.
+Token expires after 7 days (the user has to log in again).
+
+============================================================

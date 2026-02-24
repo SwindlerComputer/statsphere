@@ -1,9 +1,8 @@
 // ========================================
 // App.js - Main Router & Layout
 // ========================================
-// This is the root component. It uses React Router to show different pages
-// based on the URL. Router wraps the app, Routes matches the URL path to a
-// component, and NavLink creates links that highlight when active.
+// Root component with React Router.
+// Includes responsive navigation for all devices.
 
 import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -18,240 +17,191 @@ import BallonDor from "./pages/BallonDor";
 import LeagueStandings from "./pages/LeagueStandings";
 import LeagueFixtures from "./pages/LeagueFixtures";
 import PlayerInsights from "./pages/PlayerInsights";
+import Profile from "./pages/Profile";
 
-// API_BASE = backend URL from .env file
-// Locally: REACT_APP_API_URL=http://localhost:5000
-// Production: REACT_APP_API_URL=https://your-backend.onrender.com
-const API_BASE = process.env.REACT_APP_API_URL;
+var API_BASE = process.env.REACT_APP_API_URL;
 
 function App() {
-  // Store the logged in user (null means not logged in)
-  let [user, setUser] = useState(null);
+  var [user, setUser] = useState(null);
+  // Mobile menu toggle
+  var [menuOpen, setMenuOpen] = useState(false);
 
-  // ========================================
   // Check if user is logged in when app loads
-  // ========================================
-  // This runs once when the page first loads.
-  // It asks the server "who am I?" using cookie or saved token.
-  useEffect(function() {
-    // Get token from localStorage (backup when cookies are blocked)
+  useEffect(function () {
     var savedToken = localStorage.getItem("token");
 
-    fetch(`${API_BASE}/auth/me`, {
+    fetch(API_BASE + "/auth/me", {
       credentials: "include",
       headers: savedToken ? { "Authorization": "Bearer " + savedToken } : {}
     })
-      .then(function(res) {
-        return res.json();
-      })
-      .then(function(data) {
-        // If server returns a user, save it to state
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
         if (data.user) {
           setUser(data.user);
         }
       })
-      .catch(function(err) {
+      .catch(function () {
         console.log("Not logged in");
       });
   }, []);
 
-  // ========================================
-  // Handle logout button click
-  // ========================================
-  // Sends request to server to clear the cookie, then redirects home.
+  // Handle logout
   function handleLogout() {
     var savedToken = localStorage.getItem("token");
 
-    fetch(`${API_BASE}/auth/logout`, {
+    fetch(API_BASE + "/auth/logout", {
       method: "POST",
       credentials: "include",
       headers: savedToken ? { "Authorization": "Bearer " + savedToken } : {}
     })
-      .then(function() {
-        // Clear token from localStorage
+      .then(function () {
         localStorage.removeItem("token");
-        setUser(null);           // Clear user from state
-        window.location.href = "/";  // Redirect to home page
+        setUser(null);
+        window.location.href = "/";
       })
-      .catch(function(err) {
+      .catch(function () {
         console.log("Logout error");
       });
   }
 
+  // Close mobile menu when a link is clicked
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
+  // Style for active and inactive nav links
+  function navClass(isActive) {
+    return "block py-1 transition-all duration-200 " +
+      (isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300");
+  }
+
   return (
     <Router>
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center px-3 py-4 sm:p-6">
-        {/* Navigation Bar - Logo, links, and login/logout */}
-        <nav className="w-full bg-gray-800 p-4 rounded-lg mb-6 shadow-lg">
-          {/* Top row: Logo + User status */}
-          <div className="flex justify-between items-center flex-wrap gap-3 mb-3">
-            <h1 className="text-2xl font-bold text-cyan-400 flex items-center gap-2">
-              <span>⚽</span> <span>StatSphere</span>
-            </h1>
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center px-2 py-3 sm:px-4 sm:py-4 md:p-6">
 
-            {/* Show logged-in info OR login link */}
-            {user ? (
-              <div className="flex items-center gap-3">
-                <span className="text-gray-300 text-sm">
-                  Logged in as: <span className="text-cyan-400 font-semibold">{user.name}</span>
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition"
+        {/* Navigation Bar */}
+        <nav className="w-full max-w-6xl bg-gray-800 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 shadow-lg">
+          {/* Top row: Logo + Hamburger/User */}
+          <div className="flex justify-between items-center">
+            <NavLink to="/" className="text-xl sm:text-2xl font-bold text-cyan-400 flex items-center gap-2" onClick={closeMenu}>
+              <span>StatSphere</span>
+            </NavLink>
+
+            {/* Desktop user info (hidden on mobile) */}
+            <div className="hidden md:flex items-center gap-3">
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <NavLink
+                    to="/profile"
+                    className={function (nav) { return "text-sm transition " + (nav.isActive ? "text-cyan-400 font-semibold" : "text-gray-300 hover:text-cyan-300"); }}
+                  >
+                    {user.name}
+                  </NavLink>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <NavLink
+                  to="/login"
+                  className={function (nav) { return "text-sm transition " + (nav.isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"); }}
                 >
-                  Logout
-                </button>
+                  Login
+                </NavLink>
+              )}
+            </div>
+
+            {/* Hamburger button (mobile only) */}
+            <button
+              onClick={function () { setMenuOpen(!menuOpen); }}
+              className="md:hidden p-2 rounded hover:bg-gray-700 transition"
+              aria-label="Toggle menu"
+            >
+              <div className="space-y-1.5">
+                <span className={"block w-6 h-0.5 bg-white transition-all " + (menuOpen ? "rotate-45 translate-y-2" : "")}></span>
+                <span className={"block w-6 h-0.5 bg-white transition-all " + (menuOpen ? "opacity-0" : "")}></span>
+                <span className={"block w-6 h-0.5 bg-white transition-all " + (menuOpen ? "-rotate-45 -translate-y-2" : "")}></span>
               </div>
-            ) : (
-              <NavLink
-                to="/login"
-                className={({ isActive }) =>
-                  `text-sm transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Login
-              </NavLink>
-            )}
+            </button>
           </div>
 
-          {/* Bottom row: Page links (wraps on small screens) */}
-          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-base items-center">
-            <li>
-              <NavLink
-                to="/"
-                end
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Dashboard
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/players"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Players
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/compare"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Compare
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/insights"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Insights
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/ballon-dor"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Ballon d'Or
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/predictions"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Predictions
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/community"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Community
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/standings"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Standings
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/fixtures"
-                className={({ isActive }) =>
-                  `transition-all duration-200 ${
-                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
-                  }`
-                }
-              >
-                Fixtures
-              </NavLink>
-            </li>
+          {/* Desktop nav links (hidden on mobile) */}
+          <ul className="hidden md:flex flex-wrap gap-x-5 gap-y-2 text-sm mt-3 items-center">
+            <li><NavLink to="/" end className={function (nav) { return navClass(nav.isActive); }}>Dashboard</NavLink></li>
+            <li><NavLink to="/players" className={function (nav) { return navClass(nav.isActive); }}>Players</NavLink></li>
+            <li><NavLink to="/compare" className={function (nav) { return navClass(nav.isActive); }}>Compare</NavLink></li>
+            <li><NavLink to="/insights" className={function (nav) { return navClass(nav.isActive); }}>Insights</NavLink></li>
+            <li><NavLink to="/ballon-dor" className={function (nav) { return navClass(nav.isActive); }}>Ballon d'Or</NavLink></li>
+            <li><NavLink to="/predictions" className={function (nav) { return navClass(nav.isActive); }}>Predictions</NavLink></li>
+            <li><NavLink to="/standings" className={function (nav) { return navClass(nav.isActive); }}>Standings</NavLink></li>
+            <li><NavLink to="/fixtures" className={function (nav) { return navClass(nav.isActive); }}>Fixtures</NavLink></li>
+            <li><NavLink to="/community" className={function (nav) { return navClass(nav.isActive); }}>Community</NavLink></li>
           </ul>
+
+          {/* Mobile menu (shows when hamburger is clicked) */}
+          {menuOpen && (
+            <div className="md:hidden mt-3 pt-3 border-t border-gray-700">
+              <ul className="space-y-2 text-sm">
+                <li><NavLink to="/" end className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Dashboard</NavLink></li>
+                <li><NavLink to="/players" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Players</NavLink></li>
+                <li><NavLink to="/compare" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Compare</NavLink></li>
+                <li><NavLink to="/insights" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Insights</NavLink></li>
+                <li><NavLink to="/ballon-dor" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Ballon d'Or</NavLink></li>
+                <li><NavLink to="/predictions" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Predictions</NavLink></li>
+                <li><NavLink to="/standings" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Standings</NavLink></li>
+                <li><NavLink to="/fixtures" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Fixtures</NavLink></li>
+                <li><NavLink to="/community" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Community</NavLink></li>
+
+                {/* Mobile user actions */}
+                <li className="pt-2 border-t border-gray-700">
+                  {user ? (
+                    <div className="space-y-2">
+                      <NavLink to="/profile" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>
+                        My Profile ({user.name})
+                      </NavLink>
+                      <button
+                        onClick={function () { closeMenu(); handleLogout(); }}
+                        className="block w-full text-left text-red-400 hover:text-red-300 py-1"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  ) : (
+                    <NavLink to="/login" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>
+                      Login / Register
+                    </NavLink>
+                  )}
+                </li>
+              </ul>
+            </div>
+          )}
         </nav>
 
-        {/* Routes - Match URL paths to page components */}
-        {/* When user clicks a NavLink, the URL changes and Routes renders the matching component */}
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/players" element={<Players />} />
-          <Route path="/compare" element={<PlayerComparison />} />
-          <Route path="/insights" element={<PlayerInsights />} />
-          <Route path="/ballon-dor" element={<BallonDor />} />
-          <Route path="/predictions" element={<Predictions />} />
-          <Route path="/community" element={<Community user={user} />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          {/* League / Competition pages */}
-          <Route path="/standings" element={<LeagueStandings />} />
-          <Route path="/fixtures" element={<LeagueFixtures />} />
-          {/* Keep old routes for backwards compatibility */}
-          <Route path="/leagues/:leagueId/standings" element={<LeagueStandings />} />
-          <Route path="/leagues/:leagueId/fixtures" element={<LeagueFixtures />} />
-        </Routes>
+        {/* Page Content */}
+        <main className="w-full max-w-6xl flex flex-col items-center">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/players" element={<Players />} />
+            <Route path="/compare" element={<PlayerComparison />} />
+            <Route path="/insights" element={<PlayerInsights />} />
+            <Route path="/ballon-dor" element={<BallonDor />} />
+            <Route path="/predictions" element={<Predictions />} />
+            <Route path="/community" element={<Community user={user} />} />
+            <Route path="/profile" element={<Profile user={user} />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/standings" element={<LeagueStandings />} />
+            <Route path="/fixtures" element={<LeagueFixtures />} />
+            <Route path="/leagues/:leagueId/standings" element={<LeagueStandings />} />
+            <Route path="/leagues/:leagueId/fixtures" element={<LeagueFixtures />} />
+          </Routes>
+        </main>
 
         {/* Footer */}
-        <footer className="mt-8 text-gray-400 text-sm text-center">
+        <footer className="mt-6 sm:mt-8 text-gray-400 text-xs sm:text-sm text-center">
           © 2026 StatSphere
         </footer>
       </div>

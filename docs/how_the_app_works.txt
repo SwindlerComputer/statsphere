@@ -58,9 +58,10 @@ Ballon d'Or       /ballon-dor     Top 10 Ballon d'Or candidates
 Predictions       /predictions    Predict match outcomes
 League Standings  /standings      League tables for any competition
 League Fixtures   /fixtures       Match fixtures for any competition
-Community Chat    /community      Real-time chat (needs login)
-Login             /login          Sign into your account
-Register          /register       Create a new account
+Community Chat    /community      Real-time chat with report system
+My Profile        /profile        Favorite players, team, and league
+Login             /login          Sign in with email or username
+Register          /register       Create account (password validation)
 
 THE MOCK DATA
 --------------

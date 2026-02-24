@@ -1,0 +1,83 @@
+============================================================
+STATSPHERE - MY PROFILE PAGE
+============================================================
+File: frontend/src/pages/Profile.js
+URL: /profile
+============================================================
+
+WHAT THIS PAGE DOES
+--------------------
+When a user is logged in, they can visit their profile to:
+1. See their username and email
+2. Pick a favorite team from a dropdown
+3. Pick a favorite league from a dropdown
+4. Search and add up to 5 favorite players
+
+All favorites are saved in the browser using localStorage.
+
+HOW IT WORKS (STEP BY STEP)
+-----------------------------
+1. Page checks if the user is logged in.
+   If NOT logged in, it shows "Please log in" message.
+
+2. If logged in, it shows:
+   - A card with their username and email
+   - A dropdown for picking favorite team
+   - A dropdown for picking favorite league
+   - A search box for finding and adding favorite players
+
+3. When the user picks a team/league, it's saved immediately
+   to localStorage.
+
+4. For favorite players:
+   a. User types a name in the search box
+   b. After 2 characters, a dropdown shows matching players
+   c. User clicks a player to add them (max 5 players)
+   d. User can click "Remove" to remove a player
+   e. List is saved to localStorage after every change
+
+WHERE ARE FAVORITES SAVED?
+----------------------------
+Favorites are saved in the browser's localStorage.
+This means:
+- They stay even if you close the browser
+- They DON'T sync between devices (only this browser)
+- They are saved as simple key-value pairs
+
+localStorage keys used:
+  "favoriteTeam"    -> stores a string like "Arsenal"
+  "favoriteLeague"  -> stores a string like "Premier League"
+  "favoritePlayers" -> stores a JSON string like:
+    [{"id":1,"name":"Mbappe","team":"Real Madrid"},...]
+
+HOW localStorage WORKS
+------------------------
+localStorage is built into every web browser.
+It stores data as text (strings).
+
+To save:    localStorage.setItem("key", "value")
+To load:    localStorage.getItem("key")
+To remove:  localStorage.removeItem("key")
+
+For objects/arrays, we convert to JSON string first:
+  Save:  localStorage.setItem("key", JSON.stringify(array))
+  Load:  JSON.parse(localStorage.getItem("key"))
+
+KEY VARIABLES
+--------------
+  user             - the logged in user (comes from App.js)
+  allPlayers       - all 200 players from the backend
+  favoritePlayers  - array of favorite player objects (max 5)
+  favoriteTeam     - string with the selected team name
+  favoriteLeague   - string with the selected league name
+  playerSearch     - text the user is typing in the search box
+  searchResults    - players that match the search (max 10 shown)
+
+KEY FUNCTIONS
+--------------
+  addFavoritePlayer(player)    - adds a player to favorites
+  removeFavoritePlayer(id)     - removes a player from favorites
+  handleTeamChange(e)          - saves selected team to localStorage
+  handleLeagueChange(e)        - saves selected league to localStorage
+
+============================================================

@@ -1,0 +1,167 @@
+============================================================
+STATSPHERE - SYSTEM ARCHITECTURE
+============================================================
+Written for: Final Year Project Defence
+============================================================
+
+OVERVIEW
+--------
+StatSphere is a full-stack football statistics web application.
+It has three main parts:
+
+  1. Frontend  (React.js)  - What the user sees in the browser
+  2. Backend   (Express.js) - The server that handles requests
+  3. Database  (PostgreSQL / Supabase) - Where data is stored
+
+Below is a simple diagram:
+
+  +-------------------+         +--------------------+         +-------------------+
+  |                   |  HTTP   |                    |  SQL    |                   |
+  |   FRONTEND        | ------> |   BACKEND          | ------> |   DATABASE        |
+  |   (React.js)      | <------ |   (Express.js)     | <------ |   (PostgreSQL)    |
+  |                   |  JSON   |                    |  Rows   |                   |
+  |   Port: 3000      |         |   Port: 5000       |         |   Port: 5432      |
+  +-------------------+         +--------------------+         +-------------------+
+         |                             |
+         |  WebSocket (Socket.IO)      |
+         +-----------------------------+
+         (Real-time chat messages)
+
+
+1. FRONTEND (React.js)
+----------------------
+Location: /frontend/src/
+
+- Built with React.js (a JavaScript library for building user interfaces)
+- Uses React Router for page navigation (no page refreshes needed)
+- Styled with Tailwind CSS (utility-first CSS framework)
+- Uses Recharts library for charts on the Player Insights page
+- Uses Socket.IO Client for real-time chat
+
+Key Files:
+  - App.js         → Main router, navigation bar, layout
+  - pages/         → Each page is a separate React component
+    - Dashboard.js        → Homepage with live match data
+    - Players.js          → Player statistics table with filters
+    - PlayerInsights.js   → Player charts and AI analysis (NEW)
+    - PlayerComparison.js → Compare two players side by side
+    - BallonDor.js        → Ballon d'Or prediction rankings
+    - Predictions.js      → Match outcome predictions
+    - Community.js        → Real-time chat (WebSocket)
+    - Login.js            → Login form
+    - Register.js         → Registration form
+    - LeagueStandings.js  → League table from API
+    - LeagueFixtures.js   → Match fixtures from API
+
+How it connects to the backend:
+  - Uses fetch() to make HTTP requests (GET, POST)
+  - API_BASE is set from environment variable: REACT_APP_API_URL
+  - Locally: http://localhost:5000
+  - Production: https://your-backend.onrender.com
+
+
+2. BACKEND (Express.js / Node.js)
+----------------------------------
+Location: /backend/
+
+- Built with Express.js (a Node.js web framework)
+- Handles all API requests from the frontend
+- Manages user authentication with JWT tokens
+- Runs WebSocket server for real-time chat
+- Serves data from JSON files and the database
+
+Key Files:
+  - server.js       → Main server file (routes, middleware, WebSocket)
+  - db.js           → Database connection (supports Supabase + local)
+  - auth/           → Authentication system
+    - authRoutes.js     → Register, login, logout, /me endpoints
+    - authMiddleware.js → JWT token verification middleware
+  - api/            → API route handlers
+    - footballApiRoutes.js → External football API integration
+    - modRoutes.js         → Moderation (reports, bans)
+  - data/           → JSON data files
+    - players.json       → Original 6 players for Ballon d'Or
+    - mockPlayers.json   → 200 mock players for Insights (NEW)
+    - mockTeams.json     → 20 mock teams for Insights (NEW)
+    - predictionTeams.json → Teams for match predictions
+    - liveMatches.json     → Fake live match data
+
+API Endpoints:
+  - GET  /api/players           → Fetch original player stats
+  - GET  /api/teams             → Fetch teams from database
+  - GET  /api/insights/players  → Fetch 200 mock players (NEW)
+  - GET  /api/insights/teams    → Fetch 20 mock teams (NEW)
+  - POST /api/predict-match     → Predict match outcome
+  - GET  /api/live-matches      → Get live match data
+  - POST /auth/register         → Create new user account
+  - POST /auth/login            → Log in and get JWT token
+  - POST /auth/logout           → Clear JWT cookie
+  - GET  /auth/me               → Get current logged-in user
+  - POST /api/mod/report        → Report a chat message
+  - GET  /api/mod/reports       → View all reports (admin)
+  - POST /api/mod/ban-user      → Ban a user (admin)
+
+
+3. DATABASE (PostgreSQL / Supabase)
+------------------------------------
+Location: /backend/migrations/
+
+- Uses PostgreSQL as the relational database
+- Can connect to local Postgres OR cloud Supabase
+- Connection is configured in db.js using environment variables
+
+Tables:
+  - users              → Stores registered users (name, email, password hash)
+  - teams              → Stores football teams
+  - reported_messages  → Stores chat message reports
+
+The database connection string is stored in the .env file
+and NEVER committed to version control (for security).
+
+
+4. EXTERNAL APIS
+-----------------
+- RapidAPI Football API → Provides real league standings and fixtures
+- Accessed via /api/football routes
+- API key stored in .env as RAPIDAPI_KEY
+
+
+5. MACHINE LEARNING MODULE
+----------------------------
+Location: /ml/
+
+- Written in Python using scikit-learn
+- Trains a model to predict Ballon d'Or scores
+- Uses features like goals, assists, xG, league weight
+- Outputs predictions to CSV files
+
+Key Files:
+  - train.py    → Trains the ML model
+  - predict.py  → Makes predictions with trained model
+  - features.py → Feature engineering functions
+
+
+DATA FLOW EXAMPLE (Viewing Player Insights):
+----------------------------------------------
+1. User opens /insights page in browser
+2. React component (PlayerInsights.js) mounts
+3. useEffect() sends GET request to backend: /api/insights/players
+4. Express route handler reads mockPlayers.json file
+5. Returns JSON array of 200 players to frontend
+6. User selects a player from dropdown
+7. Recharts renders bar chart and radar chart
+8. Rule-based system analyses stats and shows strengths/weaknesses
+9. All happens in the browser - no further server requests needed
+
+
+DEPLOYMENT
+----------
+- Frontend: Deployed on Render (or any static hosting)
+- Backend: Deployed on Render (Node.js web service)
+- Database: Hosted on Supabase (cloud PostgreSQL)
+- Environment variables configured on Render dashboard
+
+============================================================
+END OF DOCUMENT
+============================================================
+

@@ -17,6 +17,7 @@ import PlayerComparison from "./pages/PlayerComparison";
 import BallonDor from "./pages/BallonDor";
 import LeagueStandings from "./pages/LeagueStandings";
 import LeagueFixtures from "./pages/LeagueFixtures";
+import PlayerInsights from "./pages/PlayerInsights";
 
 // API_BASE = backend URL from .env file
 // Locally: REACT_APP_API_URL=http://localhost:5000
@@ -156,6 +157,18 @@ function App() {
             </li>
             <li>
               <NavLink
+                to="/insights"
+                className={({ isActive }) =>
+                  `transition-all duration-200 ${
+                    isActive ? "text-cyan-400 font-semibold" : "hover:text-cyan-300"
+                  }`
+                }
+              >
+                Insights
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
                 to="/ballon-dor"
                 className={({ isActive }) =>
                   `transition-all duration-200 ${
@@ -223,6 +236,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/players" element={<Players />} />
           <Route path="/compare" element={<PlayerComparison />} />
+          <Route path="/insights" element={<PlayerInsights />} />
           <Route path="/ballon-dor" element={<BallonDor />} />
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/community" element={<Community user={user} />} />

@@ -149,6 +149,38 @@ app.get("/api/live-matches", (req, res) => {
   }
 });
 
+// ========================================
+// PLAYER INSIGHTS ROUTES (NEW)
+// ========================================
+// These endpoints serve the mock player and team data
+// used by the Player Insights page on the frontend.
+
+// GET /api/insights/players - Load 200 mock players for insights page
+app.get("/api/insights/players", (req, res) => {
+  try {
+    const filePath = path.join(__dirname, "data", "mockPlayers.json");
+    const jsonData = fs.readFileSync(filePath, "utf8");
+    const players = JSON.parse(jsonData);
+    res.json(players);
+  } catch (err) {
+    console.error("Error loading mockPlayers.json:", err);
+    res.status(500).json({ error: "Failed to load mock player data" });
+  }
+});
+
+// GET /api/insights/teams - Load 20 mock teams for insights page
+app.get("/api/insights/teams", (req, res) => {
+  try {
+    const filePath = path.join(__dirname, "data", "mockTeams.json");
+    const jsonData = fs.readFileSync(filePath, "utf8");
+    const teams = JSON.parse(jsonData);
+    res.json(teams);
+  } catch (err) {
+    console.error("Error loading mockTeams.json:", err);
+    res.status(500).json({ error: "Failed to load mock team data" });
+  }
+});
+
 
 // POST /api/predict-match - Predict match outcome
 app.post("/api/predict-match", (req, res) => {

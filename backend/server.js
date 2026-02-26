@@ -136,6 +136,32 @@ app.get("/api/prediction-teams", (req, res) => {
   }
 });
 
+// GET /api/fifa-rankings - Load FIFA world rankings
+app.get("/api/fifa-rankings", function (req, res) {
+  try {
+    var filePath = path.join(__dirname, "data", "fifa_rankings_2026.json");
+    var jsonData = fs.readFileSync(filePath, "utf8");
+    var data = JSON.parse(jsonData);
+    res.json(data);
+  } catch (err) {
+    console.error("Error loading FIFA rankings:", err);
+    res.status(500).json({ error: "Failed to load FIFA rankings" });
+  }
+});
+
+// GET /api/uefa-club-rankings - Load UEFA club coefficient rankings
+app.get("/api/uefa-club-rankings", function (req, res) {
+  try {
+    var filePath = path.join(__dirname, "data", "uefa_club_rankings_2026.json");
+    var jsonData = fs.readFileSync(filePath, "utf8");
+    var data = JSON.parse(jsonData);
+    res.json(data);
+  } catch (err) {
+    console.error("Error loading UEFA rankings:", err);
+    res.status(500).json({ error: "Failed to load UEFA club rankings" });
+  }
+});
+
 // GET /api/live-matches - Load fake live matches
 app.get("/api/live-matches", (req, res) => {
   try {

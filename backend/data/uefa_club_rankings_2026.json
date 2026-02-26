@@ -1,0 +1,26 @@
+{
+  "lastUpdated": "25/02/2026",
+  "season": "2025/26",
+  "rankings": [
+    { "rank": 1,  "club": "Real Madrid",        "country": "Spain",   "points": 139.000 },
+    { "rank": 2,  "club": "Bayern Munich",       "country": "Germany", "points": 135.500 },
+    { "rank": 3,  "club": "Inter Milan",         "country": "Italy",   "points": 127.000 },
+    { "rank": 4,  "club": "Liverpool",           "country": "England", "points": 126.500 },
+    { "rank": 5,  "club": "Manchester City",     "country": "England", "points": 125.500 },
+    { "rank": 6,  "club": "Paris Saint-Germain", "country": "France",  "points": 115.500 },
+    { "rank": 7,  "club": "Barcelona",           "country": "Spain",   "points": 106.750 },
+    { "rank": 8,  "club": "Arsenal",             "country": "England", "points": 104.500 },
+    { "rank": 9,  "club": "Bayer Leverkusen",    "country": "Germany", "points": 104.000 },
+    { "rank": 10, "club": "Borussia Dortmund",   "country": "Germany", "points": 100.750 },
+    { "rank": 11, "club": "Chelsea",             "country": "England", "points": 98.000 },
+    { "rank": 12, "club": "Atletico Madrid",     "country": "Spain",   "points": 96.500 },
+    { "rank": 13, "club": "Juventus",            "country": "Italy",   "points": 94.000 },
+    { "rank": 14, "club": "Napoli",              "country": "Italy",   "points": 90.500 },
+    { "rank": 15, "club": "AC Milan",            "country": "Italy",   "points": 88.000 },
+    { "rank": 16, "club": "Benfica",             "country": "Portugal","points": 85.500 },
+    { "rank": 17, "club": "Porto",               "country": "Portugal","points": 82.000 },
+    { "rank": 18, "club": "Ajax",                "country": "Netherlands","points": 78.500 },
+    { "rank": 19, "club": "Sevilla",             "country": "Spain",   "points": 76.000 },
+    { "rank": 20, "club": "Villarreal",          "country": "Spain",   "points": 74.500 }
+  ]
+}

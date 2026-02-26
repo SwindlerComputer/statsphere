@@ -1,189 +1,248 @@
 ============================================================
-STATSPHERE - TEAM POWER RANKINGS PAGE
+STATSPHERE - RANKINGS PAGE
 ============================================================
 Files:
   Frontend: frontend/src/pages/Rankings.js
-  Backend:  (uses /api/prediction-teams endpoint in server.js)
+  Backend:  backend/server.js (3 endpoints)
   Data:     backend/data/predictionTeams.json
-URL: /rankings
+            backend/data/fifa_rankings_2026.json
+            backend/data/uefa_club_rankings_2026.json
+URL: /rankings  (also /rankings?view=uefa etc.)
 ============================================================
 
 WHAT THIS PAGE DOES
 --------------------
-Shows a FIFA-style ranking table for all 20 teams.
-Each team gets an overall score based on their stats and
-the difficulty of their league. Teams are sorted from
-highest score to lowest (rank 1 = best team).
+Shows 6 different ranking views the user can switch between:
 
-This is similar to how FIFA ranks national teams or how
-Sofascore shows top teams, but simplified for our project.
+1. TEAM POWER RANKINGS
+   Our own calculated team ranking using attack, defense,
+   form ratings and a league bonus. 20 club teams.
 
-============================================================
-THE RANKING FORMULA
-============================================================
-  overallScore = (attack x 0.35) + (defense x 0.30)
-               + (form x 0.20) + (leagueBonus x 0.15)
+2. UEFA CLUB COEFFICIENT RANKINGS
+   Top 20 European clubs ranked by coefficient points.
+   Based on results in Champions League and Europa League.
+   Similar to the real UEFA rankings on Sofascore.
 
-WHAT EACH PART MEANS:
-  - attack (0-100): How good the team is at scoring goals
-    Weight: 0.35 (35% of the score)
-    This is the most important factor
+3. FIFA WORLD RANKINGS
+   Top 20 national teams in the world with points.
+   Shows which confederation they belong to (UEFA, CONMEBOL,
+   CAF, AFC, CONCACAF).
 
-  - defense (0-100): How good the team is at stopping goals
-    Weight: 0.30 (30% of the score)
+4. FIFA AFRICA RANKINGS (CAF)
+   Top 10 African national teams with their world rank.
 
-  - form (0-100): How well the team has been playing recently
-    Weight: 0.20 (20% of the score)
+5. FIFA SOUTH AMERICA RANKINGS (CONMEBOL)
+   Top 10 South American national teams with their world rank.
 
-  - leagueBonus: Extra points for playing in a harder league
-    Weight: 0.15 (15% of the score)
+6. FIFA ASIA RANKINGS (AFC)
+   Top 10 Asian national teams with their world rank.
 
 ============================================================
-LEAGUE BONUS VALUES
+HOW THE NAV DROPDOWN WORKS
 ============================================================
-  Premier League:    15 points  (hardest league)
-  La Liga:           13 points
-  Serie A:           12 points
-  Bundesliga:        12 points
-  Ligue 1:           10 points
-  Saudi Pro League:   6 points  (weakest league)
+In the desktop navigation bar, "Rankings" has a small arrow (▼)
+next to it. When the user hovers over it, a dropdown appears
+showing all 6 ranking options.
 
-WHY LEAGUE BONUS MATTERS:
-  If two teams both have 85 attack, but one plays in the
-  Premier League and the other in the Saudi Pro League,
-  the Premier League team gets a higher ranking because
-  they face tougher opponents every week.
+How this is done in code (App.js):
+  - The <li> element has className "relative group"
+  - The dropdown div has className "hidden group-hover:block"
+  - Tailwind's "group" + "group-hover:" classes mean:
+    when you hover over the parent (group), show the child
+
+Each dropdown link goes to /rankings?view=power (or uefa, etc.)
+The Rankings.js page reads the ?view= parameter using:
+  var [searchParams] = useSearchParams();
+  var viewFromUrl = searchParams.get("view");
+
+On mobile, the Rankings section shows as an expandable list
+with all 6 options visible at once.
 
 ============================================================
-EXAMPLE CALCULATION
+DATA FILES
 ============================================================
-  Arsenal: attack=88, defense=89, form=88, league=PL (15)
 
-  attackScore  = 88 x 0.35  = 30.8
-  defenseScore = 89 x 0.30  = 26.7
-  formScore    = 88 x 0.20  = 17.6
-  leagueScore  = 15 x 0.15  =  2.25
-  TOTAL = 30.8 + 26.7 + 17.6 + 2.25 = 77.35
+1. fifa_rankings_2026.json
+   Contains 4 arrays:
+   - worldRankings: top 20 nations (rank, nation, confederation, points)
+   - africa: top 10 CAF nations (rank, nation, worldRank, points)
+   - southAmerica: top 10 CONMEBOL nations
+   - asia: top 10 AFC nations
 
-  Al Nassr: attack=78, defense=72, form=74, league=Saudi (6)
+   Example entry:
+   { "rank": 1, "nation": "Argentina", "confederation": "CONMEBOL", "points": 1867.25 }
 
-  attackScore  = 78 x 0.35  = 27.3
-  defenseScore = 72 x 0.30  = 21.6
-  formScore    = 74 x 0.20  = 14.8
-  leagueScore  = 6  x 0.15  =  0.9
-  TOTAL = 27.3 + 21.6 + 14.8 + 0.9 = 64.6
+2. uefa_club_rankings_2026.json
+   Contains:
+   - lastUpdated: date string
+   - season: "2025/26"
+   - rankings: array of 20 clubs (rank, club, country, points)
 
-  Arsenal (77.35) ranks higher than Al Nassr (64.6)
+   Example entry:
+   { "rank": 1, "club": "Real Madrid", "country": "Spain", "points": 139.000 }
+
+============================================================
+BACKEND ENDPOINTS
+============================================================
+  GET /api/prediction-teams     → returns club team data
+  GET /api/fifa-rankings        → returns all FIFA data
+  GET /api/uefa-club-rankings   → returns UEFA club data
+
+All three just read a JSON file and send it back.
+Code pattern:
+  var filePath = path.join(__dirname, "data", "filename.json");
+  var jsonData = fs.readFileSync(filePath, "utf8");
+  var data = JSON.parse(jsonData);
+  res.json(data);
 
 ============================================================
 KEY VARIABLES (Rankings.js)
 ============================================================
-  teams         - array of all teams with their overall score
-  loading       - true while fetching data
-  leagueFilter  - "all" or a specific league name
+  activeView    - which ranking is shown ("power", "uefa",
+                  "fifaWorld", "fifaAfrica", etc.)
+  powerTeams    - array of 20 club teams with overall scores
+  uefaData      - UEFA club coefficient data from backend
+  fifaData      - FIFA rankings data from backend
+  searchText    - what the user typed in the search box
+  searchParams  - reads the ?view= parameter from the URL
+  tabs          - array of tab button objects
 
 ============================================================
 KEY FUNCTIONS (Rankings.js)
 ============================================================
-  getLeagueBonus(league)
-    Returns the bonus points for a league.
-    Example: getLeagueBonus("Premier League") returns 15
-
   calculateOverall(team)
-    Calculates the overall ranking score for a team.
-    Uses the formula above and rounds to 1 decimal.
+    Calculates team power score using the weighted formula.
 
-  getFilteredTeams()
-    Returns only teams matching the selected league filter.
+  switchView(view)
+    Changes which ranking is displayed and clears search.
+
+  getLeagueBonus(league)
+    Returns bonus points for the team's league.
 
   getRankColor(rank)
-    Returns gold for 1st, silver for 2nd, bronze for 3rd.
-
-  getBarColor(value)
-    Returns green for 90+, cyan for 80+, yellow for 70+, red below.
-
-  getTierLabel(rank, total)
-    Returns "Elite", "Strong", "Mid", or "Developing" based
-    on where the team sits in the rankings.
+    Returns gold/silver/bronze colour for top 3.
 
 ============================================================
-WHAT THE PAGE SHOWS
+REUSABLE COMPONENTS
 ============================================================
-1. Title and formula explanation
-2. League filter dropdown
-3. Top 3 podium (gold, silver, bronze cards) when viewing all
-4. Full ranking table with:
-   - Rank number (coloured badge)
-   - Team name
-   - League name
-   - Attack rating with mini bar
-   - Defense rating with mini bar
-   - Form rating with mini bar
-   - Overall score
-   - Tier label (Elite, Strong, Mid, Developing)
-5. League bonus reference at the bottom
+The page uses 3 sub-components to avoid repeating code:
 
-MOBILE VERSION:
-  On mobile, each team shows as a compact card with
-  the rank badge, team name, score, and 3 stat bars.
-  The podium still shows but with smaller text.
+  PowerRankingsView - shows club team power rankings
+    Props: teams, searchText
 
+  UefaRankingsView - shows UEFA club coefficients
+    Props: data, searchText
+
+  FifaRankingsView - REUSABLE for all FIFA rankings
+    Props: title, subtitle, nations, lastUpdated, searchText,
+           showConfederation, showWorldRank
+    Used 4 times (World, Africa, South America, Asia) with
+    different props each time.
+
+============================================================
+TEAM POWER RANKING FORMULA
+============================================================
+  Overall = (Attack x 0.35) + (Defense x 0.30)
+          + (Form x 0.20) + (League Bonus x 0.15)
+
+  League Bonuses:
+    Premier League: 15  |  La Liga: 13
+    Serie A: 12  |  Bundesliga: 12
+    Ligue 1: 10  |  Saudi Pro League: 6
+
+============================================================
+CONFEDERATIONS EXPLAINED
+============================================================
+  UEFA     = Europe (France, Spain, England, etc.)
+  CONMEBOL = South America (Argentina, Brazil, etc.)
+  CAF      = Africa (Morocco, Senegal, Nigeria, etc.)
+  AFC      = Asia (Japan, Iran, South Korea, etc.)
+  CONCACAF = North/Central America (USA, Mexico, etc.)
+
+============================================================
 COMPLEX CODE EXPLAINED
-------------------------
-Here are the trickiest parts of this page in plain English:
+============================================================
 
-1. calculateOverall Formula
-   The function takes a team object and calculates a single score using
-   weighted addition: (attack x 0.35) + (defense x 0.30) + (form x 0.20)
-   + (leagueBonus x 0.15). Each weight is a decimal that represents how
-   important that stat is. Attack gets the highest weight (35%) because
-   scoring goals matters most. The result is rounded to one decimal place
-   using .toFixed(1). This weighted average approach is the same concept
-   FIFA and other sports organisations use for rankings.
+1. TAB SWITCHING WITH STATE
+   var [activeView, setActiveView] = useState("power");
 
-2. .sort() Comparison Function
-   After calculating every team's score, we sort them using JavaScript's
-   .sort() method with a custom comparison function:
-   teams.sort(function(a, b) { return b.overall - a.overall })
-   This tells JavaScript: "Compare two teams. If b's score minus a's
-   score is positive, put b first." This sorts from highest to lowest.
-   Without this custom function, .sort() would sort alphabetically, which
-   is not what we want for rankings.
+   The activeView variable holds which ranking we're showing.
+   When the user clicks a tab button, we call:
+     setActiveView("uefa")
+   React then re-renders the page, and the matching
+   {activeView === "uefa" && (...)} block is shown.
+   All other blocks are hidden because their condition
+   is false.
 
-3. getTierLabel Logic and League Bonus Concept
-   getTierLabel divides teams into tiers based on their position. If a
-   team is in the top 25% of rankings, it gets "Elite". Next 25% is
-   "Strong", then "Mid", then "Developing". The league bonus adds extra
-   points for teams in harder leagues. A team in the Premier League gets
-   15 bonus points while a Saudi Pro League team gets only 6. This means
-   two teams with identical stats will rank differently based on how
-   tough their league competition is, which is realistic.
+2. URL QUERY PARAMETERS
+   var [searchParams] = useSearchParams();
+   var viewFromUrl = searchParams.get("view");
 
+   When a user clicks a nav dropdown link like
+   /rankings?view=fifaAfrica, the URL has "?view=fifaAfrica"
+   at the end. useSearchParams reads this and returns
+   "fifaAfrica". We then set activeView to match.
+   This is how the nav dropdown communicates with the page.
+
+3. REUSABLE FifaRankingsView COMPONENT
+   Instead of writing 4 separate components for World,
+   Africa, South America, and Asia rankings, we wrote
+   ONE component and pass different data using "props":
+
+   <FifaRankingsView
+     title="FIFA Africa Rankings (CAF)"
+     nations={fifaData.africa}
+     showWorldRank={true}
+   />
+
+   Props are like function arguments. The component reads
+   them with props.title, props.nations, etc. and shows
+   the right data. This is a key React pattern called
+   "component reuse".
+
+4. CSS HOVER DROPDOWN (Nav)
+   <li className="relative group">
+     <NavLink>Rankings ▼</NavLink>
+     <div className="hidden group-hover:block">
+       ...dropdown items...
+     </div>
+   </li>
+
+   "group" marks the parent element.
+   "group-hover:block" means: when the GROUP is hovered,
+   change this element from hidden to block (visible).
+   No JavaScript needed - pure CSS via Tailwind.
+
+============================================================
 DEFENCE TALKING POINTS
-------------------------
-Here is what to say when presenting the Rankings feature:
+============================================================
 
-- "I created a custom ranking algorithm using a weighted scoring formula.
-  Attack contributes 35%, defense 30%, form 20%, and a league difficulty
-  bonus 15%. These weights were chosen to reflect how real football
-  analysis values different team qualities."
+1. "The Rankings page demonstrates component reuse - we
+   wrote ONE FifaRankingsView component and used it four
+   times with different props. This avoids code duplication
+   and is a core React design principle."
 
-- "The league bonus system adds realism to the rankings. A team playing
-  in the Premier League faces tougher competition weekly, so they receive
-  a higher bonus than a team in a weaker league. This mirrors how UEFA
-  coefficient works in real football."
+2. "We implemented URL query parameters so the nav dropdown
+   can communicate with the Rankings page. When a user
+   clicks 'FIFA Africa' in the nav, it navigates to
+   /rankings?view=fifaAfrica and the page reads that
+   parameter to show the right ranking."
 
-- "Teams are sorted using JavaScript's .sort() with a custom comparator
-  function that orders by overall score descending. I also implemented
-  tier labels (Elite, Strong, Mid, Developing) that dynamically adjust
-  based on the total number of teams being displayed."
+3. "The nav hover dropdown uses pure CSS through Tailwind's
+   group-hover utility. This is more performant than
+   JavaScript hover because the browser handles it natively."
 
-- "The page includes visual elements like colour-coded stat bars, a
-  podium for the top 3 teams, and a league filter dropdown. This makes
-  the data easy to understand at a glance."
+4. "Our data covers multiple football ranking systems:
+   UEFA club coefficients based on European competition
+   results, and FIFA rankings for national teams across
+   different continents. This shows we understand the
+   football domain our application serves."
 
-- "On mobile, the full table is replaced with compact cards that show
-  the key information without horizontal scrolling, demonstrating
-  responsive design considerations."
+5. "All ranking data is served from JSON files through
+   three simple API endpoints. This keeps the architecture
+   clean - the frontend just fetches and displays, the
+   backend reads and sends. If we wanted to use a real
+   FIFA or UEFA API in the future, we'd only need to
+   change the backend endpoints."
 
 ============================================================

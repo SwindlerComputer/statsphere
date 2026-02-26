@@ -210,7 +210,38 @@ function App() {
             <li><NavLink to="/predictions" className={function (nav) { return navClass(nav.isActive); }}>Predictions</NavLink></li>
             <li><NavLink to="/standings" className={function (nav) { return navClass(nav.isActive); }}>Standings</NavLink></li>
             <li><NavLink to="/fixtures" className={function (nav) { return navClass(nav.isActive); }}>Fixtures</NavLink></li>
-            <li><NavLink to="/rankings" className={function (nav) { return navClass(nav.isActive); }}>Rankings</NavLink></li>
+
+            {/* Rankings hover dropdown (desktop) */}
+            {/* "group" class lets child elements use "group-hover:" */}
+            <li className="relative group">
+              <NavLink to="/rankings" className={function (nav) { return navClass(nav.isActive) + " flex items-center gap-1"; }}>
+                Rankings <span className="text-xs text-gray-500">▼</span>
+              </NavLink>
+              {/* Dropdown that appears on hover */}
+              <div className="absolute left-0 top-full mt-0 pt-1 hidden group-hover:block z-50">
+                <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-48 py-1">
+                  <NavLink to="/rankings?view=power" onClick={function () {}} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    Team Power
+                  </NavLink>
+                  <NavLink to="/rankings?view=uefa" onClick={function () {}} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    UEFA Club Rankings
+                  </NavLink>
+                  <NavLink to="/rankings?view=fifaWorld" onClick={function () {}} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    FIFA World
+                  </NavLink>
+                  <NavLink to="/rankings?view=fifaAfrica" onClick={function () {}} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    FIFA Africa
+                  </NavLink>
+                  <NavLink to="/rankings?view=fifaSouthAmerica" onClick={function () {}} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    FIFA South America
+                  </NavLink>
+                  <NavLink to="/rankings?view=fifaAsia" onClick={function () {}} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    FIFA Asia
+                  </NavLink>
+                </div>
+              </div>
+            </li>
+
             <li><NavLink to="/community" className={function (nav) { return navClass(nav.isActive); }}>Community</NavLink></li>
           </ul>
 
@@ -226,7 +257,17 @@ function App() {
                 <li><NavLink to="/predictions" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Predictions</NavLink></li>
                 <li><NavLink to="/standings" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Standings</NavLink></li>
                 <li><NavLink to="/fixtures" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Fixtures</NavLink></li>
-                <li><NavLink to="/rankings" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Rankings</NavLink></li>
+                <li>
+                  <p className="text-gray-500 text-xs mt-1 mb-1">Rankings</p>
+                  <ul className="pl-3 space-y-1">
+                    <li><NavLink to="/rankings?view=power" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Team Power</NavLink></li>
+                    <li><NavLink to="/rankings?view=uefa" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>UEFA Clubs</NavLink></li>
+                    <li><NavLink to="/rankings?view=fifaWorld" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>FIFA World</NavLink></li>
+                    <li><NavLink to="/rankings?view=fifaAfrica" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>FIFA Africa</NavLink></li>
+                    <li><NavLink to="/rankings?view=fifaSouthAmerica" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>FIFA South America</NavLink></li>
+                    <li><NavLink to="/rankings?view=fifaAsia" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>FIFA Asia</NavLink></li>
+                  </ul>
+                </li>
                 <li><NavLink to="/community" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Community</NavLink></li>
 
                 {/* Mobile user actions */}

@@ -1,33 +1,31 @@
 // ========================================
-// Rankings.js - Team Power Rankings
+// Rankings.js - All Rankings Page
 // ========================================
-// Shows a FIFA-style ranking table for all teams.
+// This page shows multiple types of rankings:
+//   1. Team Power Rankings (our own calculated ranking)
+//   2. UEFA Club Coefficient Rankings (European clubs)
+//   3. FIFA World Rankings (top 20 nations)
+//   4. FIFA Africa Rankings (CAF - top 10)
+//   5. FIFA South America Rankings (CONMEBOL - top 10)
+//   6. FIFA Asia Rankings (AFC - top 10)
 //
-// HOW THE RANKING SCORE IS CALCULATED:
-//   overallScore = (attack * 0.35) + (defense * 0.30) + (form * 0.20) + (leagueBonus * 0.15)
+// The user picks which ranking to view using tabs at the top.
+// The "activeView" state variable controls which ranking is shown.
 //
-//   - attack (0-100):  how good the team is at scoring goals
-//   - defense (0-100): how good the team is at stopping goals
-//   - form (0-100):    how well the team is playing recently
-//   - leagueBonus:     bonus points for playing in a harder league
-//
-// LEAGUE BONUS VALUES:
-//   Premier League:   15 (hardest league)
-//   La Liga:          13
-//   Serie A:          12
-//   Bundesliga:       12
-//   Ligue 1:          10
-//   Saudi Pro League:  6 (weakest league)
-//
-// Teams are sorted by overall score (highest = rank 1)
+// DATA SOURCES:
+//   - Team Power: /api/prediction-teams (our mock data)
+//   - UEFA Clubs: /api/uefa-club-rankings (JSON file)
+//   - FIFA rankings: /api/fifa-rankings (JSON file)
 // ========================================
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 var API_BASE = process.env.REACT_APP_API_URL;
 
-// League bonus points (outside the component so it doesn't get recreated)
-// Harder leagues get more bonus points
+// ========================================
+// HELPER: League bonus for Team Power Rankings
+// ========================================
 function getLeagueBonus(league) {
   if (league === "Premier League") return 15;
   if (league === "La Liga") return 13;
@@ -38,7 +36,7 @@ function getLeagueBonus(league) {
   return 8;
 }
 
-// Calculate the overall ranking score for a team
+// Calculate overall score for a team
 function calculateOverall(team) {
   var attackScore = team.attack * 0.35;
   var defenseScore = team.defense * 0.30;
@@ -48,95 +46,110 @@ function calculateOverall(team) {
   return Math.round(total * 10) / 10;
 }
 
-export default function Rankings() {
-  var [teams, setTeams] = useState([]);
-  var [loading, setLoading] = useState(true);
-  // Filter: which league to show ("all" or a specific league name)
-  var [leagueFilter, setLeagueFilter] = useState("all");
+// Get colour for rank badge (gold, silver, bronze)
+function getRankColor(rank) {
+  if (rank === 1) return "bg-yellow-500 text-black";
+  if (rank === 2) return "bg-gray-300 text-black";
+  if (rank === 3) return "bg-amber-600 text-white";
+  return "bg-gray-700 text-gray-300";
+}
 
-  // Fetch the teams when the page loads
+// Get bar colour based on stat value
+function getBarColor(value) {
+  if (value >= 90) return "bg-green-400";
+  if (value >= 80) return "bg-cyan-400";
+  if (value >= 70) return "bg-yellow-400";
+  return "bg-red-400";
+}
+
+export default function Rankings() {
+  // useSearchParams reads the ?view= part of the URL
+  // For example: /rankings?view=uefa means the user clicked "UEFA Clubs"
+  var [searchParams] = useSearchParams();
+  var viewFromUrl = searchParams.get("view");
+
+  // Which ranking view is currently active
+  // Options: "power", "uefa", "fifaWorld", "fifaAfrica", "fifaSouthAmerica", "fifaAsia"
+  var [activeView, setActiveView] = useState(viewFromUrl || "power");
+
+  // When the URL changes (user clicked a nav dropdown link), update the view
   useEffect(function () {
+    if (viewFromUrl) {
+      setActiveView(viewFromUrl);
+    }
+  }, [viewFromUrl]);
+
+  // Data for each ranking type
+  var [powerTeams, setPowerTeams] = useState([]);
+  var [uefaData, setUefaData] = useState(null);
+  var [fifaData, setFifaData] = useState(null);
+
+  // Search box for filtering the table
+  var [searchText, setSearchText] = useState("");
+
+  // Loading state
+  var [loading, setLoading] = useState(true);
+
+  // ========================================
+  // LOAD ALL DATA when the page first loads
+  // ========================================
+  useEffect(function () {
+    var loaded = 0;
+    var total = 3;
+
+    // Helper: check if all data is loaded
+    function checkDone() {
+      loaded = loaded + 1;
+      if (loaded >= total) setLoading(false);
+    }
+
+    // Load Team Power data
     fetch(API_BASE + "/api/prediction-teams")
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        // Calculate score for each team and sort by score (highest first)
-        var teamsWithScore = [];
+        // Calculate score for each team
         for (var i = 0; i < data.length; i++) {
-          var team = data[i];
-          team.overall = calculateOverall(team);
-          teamsWithScore.push(team);
+          data[i].overall = calculateOverall(data[i]);
         }
-
-        // Sort by overall score (highest first)
-        teamsWithScore.sort(function (a, b) {
-          return b.overall - a.overall;
-        });
-
-        setTeams(teamsWithScore);
-        setLoading(false);
+        // Sort by score (highest first)
+        data.sort(function (a, b) { return b.overall - a.overall; });
+        setPowerTeams(data);
+        checkDone();
       })
-      .catch(function (err) {
-        console.error("Failed to load teams:", err);
-        setLoading(false);
-      });
+      .catch(function () { checkDone(); });
+
+    // Load UEFA club rankings
+    fetch(API_BASE + "/api/uefa-club-rankings")
+      .then(function (res) { return res.json(); })
+      .then(function (data) { setUefaData(data); checkDone(); })
+      .catch(function () { checkDone(); });
+
+    // Load FIFA rankings
+    fetch(API_BASE + "/api/fifa-rankings")
+      .then(function (res) { return res.json(); })
+      .then(function (data) { setFifaData(data); checkDone(); })
+      .catch(function () { checkDone(); });
   }, []);
 
-  // Get unique leagues for the filter dropdown
-  function getLeagues() {
-    var list = [];
-    for (var i = 0; i < teams.length; i++) {
-      if (list.indexOf(teams[i].league) === -1) {
-        list.push(teams[i].league);
-      }
-    }
-    return list;
+  // Clear search when switching views
+  function switchView(view) {
+    setActiveView(view);
+    setSearchText("");
   }
 
-  // Filter teams by selected league
-  function getFilteredTeams() {
-    if (leagueFilter === "all") return teams;
-    var filtered = [];
-    for (var i = 0; i < teams.length; i++) {
-      if (teams[i].league === leagueFilter) {
-        filtered.push(teams[i]);
-      }
-    }
-    return filtered;
-  }
+  // ========================================
+  // ALL TAB OPTIONS
+  // ========================================
+  var tabs = [
+    { id: "power",            label: "Team Power" },
+    { id: "uefa",             label: "UEFA Clubs" },
+    { id: "fifaWorld",        label: "FIFA World" },
+    { id: "fifaAfrica",       label: "FIFA Africa" },
+    { id: "fifaSouthAmerica", label: "FIFA South America" },
+    { id: "fifaAsia",         label: "FIFA Asia" }
+  ];
 
-  // Get a colour for the rank badge
-  function getRankColor(rank) {
-    if (rank === 1) return "bg-yellow-500 text-black";
-    if (rank === 2) return "bg-gray-300 text-black";
-    if (rank === 3) return "bg-amber-600 text-white";
-    return "bg-gray-700 text-gray-300";
-  }
-
-  // Get colour for the stat bar based on value
-  function getBarColor(value) {
-    if (value >= 90) return "bg-green-400";
-    if (value >= 80) return "bg-cyan-400";
-    if (value >= 70) return "bg-yellow-400";
-    return "bg-red-400";
-  }
-
-  // Get an arrow showing if the team is top, mid, or bottom tier
-  function getTierLabel(rank, total) {
-    if (rank <= 3) return "Elite";
-    if (rank <= Math.round(total / 2)) return "Strong";
-    if (rank <= Math.round(total * 0.75)) return "Mid";
-    return "Developing";
-  }
-
-  function getTierColor(rank, total) {
-    if (rank <= 3) return "text-yellow-400";
-    if (rank <= Math.round(total / 2)) return "text-green-400";
-    if (rank <= Math.round(total * 0.75)) return "text-gray-400";
-    return "text-red-400";
-  }
-
-  var filteredTeams = getFilteredTeams();
-
+  // Loading screen
   if (loading) {
     return (
       <div className="text-center text-gray-400 mt-20">
@@ -148,224 +161,363 @@ export default function Rankings() {
   return (
     <div className="w-full max-w-4xl mx-auto px-2">
       <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-2 text-center">
-        Team Power Rankings
+        Rankings
       </h1>
-      <p className="text-gray-400 text-center mb-6 text-sm">
-        Teams ranked by overall score. Based on attack, defense, form, and league strength.
+      <p className="text-gray-400 text-center mb-4 text-sm">
+        Choose a ranking type below
       </p>
 
-      {/* Formula explanation */}
-      <div className="bg-gray-800 rounded-lg p-3 sm:p-4 mb-4">
+      {/* ========================================
+          TAB BUTTONS - choose which ranking to see
+          ======================================== */}
+      <div className="flex flex-wrap gap-2 mb-4 justify-center">
+        {tabs.map(function (tab) {
+          var isActive = activeView === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={function () { switchView(tab.id); }}
+              className={
+                "px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition " +
+                (isActive
+                  ? "bg-cyan-500 text-white"
+                  : "bg-gray-700 text-gray-300 hover:bg-gray-600")
+              }
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Search bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchText}
+          onChange={function (e) { setSearchText(e.target.value); }}
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:border-cyan-400 focus:outline-none text-sm"
+        />
+      </div>
+
+      {/* ========================================
+          VIEW: Team Power Rankings
+          ======================================== */}
+      {activeView === "power" && (
+        <PowerRankingsView teams={powerTeams} searchText={searchText} />
+      )}
+
+      {/* ========================================
+          VIEW: UEFA Club Rankings
+          ======================================== */}
+      {activeView === "uefa" && uefaData && (
+        <UefaRankingsView data={uefaData} searchText={searchText} />
+      )}
+
+      {/* ========================================
+          VIEW: FIFA World Rankings
+          ======================================== */}
+      {activeView === "fifaWorld" && fifaData && (
+        <FifaRankingsView
+          title="FIFA World Rankings"
+          subtitle="Top 20 nations in the world"
+          nations={fifaData.worldRankings}
+          lastUpdated={fifaData.lastUpdated}
+          searchText={searchText}
+          showConfederation={true}
+        />
+      )}
+
+      {/* ========================================
+          VIEW: FIFA Africa Rankings
+          ======================================== */}
+      {activeView === "fifaAfrica" && fifaData && (
+        <FifaRankingsView
+          title="FIFA Africa Rankings (CAF)"
+          subtitle="Top 10 African nations"
+          nations={fifaData.africa}
+          lastUpdated={fifaData.lastUpdated}
+          searchText={searchText}
+          showWorldRank={true}
+        />
+      )}
+
+      {/* ========================================
+          VIEW: FIFA South America Rankings
+          ======================================== */}
+      {activeView === "fifaSouthAmerica" && fifaData && (
+        <FifaRankingsView
+          title="FIFA South America Rankings (CONMEBOL)"
+          subtitle="Top 10 South American nations"
+          nations={fifaData.southAmerica}
+          lastUpdated={fifaData.lastUpdated}
+          searchText={searchText}
+          showWorldRank={true}
+        />
+      )}
+
+      {/* ========================================
+          VIEW: FIFA Asia Rankings
+          ======================================== */}
+      {activeView === "fifaAsia" && fifaData && (
+        <FifaRankingsView
+          title="FIFA Asia Rankings (AFC)"
+          subtitle="Top 10 Asian nations"
+          nations={fifaData.asia}
+          lastUpdated={fifaData.lastUpdated}
+          searchText={searchText}
+          showWorldRank={true}
+        />
+      )}
+    </div>
+  );
+}
+
+// ========================================
+// COMPONENT: Team Power Rankings View
+// ========================================
+// This is the original team ranking with attack/defense/form
+function PowerRankingsView(props) {
+  var teams = props.teams;
+  var searchText = props.searchText;
+
+  // Filter teams by search
+  var filtered = [];
+  var lower = searchText.toLowerCase();
+  for (var i = 0; i < teams.length; i++) {
+    if (searchText === "" || teams[i].name.toLowerCase().indexOf(lower) >= 0 || teams[i].league.toLowerCase().indexOf(lower) >= 0) {
+      filtered.push(teams[i]);
+    }
+  }
+
+  return (
+    <div>
+      <div className="bg-gray-800 rounded-lg p-3 mb-4">
         <h3 className="text-sm font-semibold text-gray-300 mb-1">Ranking Formula:</h3>
         <p className="text-xs text-gray-400">
           Overall = (Attack x 0.35) + (Defense x 0.30) + (Form x 0.20) + (League Bonus x 0.15)
         </p>
       </div>
 
-      {/* League filter + count */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-        <select
-          value={leagueFilter}
-          onChange={function (e) { setLeagueFilter(e.target.value); }}
-          className="bg-gray-800 border border-gray-600 rounded p-2 text-sm w-full sm:w-auto"
-        >
-          <option value="all">All Leagues</option>
-          {getLeagues().map(function (league) {
-            return <option key={league} value={league}>{league}</option>;
-          })}
-        </select>
-        <p className="text-xs text-gray-500">{filteredTeams.length} teams</p>
-      </div>
+      <p className="text-xs text-gray-500 mb-3">{filtered.length} teams</p>
 
-      {/* ========================================
-          TOP 3 PODIUM (only shown when viewing all leagues)
-          ======================================== */}
-      {leagueFilter === "all" && (
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
-          {/* 2nd place */}
-          <div className="bg-gray-800 rounded-lg p-3 sm:p-4 text-center mt-6">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-300 text-black font-bold text-lg sm:text-xl flex items-center justify-center mx-auto mb-2">
-              2
-            </div>
-            <p className="font-semibold text-sm sm:text-base truncate">{filteredTeams[1] ? filteredTeams[1].name : ""}</p>
-            <p className="text-xs text-gray-400">{filteredTeams[1] ? filteredTeams[1].league : ""}</p>
-            <p className="text-lg sm:text-xl font-bold text-cyan-400 mt-1">{filteredTeams[1] ? filteredTeams[1].overall : ""}</p>
-          </div>
-
-          {/* 1st place (taller) */}
-          <div className="bg-gray-800 rounded-lg p-3 sm:p-4 text-center border border-yellow-500">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-yellow-500 text-black font-bold text-xl sm:text-2xl flex items-center justify-center mx-auto mb-2">
-              1
-            </div>
-            <p className="font-bold text-sm sm:text-base truncate">{filteredTeams[0] ? filteredTeams[0].name : ""}</p>
-            <p className="text-xs text-gray-400">{filteredTeams[0] ? filteredTeams[0].league : ""}</p>
-            <p className="text-xl sm:text-2xl font-bold text-yellow-400 mt-1">{filteredTeams[0] ? filteredTeams[0].overall : ""}</p>
-          </div>
-
-          {/* 3rd place */}
-          <div className="bg-gray-800 rounded-lg p-3 sm:p-4 text-center mt-8">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-600 text-white font-bold text-lg sm:text-xl flex items-center justify-center mx-auto mb-2">
-              3
-            </div>
-            <p className="font-semibold text-sm sm:text-base truncate">{filteredTeams[2] ? filteredTeams[2].name : ""}</p>
-            <p className="text-xs text-gray-400">{filteredTeams[2] ? filteredTeams[2].league : ""}</p>
-            <p className="text-lg sm:text-xl font-bold text-cyan-400 mt-1">{filteredTeams[2] ? filteredTeams[2].overall : ""}</p>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================
-          FULL RANKINGS TABLE
-          ======================================== */}
+      {/* Table */}
       <div className="bg-gray-800 rounded-lg overflow-hidden">
-        {/* Table header */}
-        <div className="hidden sm:grid grid-cols-12 gap-2 p-3 bg-gray-700 text-xs text-gray-400 font-semibold">
-          <div className="col-span-1 text-center">#</div>
-          <div className="col-span-3">Team</div>
-          <div className="col-span-2">League</div>
-          <div className="col-span-1 text-center">ATK</div>
-          <div className="col-span-1 text-center">DEF</div>
-          <div className="col-span-1 text-center">FORM</div>
-          <div className="col-span-1 text-center">Score</div>
-          <div className="col-span-2 text-center">Tier</div>
-        </div>
-
-        {/* Team rows */}
-        {filteredTeams.map(function (team, index) {
+        {filtered.map(function (team, index) {
           var rank = index + 1;
-          var totalTeams = filteredTeams.length;
-
           return (
-            <div
-              key={team.id}
-              className={
-                "p-3 border-b border-gray-700 last:border-0 " +
-                (rank <= 3 ? "bg-gray-750" : "")
-              }
-            >
-              {/* Desktop layout */}
-              <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
-                {/* Rank */}
-                <div className="col-span-1 text-center">
-                  <span className={"inline-flex w-7 h-7 rounded-full text-xs font-bold items-center justify-center " + getRankColor(rank)}>
-                    {rank}
-                  </span>
+            <div key={team.id} className="p-3 border-b border-gray-700 last:border-0">
+              {/* Desktop */}
+              <div className="hidden sm:flex items-center gap-4">
+                <span className={"inline-flex w-8 h-8 rounded-full text-xs font-bold items-center justify-center " + getRankColor(rank)}>
+                  {rank}
+                </span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">{team.name}</p>
+                  <p className="text-xs text-gray-400">{team.league}</p>
                 </div>
-                {/* Team name */}
-                <div className="col-span-3 font-semibold text-sm">{team.name}</div>
-                {/* League */}
-                <div className="col-span-2 text-xs text-gray-400">{team.league}</div>
-                {/* Attack */}
-                <div className="col-span-1 text-center">
-                  <span className="text-sm font-semibold">{team.attack}</span>
-                  <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
-                    <div className={"h-1 rounded-full " + getBarColor(team.attack)} style={{ width: team.attack + "%" }}></div>
-                  </div>
-                </div>
-                {/* Defense */}
-                <div className="col-span-1 text-center">
-                  <span className="text-sm font-semibold">{team.defense}</span>
-                  <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
-                    <div className={"h-1 rounded-full " + getBarColor(team.defense)} style={{ width: team.defense + "%" }}></div>
-                  </div>
-                </div>
-                {/* Form */}
-                <div className="col-span-1 text-center">
-                  <span className="text-sm font-semibold">{team.form}</span>
-                  <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
-                    <div className={"h-1 rounded-full " + getBarColor(team.form)} style={{ width: team.form + "%" }}></div>
-                  </div>
-                </div>
-                {/* Overall score */}
-                <div className="col-span-1 text-center">
-                  <span className="text-base font-bold text-cyan-400">{team.overall}</span>
-                </div>
-                {/* Tier */}
-                <div className="col-span-2 text-center">
-                  <span className={"text-xs font-semibold " + getTierColor(rank, totalTeams)}>
-                    {getTierLabel(rank, totalTeams)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Mobile layout */}
-              <div className="sm:hidden">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <span className={"inline-flex w-7 h-7 rounded-full text-xs font-bold items-center justify-center " + getRankColor(rank)}>
-                      {rank}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-sm">{team.name}</p>
-                      <p className="text-xs text-gray-400">{team.league}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-cyan-400">{team.overall}</p>
-                    <p className={"text-xs font-semibold " + getTierColor(rank, totalTeams)}>
-                      {getTierLabel(rank, totalTeams)}
-                    </p>
-                  </div>
-                </div>
-                {/* Stat bars (mobile) */}
-                <div className="grid grid-cols-3 gap-2 text-center text-xs text-gray-400">
-                  <div>
-                    <p>ATK {team.attack}</p>
+                <div className="flex gap-4 items-center text-center text-xs">
+                  <div className="w-12">
+                    <p className="text-gray-400">ATK</p>
+                    <p className="font-bold">{team.attack}</p>
                     <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
                       <div className={"h-1 rounded-full " + getBarColor(team.attack)} style={{ width: team.attack + "%" }}></div>
                     </div>
                   </div>
-                  <div>
-                    <p>DEF {team.defense}</p>
+                  <div className="w-12">
+                    <p className="text-gray-400">DEF</p>
+                    <p className="font-bold">{team.defense}</p>
                     <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
                       <div className={"h-1 rounded-full " + getBarColor(team.defense)} style={{ width: team.defense + "%" }}></div>
                     </div>
                   </div>
-                  <div>
-                    <p>FORM {team.form}</p>
+                  <div className="w-12">
+                    <p className="text-gray-400">FORM</p>
+                    <p className="font-bold">{team.form}</p>
                     <div className="w-full bg-gray-700 rounded-full h-1 mt-1">
                       <div className={"h-1 rounded-full " + getBarColor(team.form)} style={{ width: team.form + "%" }}></div>
                     </div>
                   </div>
                 </div>
+                <div className="w-16 text-center">
+                  <p className="text-lg font-bold text-cyan-400">{team.overall}</p>
+                </div>
+              </div>
+              {/* Mobile */}
+              <div className="sm:hidden flex items-center gap-3">
+                <span className={"inline-flex w-7 h-7 rounded-full text-xs font-bold items-center justify-center " + getRankColor(rank)}>
+                  {rank}
+                </span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">{team.name}</p>
+                  <p className="text-xs text-gray-400">{team.league}</p>
+                </div>
+                <p className="text-lg font-bold text-cyan-400">{team.overall}</p>
               </div>
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
 
-      {/* League bonus reference */}
-      <div className="bg-gray-800 rounded-lg p-4 mt-4">
-        <h3 className="text-sm font-semibold text-gray-300 mb-2">League Bonus Points</h3>
-        <p className="text-xs text-gray-500 mb-2">
-          Teams in harder leagues get extra bonus points added to their ranking score.
+// ========================================
+// COMPONENT: UEFA Club Coefficient Rankings View
+// ========================================
+function UefaRankingsView(props) {
+  var data = props.data;
+  var searchText = props.searchText;
+
+  // Filter by search
+  var filtered = [];
+  var lower = searchText.toLowerCase();
+  for (var i = 0; i < data.rankings.length; i++) {
+    var club = data.rankings[i];
+    if (searchText === "" || club.club.toLowerCase().indexOf(lower) >= 0 || club.country.toLowerCase().indexOf(lower) >= 0) {
+      filtered.push(club);
+    }
+  }
+
+  return (
+    <div>
+      <div className="bg-gray-800 rounded-lg p-3 mb-4">
+        <h2 className="text-lg font-bold text-cyan-400 mb-1">UEFA Club Coefficient Rankings</h2>
+        <p className="text-xs text-gray-400">
+          Based on results in European competitions (Champions League, Europa League).
+          Season: {data.season}
         </p>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs">
-          <div className="bg-gray-700 p-2 rounded">
-            <p className="text-gray-400">PL</p>
-            <p className="font-bold text-green-400">15</p>
-          </div>
-          <div className="bg-gray-700 p-2 rounded">
-            <p className="text-gray-400">La Liga</p>
-            <p className="font-bold">13</p>
-          </div>
-          <div className="bg-gray-700 p-2 rounded">
-            <p className="text-gray-400">Serie A</p>
-            <p className="font-bold">12</p>
-          </div>
-          <div className="bg-gray-700 p-2 rounded">
-            <p className="text-gray-400">Bund.</p>
-            <p className="font-bold">12</p>
-          </div>
-          <div className="bg-gray-700 p-2 rounded">
-            <p className="text-gray-400">Ligue 1</p>
-            <p className="font-bold">10</p>
-          </div>
-          <div className="bg-gray-700 p-2 rounded">
-            <p className="text-gray-400">Saudi</p>
-            <p className="font-bold text-red-400">6</p>
-          </div>
+        <p className="text-xs text-gray-500 mt-1">Last updated: {data.lastUpdated}</p>
+      </div>
+
+      <p className="text-xs text-gray-500 mb-3">{filtered.length} clubs</p>
+
+      <div className="bg-gray-800 rounded-lg overflow-hidden">
+        {/* Header */}
+        <div className="hidden sm:grid grid-cols-12 gap-2 p-3 bg-gray-700 text-xs text-gray-400 font-semibold">
+          <div className="col-span-1 text-center">#</div>
+          <div className="col-span-5">Club</div>
+          <div className="col-span-3">Country</div>
+          <div className="col-span-3 text-right">Coefficient Pts</div>
         </div>
+
+        {filtered.map(function (club) {
+          return (
+            <div key={club.rank} className="p-3 border-b border-gray-700 last:border-0">
+              {/* Desktop */}
+              <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
+                <div className="col-span-1 text-center">
+                  <span className={"inline-flex w-7 h-7 rounded-full text-xs font-bold items-center justify-center " + getRankColor(club.rank)}>
+                    {club.rank}
+                  </span>
+                </div>
+                <div className="col-span-5 font-semibold text-sm">{club.club}</div>
+                <div className="col-span-3 text-sm text-gray-400">{club.country}</div>
+                <div className="col-span-3 text-right font-bold text-cyan-400">{club.points.toFixed(3)}</div>
+              </div>
+              {/* Mobile */}
+              <div className="sm:hidden flex items-center gap-3">
+                <span className={"inline-flex w-7 h-7 rounded-full text-xs font-bold items-center justify-center " + getRankColor(club.rank)}>
+                  {club.rank}
+                </span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">{club.club}</p>
+                  <p className="text-xs text-gray-400">{club.country}</p>
+                </div>
+                <p className="font-bold text-cyan-400 text-sm">{club.points.toFixed(3)}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ========================================
+// COMPONENT: FIFA Nation Rankings View
+// ========================================
+// Reusable for World, Africa, South America, Asia
+function FifaRankingsView(props) {
+  var title = props.title;
+  var subtitle = props.subtitle;
+  var nations = props.nations;
+  var lastUpdated = props.lastUpdated;
+  var searchText = props.searchText;
+  var showConfederation = props.showConfederation || false;
+  var showWorldRank = props.showWorldRank || false;
+
+  // Filter by search
+  var filtered = [];
+  var lower = searchText.toLowerCase();
+  for (var i = 0; i < nations.length; i++) {
+    var nation = nations[i];
+    if (searchText === "" || nation.nation.toLowerCase().indexOf(lower) >= 0) {
+      filtered.push(nation);
+    }
+  }
+
+  return (
+    <div>
+      <div className="bg-gray-800 rounded-lg p-3 mb-4">
+        <h2 className="text-lg font-bold text-cyan-400 mb-1">{title}</h2>
+        <p className="text-xs text-gray-400">{subtitle}</p>
+        <p className="text-xs text-gray-500 mt-1">Last updated: {lastUpdated}</p>
+      </div>
+
+      <p className="text-xs text-gray-500 mb-3">{filtered.length} nations</p>
+
+      <div className="bg-gray-800 rounded-lg overflow-hidden">
+        {/* Header */}
+        <div className="hidden sm:grid grid-cols-12 gap-2 p-3 bg-gray-700 text-xs text-gray-400 font-semibold">
+          <div className="col-span-1 text-center">#</div>
+          <div className={showConfederation ? "col-span-4" : "col-span-5"}>Nation</div>
+          {showConfederation && <div className="col-span-2">Confederation</div>}
+          {showWorldRank && <div className="col-span-2 text-center">World Rank</div>}
+          <div className={showWorldRank || showConfederation ? "col-span-3" : "col-span-6"} style={{ textAlign: "right" }}>Points</div>
+        </div>
+
+        {filtered.map(function (nation) {
+          return (
+            <div key={nation.rank + nation.nation} className="p-3 border-b border-gray-700 last:border-0">
+              {/* Desktop */}
+              <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
+                <div className="col-span-1 text-center">
+                  <span className={"inline-flex w-7 h-7 rounded-full text-xs font-bold items-center justify-center " + getRankColor(nation.rank)}>
+                    {nation.rank}
+                  </span>
+                </div>
+                <div className={showConfederation ? "col-span-4" : "col-span-5"}>
+                  <span className="font-semibold text-sm">{nation.nation}</span>
+                </div>
+                {showConfederation && (
+                  <div className="col-span-2 text-xs text-gray-400">{nation.confederation}</div>
+                )}
+                {showWorldRank && (
+                  <div className="col-span-2 text-center text-xs text-gray-400">#{nation.worldRank}</div>
+                )}
+                <div className={showWorldRank || showConfederation ? "col-span-3" : "col-span-6"} style={{ textAlign: "right" }}>
+                  <span className="font-bold text-cyan-400">{nation.points.toFixed(2)}</span>
+                </div>
+              </div>
+              {/* Mobile */}
+              <div className="sm:hidden flex items-center gap-3">
+                <span className={"inline-flex w-7 h-7 rounded-full text-xs font-bold items-center justify-center " + getRankColor(nation.rank)}>
+                  {nation.rank}
+                </span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">{nation.nation}</p>
+                  <p className="text-xs text-gray-400">
+                    {showConfederation ? nation.confederation : ""}
+                    {showWorldRank ? "World #" + nation.worldRank : ""}
+                  </p>
+                </div>
+                <p className="font-bold text-cyan-400 text-sm">{nation.points.toFixed(2)}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

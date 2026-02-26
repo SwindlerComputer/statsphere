@@ -1,0 +1,61 @@
+{
+  "lastUpdated": "25/02/2026",
+  "worldRankings": [
+    { "rank": 1,  "nation": "Argentina",    "confederation": "CONMEBOL", "points": 1867.25 },
+    { "rank": 2,  "nation": "France",       "confederation": "UEFA",     "points": 1859.78 },
+    { "rank": 3,  "nation": "Spain",        "confederation": "UEFA",     "points": 1840.93 },
+    { "rank": 4,  "nation": "England",      "confederation": "UEFA",     "points": 1797.39 },
+    { "rank": 5,  "nation": "Brazil",       "confederation": "CONMEBOL", "points": 1784.37 },
+    { "rank": 6,  "nation": "Belgium",      "confederation": "UEFA",     "points": 1761.71 },
+    { "rank": 7,  "nation": "Netherlands",  "confederation": "UEFA",     "points": 1747.55 },
+    { "rank": 8,  "nation": "Portugal",     "confederation": "UEFA",     "points": 1743.62 },
+    { "rank": 9,  "nation": "Colombia",     "confederation": "CONMEBOL", "points": 1727.31 },
+    { "rank": 10, "nation": "Italy",        "confederation": "UEFA",     "points": 1723.87 },
+    { "rank": 11, "nation": "Germany",      "confederation": "UEFA",     "points": 1708.64 },
+    { "rank": 12, "nation": "Uruguay",      "confederation": "CONMEBOL", "points": 1695.49 },
+    { "rank": 13, "nation": "Croatia",      "confederation": "UEFA",     "points": 1691.52 },
+    { "rank": 14, "nation": "Morocco",      "confederation": "CAF",      "points": 1681.22 },
+    { "rank": 15, "nation": "Japan",        "confederation": "AFC",      "points": 1669.45 },
+    { "rank": 16, "nation": "USA",          "confederation": "CONCACAF", "points": 1658.38 },
+    { "rank": 17, "nation": "Mexico",       "confederation": "CONCACAF", "points": 1649.17 },
+    { "rank": 18, "nation": "Senegal",      "confederation": "CAF",      "points": 1637.84 },
+    { "rank": 19, "nation": "Switzerland",  "confederation": "UEFA",     "points": 1631.55 },
+    { "rank": 20, "nation": "Denmark",      "confederation": "UEFA",     "points": 1625.43 }
+  ],
+  "africa": [
+    { "rank": 1,  "nation": "Morocco",      "worldRank": 14, "points": 1681.22 },
+    { "rank": 2,  "nation": "Senegal",      "worldRank": 18, "points": 1637.84 },
+    { "rank": 3,  "nation": "Nigeria",      "worldRank": 28, "points": 1574.91 },
+    { "rank": 4,  "nation": "Ivory Coast",  "worldRank": 33, "points": 1552.63 },
+    { "rank": 5,  "nation": "Egypt",        "worldRank": 36, "points": 1541.20 },
+    { "rank": 6,  "nation": "Tunisia",      "worldRank": 41, "points": 1518.75 },
+    { "rank": 7,  "nation": "Cameroon",     "worldRank": 44, "points": 1507.39 },
+    { "rank": 8,  "nation": "Algeria",      "worldRank": 47, "points": 1496.14 },
+    { "rank": 9,  "nation": "Mali",         "worldRank": 51, "points": 1481.87 },
+    { "rank": 10, "nation": "South Africa", "worldRank": 55, "points": 1468.42 }
+  ],
+  "southAmerica": [
+    { "rank": 1,  "nation": "Argentina",    "worldRank": 1,  "points": 1867.25 },
+    { "rank": 2,  "nation": "Brazil",       "worldRank": 5,  "points": 1784.37 },
+    { "rank": 3,  "nation": "Colombia",     "worldRank": 9,  "points": 1727.31 },
+    { "rank": 4,  "nation": "Uruguay",      "worldRank": 12, "points": 1695.49 },
+    { "rank": 5,  "nation": "Ecuador",      "worldRank": 29, "points": 1569.58 },
+    { "rank": 6,  "nation": "Chile",        "worldRank": 37, "points": 1538.17 },
+    { "rank": 7,  "nation": "Paraguay",     "worldRank": 52, "points": 1478.93 },
+    { "rank": 8,  "nation": "Peru",         "worldRank": 56, "points": 1464.26 },
+    { "rank": 9,  "nation": "Venezuela",    "worldRank": 61, "points": 1445.81 },
+    { "rank": 10, "nation": "Bolivia",      "worldRank": 82, "points": 1349.70 }
+  ],
+  "asia": [
+    { "rank": 1,  "nation": "Japan",        "worldRank": 15, "points": 1669.45 },
+    { "rank": 2,  "nation": "Iran",         "worldRank": 21, "points": 1617.82 },
+    { "rank": 3,  "nation": "South Korea",  "worldRank": 23, "points": 1606.57 },
+    { "rank": 4,  "nation": "Australia",    "worldRank": 24, "points": 1601.29 },
+    { "rank": 5,  "nation": "Saudi Arabia", "worldRank": 53, "points": 1475.64 },
+    { "rank": 6,  "nation": "Qatar",        "worldRank": 58, "points": 1458.13 },
+    { "rank": 7,  "nation": "Iraq",         "worldRank": 59, "points": 1453.90 },
+    { "rank": 8,  "nation": "Uzbekistan",   "worldRank": 62, "points": 1441.56 },
+    { "rank": 9,  "nation": "UAE",          "worldRank": 67, "points": 1421.38 },
+    { "rank": 10, "nation": "Oman",         "worldRank": 74, "points": 1392.77 }
+  ]
+}

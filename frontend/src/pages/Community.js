@@ -1,13 +1,23 @@
 // ========================================
 // Community.js - Real-Time Chat Page
 // ========================================
-// Uses WebSockets (Socket.IO) for live chat.
+// Uses WebSockets (Socket.IO) for live chat with multiple rooms.
+// Each room has its own message list. Users pick a room with the tabs.
 // Includes a report modal for reporting messages.
 
 import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
 var API_BASE = process.env.REACT_APP_API_URL;
+
+// List of chat rooms. id is sent to the server, label is shown to the user.
+var CHAT_ROOMS = [
+  { id: "general",      label: "General Chat" },
+  { id: "ballon-dor",   label: "Ballon d'Or" },
+  { id: "transfers",    label: "Transfers" },
+  { id: "goat",         label: "GOAT Debate" }
+];
 
 export default function Community({ user }) {
   var [messages, setMessages] = useState([]);
@@ -16,6 +26,20 @@ export default function Community({ user }) {
   var [error, setError] = useState("");
   var [success, setSuccess] = useState("");
   var [loading, setLoading] = useState(true);
+
+  // Read ?room= from the URL (e.g. /community?room=ballon-dor)
+  var [searchParams] = useSearchParams();
+  var roomFromUrl = searchParams.get("room");
+
+  // Which chat room the user is currently in (default "general")
+  var [currentRoom, setCurrentRoom] = useState(roomFromUrl || "general");
+
+  // When the URL changes (e.g. user clicked a room in the nav), switch to that room
+  useEffect(function () {
+    if (roomFromUrl && (roomFromUrl === "general" || roomFromUrl === "ballon-dor" || roomFromUrl === "transfers" || roomFromUrl === "goat")) {
+      setCurrentRoom(roomFromUrl);
+    }
+  }, [roomFromUrl]);
 
   // Report modal state
   var [showReportModal, setShowReportModal] = useState(false);
@@ -26,6 +50,14 @@ export default function Community({ user }) {
 
   // Ref for auto-scrolling to bottom
   var chatEndRef = useRef(null);
+
+  // Get the display name for the current room
+  function getCurrentRoomLabel() {
+    for (var i = 0; i < CHAT_ROOMS.length; i++) {
+      if (CHAT_ROOMS[i].id === currentRoom) return CHAT_ROOMS[i].label;
+    }
+    return "General Chat";
+  }
 
   // Auto-scroll when new messages arrive
   function scrollToBottom() {
@@ -44,13 +76,13 @@ export default function Community({ user }) {
 
     setSocket(newSocket);
 
+    // When the server sends this room's message history, replace our messages with it
     newSocket.on("chat_history", function (history) {
       setMessages(history);
       setLoading(false);
     });
 
-    // When a new message arrives, add it to the end of the messages array
-    // .concat() adds an item to an array and returns a new array
+    // When a new message arrives in the current room, add it to the list
     newSocket.on("new_message", function (message) {
       setMessages(function (prev) { return prev.concat(message); });
     });
@@ -65,16 +97,25 @@ export default function Community({ user }) {
     };
   }, []);
 
+  // When the user switches room (or when socket is ready), join that room
+  // The server will send that room's chat history back
+  useEffect(function () {
+    if (!socket) return;
+    setLoading(true);
+    setMessages([]);
+    socket.emit("join_room", currentRoom);
+  }, [currentRoom, socket]);
+
   // Scroll to bottom when messages change
   useEffect(function () {
     scrollToBottom();
   }, [messages]);
 
-  // Send a message
+  // Send a message to the current room
   function handleSendMessage(e) {
     e.preventDefault();
     if (newMessage.trim() === "") return;
-    socket.emit("send_message", newMessage);
+    socket.emit("send_message", { room: currentRoom, text: newMessage });
     setNewMessage("");
   }
 
@@ -173,6 +214,31 @@ export default function Community({ user }) {
         Community Chat
       </h1>
 
+      {/* ========== CHOOSE A CHAT ROOM - shown first so users always see it ========== */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-4 border-2 border-cyan-500/50">
+        <p className="text-white font-bold text-base sm:text-lg mb-2">Choose a chat room</p>
+        <p className="text-gray-400 text-xs mb-3">Pick one of the four rooms below. You can also use the Community ▼ menu in the nav bar.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {CHAT_ROOMS.map(function (room) {
+            var isActive = currentRoom === room.id;
+            return (
+              <button
+                key={room.id}
+                onClick={function () { setCurrentRoom(room.id); }}
+                className={
+                  "px-3 py-3 rounded-lg text-sm font-semibold transition " +
+                  (isActive
+                    ? "bg-cyan-500 text-white ring-2 ring-cyan-400"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600")
+                }
+              >
+                {room.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Login status */}
       <div className="bg-gray-800 rounded-lg p-3 mb-4 text-center">
         {user ? (
@@ -186,7 +252,10 @@ export default function Community({ user }) {
         )}
       </div>
 
-      {/* Chat Messages */}
+      {/* Current room label + Chat Messages */}
+      <div className="mb-2">
+        <p className="text-cyan-400 font-semibold text-sm">{getCurrentRoomLabel()}</p>
+      </div>
       <div className="bg-gray-800 rounded-lg p-3 sm:p-4 h-80 sm:h-96 overflow-y-auto mb-4">
         {loading ? (
           <p className="text-gray-400 text-center mt-20">Loading messages...</p>

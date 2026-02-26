@@ -4,7 +4,7 @@
 // Root component with React Router.
 // Includes responsive navigation for all devices.
 
-import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from "react-router-dom";
+import { Routes, Route, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import Dashboard from "./pages/Dashboard";
 import Players from "./pages/Players";
@@ -23,13 +23,17 @@ import Rankings from "./pages/Rankings";
 var API_BASE = process.env.REACT_APP_API_URL;
 
 function App() {
+  var location = useLocation();
   var [user, setUser] = useState(null);
   // Mobile menu toggle
   var [menuOpen, setMenuOpen] = useState(false);
   // Profile dropdown toggle (desktop)
   var [profileOpen, setProfileOpen] = useState(false);
+  // Community dropdown toggle (desktop) - so users can click to see the 4 rooms
+  var [communityOpen, setCommunityOpen] = useState(false);
   // Ref to detect clicks outside the dropdown
   var profileRef = useRef(null);
+  var communityRef = useRef(null);
 
   // Check if user is logged in when app loads
   useEffect(function () {
@@ -51,17 +55,16 @@ function App() {
   }, []);
 
   // Close profile dropdown when user clicks outside of it
-  // useEffect with event listener pattern
   useEffect(function () {
     function handleClickOutside(event) {
-      // profileRef.current is the dropdown container div
-      // .contains() checks if the click was inside it
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
       }
+      if (communityRef.current && !communityRef.current.contains(event.target)) {
+        setCommunityOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    // Cleanup: remove the event listener when component unmounts
     return function () {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -98,8 +101,7 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center px-2 py-3 sm:px-4 sm:py-4 md:p-6">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center px-2 py-3 sm:px-4 sm:py-4 md:p-6">
 
         {/* Navigation Bar */}
         <nav className="w-full max-w-6xl bg-gray-800 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 shadow-lg">
@@ -242,7 +244,40 @@ function App() {
               </div>
             </li>
 
-            <li><NavLink to="/community" className={function (nav) { return navClass(nav.isActive); }}>Community</NavLink></li>
+            {/* Community dropdown: click OR hover to see the 4 chat rooms */}
+            <li className="relative group" ref={communityRef}>
+              <button
+                type="button"
+                onClick={function () { setCommunityOpen(!communityOpen); }}
+                className={
+                  "flex items-center gap-1 " +
+                  (location.pathname === "/community" ? "text-cyan-400 font-semibold" : "text-white hover:text-cyan-300") +
+                  " transition py-1"
+                }
+              >
+                Community <span className="text-xs text-gray-500">▼</span>
+              </button>
+              <div className={
+                "absolute left-0 top-full mt-0 pt-1 z-50 " +
+                (communityOpen ? "block" : "hidden group-hover:block")
+              }>
+                <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-52 py-1">
+                  <p className="px-3 py-1 text-xs text-gray-500 border-b border-gray-700">Chat rooms</p>
+                  <NavLink to="/community?room=general" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    General Chat
+                  </NavLink>
+                  <NavLink to="/community?room=ballon-dor" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    Ballon d&apos;Or
+                  </NavLink>
+                  <NavLink to="/community?room=transfers" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    Transfers
+                  </NavLink>
+                  <NavLink to="/community?room=goat" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                    GOAT Debate
+                  </NavLink>
+                </div>
+              </div>
+            </li>
           </ul>
 
           {/* Mobile menu (shows when hamburger is clicked) */}
@@ -268,7 +303,15 @@ function App() {
                     <li><NavLink to="/rankings?view=fifaAsia" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>FIFA Asia</NavLink></li>
                   </ul>
                 </li>
-                <li><NavLink to="/community" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Community</NavLink></li>
+                <li>
+                  <p className="text-gray-500 text-xs mt-1 mb-1">Community (chat rooms)</p>
+                  <ul className="pl-3 space-y-1">
+                    <li><NavLink to="/community?room=general" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>General Chat</NavLink></li>
+                    <li><NavLink to="/community?room=ballon-dor" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Ballon d&apos;Or</NavLink></li>
+                    <li><NavLink to="/community?room=transfers" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>Transfers</NavLink></li>
+                    <li><NavLink to="/community?room=goat" className={function (nav) { return navClass(nav.isActive); }} onClick={closeMenu}>GOAT Debate</NavLink></li>
+                  </ul>
+                </li>
 
                 {/* Mobile user actions */}
                 <li className="pt-2 border-t border-gray-700">
@@ -321,7 +364,6 @@ function App() {
           © 2026 StatSphere
         </footer>
       </div>
-    </Router>
   );
 }
 

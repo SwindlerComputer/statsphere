@@ -399,9 +399,15 @@ const io = new Server(httpServer, {
   }
 });
 
-// Step 3: Store chat messages in memory (array)
-// Note: Messages are lost when server restarts (no database yet)
-let chatMessages = [];
+// Step 3: Store chat messages per room (object with room id as key)
+// Each room has its own array of messages. Messages are lost when server restarts.
+// Room ids: "general", "ballon-dor", "transfers", "goat"
+var CHAT_ROOM_IDS = ["general", "ballon-dor", "transfers", "goat"];
+var chatMessages = {};
+// Initialize empty array for each room
+for (var r = 0; r < CHAT_ROOM_IDS.length; r++) {
+  chatMessages[CHAT_ROOM_IDS[r]] = [];
+}
 
 // Step 4: Store last message time per user (for spam rate limiting)
 // Format: { userId: timestamp }
@@ -536,18 +542,52 @@ io.on("connection", async (socket) => {
   // Store user info on the socket object
   socket.user = user;
 
-  // Send existing messages to the new user
-  socket.emit("chat_history", chatMessages);
+  // ========================================
+  // HANDLE: User joins a chat room
+  // ========================================
+  // The client sends the room id (e.g. "general", "ballon-dor", "transfers", "goat")
+  // We add the socket to that Socket.IO room and send that room's message history
+  socket.on("join_room", function (roomId) {
+    // Only allow known room ids (security: prevent arbitrary room names)
+    if (CHAT_ROOM_IDS.indexOf(roomId) === -1) {
+      roomId = "general";
+    }
+    // Leave the previous room if they were in one
+    if (socket.currentRoom) {
+      socket.leave(socket.currentRoom);
+    }
+    socket.join(roomId);
+    socket.currentRoom = roomId;
+    // Get this room's messages (empty array if none)
+    var roomMessages = chatMessages[roomId] || [];
+    socket.emit("chat_history", roomMessages);
+  });
+
+  // Client should emit "join_room" with a room id to get that room's history
+  // (e.g. join_room("general") when the page loads)
 
   // ========================================
   // HANDLE: User sends a message
   // ========================================
-  socket.on("send_message", async (messageText) => {
+  // Client sends { room: "general", text: "hello" } (or just room + text in one object)
+  socket.on("send_message", async (payload) => {
     // Only logged-in users can send messages
     if (!socket.user) {
       socket.emit("error_message", "You must be logged in to send messages");
       return;
     }
+
+    // Get room and text from payload (payload can be { room, text } or legacy plain string)
+    var roomId = "general";
+    var messageText = "";
+    if (typeof payload === "string") {
+      messageText = payload;
+      roomId = socket.currentRoom || "general";
+    } else if (payload && payload.text) {
+      messageText = payload.text;
+      roomId = payload.room || socket.currentRoom || "general";
+    }
+    if (CHAT_ROOM_IDS.indexOf(roomId) === -1) roomId = "general";
 
     // ========================================
     // VALIDATION: Check if user is banned
@@ -625,19 +665,20 @@ io.on("connection", async (socket) => {
       timestamp: new Date().toISOString() // When it was sent
     };
 
-    // Add to messages array
-    chatMessages.push(newMessage);
+    // Add to this room's message array
+    if (!chatMessages[roomId]) chatMessages[roomId] = [];
+    chatMessages[roomId].push(newMessage);
 
-    // Keep only last 50 messages (prevent memory overflow)
-    if (chatMessages.length > 50) {
-      chatMessages.shift(); // Remove oldest message
+    // Keep only last 50 messages per room (prevent memory overflow)
+    if (chatMessages[roomId].length > 50) {
+      chatMessages[roomId].shift(); // Remove oldest message
     }
 
-    // BROADCAST: Send message to ALL connected users
-    // io.emit() sends to everyone, socket.emit() sends to just one user
-    io.emit("new_message", newMessage);
+    // BROADCAST: Send message only to users in this room
+    // io.to(roomId).emit() sends only to sockets that joined that room
+    io.to(roomId).emit("new_message", newMessage);
 
-    console.log("💬 Message from", socket.user.email + ":", messageText);
+    console.log("💬 [" + roomId + "] Message from", socket.user.email + ":", messageText);
   });
 
   // ========================================

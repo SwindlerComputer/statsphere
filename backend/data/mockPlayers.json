@@ -2642,8 +2642,8 @@
   {
     "id": 121,
     "name": "Khvicha Kvaratskhelia",
-    "team": "Napoli",
-    "league": "Serie A",
+    "team": "Paris Saint-Germain",
+    "league": "Ligue 1",
     "position": "Forward",
     "age": 24,
     "minutesPlayed": 2272,
@@ -4248,8 +4248,8 @@
   {
     "id": 194,
     "name": "Luis Diaz",
-    "team": "Bayern Munich",
-    "league": "Bundesliga",
+    "team": "Liverpool",
+    "league": "Premier League",
     "position": "Forward",
     "age": 28,
     "minutesPlayed": 1796,

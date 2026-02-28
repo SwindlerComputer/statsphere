@@ -156,6 +156,34 @@ KEY FUNCTIONS
   showSaved()                - shows the "Saved!" banner, then hides it
                                after 2 seconds using setTimeout
 
+KEY LOOPS (what the loop does in the code)
+-------------------------------------------
+  for (var i = 0; i < allPlayers.length; i++) for player search
+    Goes through every player from the backend. If the player's name
+    (in lowercase) contains the search text (in lowercase), we push
+    that player into searchResults. We stop when we have 8 results so
+    the list doesn't get too long. This is how the search box filters
+    players as the user types.
+
+  for (var t = 0; t < teams.length; t++) for filteredTeams
+    Goes through every team name and keeps only the ones that match
+    the search text (teamSearch). If teamSearch is empty we show all
+    teams. So the grid only shows teams that match what the user typed.
+
+  for (var l = 0; l < leagues.length; l++) for filteredLeagues
+    Same idea as filteredTeams but for the league list. So when the
+    user types in the league search box, only matching leagues show.
+
+  favoritePlayers.map(function (fav, index) { return <div>...</div> })
+    Loops through each saved favorite player and draws one card per
+    player (with number badge, name, team, and Remove button). So
+    3 favorites means 3 cards on the screen.
+
+  filteredTeams.map(function (team) { return <button>...</button> })
+    Loops through the filtered team list and creates one button per
+    team. Clicking a button calls selectTeam(team) which saves that
+    team as the favorite and closes the picker.
+
 COMPLEX CODE EXPLAINED
 ------------------------
 Here are the trickiest parts of this page in plain English:

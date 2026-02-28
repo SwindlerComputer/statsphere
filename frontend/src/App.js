@@ -104,7 +104,7 @@ function App() {
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center px-2 py-3 sm:px-4 sm:py-4 md:p-6">
 
         {/* Navigation Bar */}
-        <nav className="w-full max-w-6xl bg-gray-800 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 shadow-lg">
+        <nav className="w-full max-w-6xl bg-gray-800 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 shadow-lg overflow-visible">
           {/* Top row: Logo + Hamburger/User */}
           <div className="flex justify-between items-center">
             <NavLink to="/" className="text-xl sm:text-2xl font-bold text-cyan-400 flex items-center gap-2" onClick={closeMenu}>
@@ -203,7 +203,7 @@ function App() {
           </div>
 
           {/* Desktop nav links (hidden on mobile) */}
-          <ul className="hidden md:flex flex-wrap gap-x-5 gap-y-2 text-sm mt-3 items-center">
+            <ul className="hidden md:flex flex-wrap gap-x-5 gap-y-2 text-sm mt-3 items-center overflow-visible">
             <li><NavLink to="/" end className={function (nav) { return navClass(nav.isActive); }}>Dashboard</NavLink></li>
             <li><NavLink to="/players" className={function (nav) { return navClass(nav.isActive); }}>Players</NavLink></li>
             <li><NavLink to="/compare" className={function (nav) { return navClass(nav.isActive); }}>Compare</NavLink></li>
@@ -244,8 +244,8 @@ function App() {
               </div>
             </li>
 
-            {/* Community dropdown: click OR hover to see the 4 chat rooms */}
-            <li className="relative group" ref={communityRef}>
+            {/* Community dropdown: click "Community ▼" to see the 4 chat rooms */}
+            <li className="relative overflow-visible" ref={communityRef}>
               <button
                 type="button"
                 onClick={function () { setCommunityOpen(!communityOpen); }}
@@ -254,29 +254,30 @@ function App() {
                   (location.pathname === "/community" ? "text-cyan-400 font-semibold" : "text-white hover:text-cyan-300") +
                   " transition py-1"
                 }
+                aria-expanded={communityOpen}
+                aria-haspopup="true"
               >
-                Community <span className="text-xs text-gray-500">▼</span>
+                Community <span className="text-xs text-gray-500">{communityOpen ? "▲" : "▼"}</span>
               </button>
-              <div className={
-                "absolute left-0 top-full mt-0 pt-1 z-50 " +
-                (communityOpen ? "block" : "hidden group-hover:block")
-              }>
-                <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-52 py-1">
-                  <p className="px-3 py-1 text-xs text-gray-500 border-b border-gray-700">Chat rooms</p>
-                  <NavLink to="/community?room=general" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
-                    General Chat
-                  </NavLink>
-                  <NavLink to="/community?room=ballon-dor" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
-                    Ballon d&apos;Or
-                  </NavLink>
-                  <NavLink to="/community?room=transfers" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
-                    Transfers
-                  </NavLink>
-                  <NavLink to="/community?room=goat" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
-                    GOAT Debate
-                  </NavLink>
+              {communityOpen && (
+                <div className="absolute left-0 top-full mt-1 pt-1 z-[100]" style={{ display: "block" }}>
+                  <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-52 py-1">
+                    <p className="px-3 py-1 text-xs text-gray-500 border-b border-gray-700">Chat rooms</p>
+                    <NavLink to="/community?room=general" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                      General Chat
+                    </NavLink>
+                    <NavLink to="/community?room=ballon-dor" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                      Ballon d&apos;Or
+                    </NavLink>
+                    <NavLink to="/community?room=transfers" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                      Transfers
+                    </NavLink>
+                    <NavLink to="/community?room=goat" onClick={function () { setCommunityOpen(false); }} className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-cyan-400 transition">
+                      GOAT Debate
+                    </NavLink>
+                  </div>
                 </div>
-              </div>
+              )}
             </li>
           </ul>
 

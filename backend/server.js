@@ -22,6 +22,7 @@ import authRoutes from "./auth/authRoutes.js";
 import footballApiRoutes from "./api/footballApiRoutes.js";
 import modRoutes from "./api/modRoutes.js";
 import { fileURLToPath } from "url";
+import { spawn } from "child_process";      // For calling Python ML scripts
 import { createServer } from "http";        // Needed for Socket.IO
 import { Server } from "socket.io";         // Socket.IO library
 import jwt from "jsonwebtoken";             // To verify user tokens
@@ -378,6 +379,80 @@ app.post("/api/predict-match", function (req, res) {
     },
     teamA: { name: teamA.name, league: teamA.league, attack: teamA.attack, defense: teamA.defense, form: teamA.form },
     teamB: { name: teamB.name, league: teamB.league, attack: teamB.attack, defense: teamB.defense, form: teamB.form }
+  });
+});
+
+// ========================================
+// ML BALLON D'OR RANKING ENDPOINT
+// ========================================
+// POST /api/ballondor/ml-rank
+// Accepts { players: [...] } where each player has ML feature fields.
+// Spawns Python predict script, sends data via stdin, returns predictions.
+app.post("/api/ballondor/ml-rank", (req, res) => {
+  const players = req.body.players;
+
+  // Validate input
+  if (!players || !Array.isArray(players) || players.length === 0) {
+    return res.status(400).json({ error: "Request body must contain a non-empty 'players' array" });
+  }
+
+  // Path to the prediction script
+  const scriptPath = path.join(__dirname, "ml", "predict_ballondor.py");
+
+  // Try python3 first, fall back to python
+  const pythonCmd = process.platform === "win32" ? "python" : "python3";
+
+  const child = spawn(pythonCmd, [scriptPath], {
+    cwd: __dirname,
+    timeout: 30000,
+  });
+
+  let stdout = "";
+  let stderr = "";
+
+  child.stdout.on("data", (data) => {
+    stdout += data.toString();
+  });
+
+  child.stderr.on("data", (data) => {
+    stderr += data.toString();
+  });
+
+  // Send player data to Python via stdin
+  const inputJSON = JSON.stringify({ players: players });
+  child.stdin.write(inputJSON);
+  child.stdin.end();
+
+  child.on("close", (code) => {
+    if (code !== 0) {
+      console.error("Python ML script error:", stderr);
+      return res.status(500).json({
+        error: "ML prediction failed",
+        details: stderr || "Python script exited with code " + code,
+      });
+    }
+
+    try {
+      const result = JSON.parse(stdout);
+      if (result.error) {
+        return res.status(500).json({ error: result.error });
+      }
+      res.json(result);
+    } catch (parseErr) {
+      console.error("Failed to parse Python output:", stdout);
+      res.status(500).json({
+        error: "Failed to parse ML output",
+        details: stdout.substring(0, 500),
+      });
+    }
+  });
+
+  child.on("error", (err) => {
+    console.error("Failed to start Python:", err.message);
+    res.status(500).json({
+      error: "Could not start Python. Make sure python3 is installed.",
+      details: err.message,
+    });
   });
 });
 

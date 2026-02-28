@@ -1,7 +1,9 @@
 ============================================================
 STATSPHERE - HOW THE WHOLE APP WORKS
 ============================================================
-A simple overview for your final year project defence
+A simple overview for your final year project defence.
+For a list of ALL documentation files and what each one describes,
+see 00_SUMMARY_OF_ALL_DOCS.txt (key functions, loops, and code style).
 ============================================================
 
 WHAT IS STATSPHERE?
@@ -77,6 +79,16 @@ break), we use local JSON files with realistic data:
   backend/data/predictionTeams.json - Team ratings for predictions
 
 All players are real 2025-26 players on their actual teams.
+
+CODE STYLE (easy to explain in a defence)
+------------------------------------------
+The project uses simple, student-level code on purpose:
+  - "var" instead of const/let so variable names are easy to spot
+  - "function name() { }" instead of arrow functions (=>)
+  - "for" loops where it makes the step-by-step logic clear
+  - Comments at the top of files and above important blocks
+  - Key functions and loops are described in the .txt docs (see
+    00_SUMMARY_OF_ALL_DOCS.txt for a quick reference).
 
 KEY TECHNOLOGIES
 ------------------

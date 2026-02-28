@@ -1,36 +1,57 @@
 ============================================================
 STATSPHERE - COMMUNITY CHAT PAGE
 ============================================================
-File: frontend/src/pages/Community.js
+Files: frontend/src/pages/Community.js, backend/server.js (Socket.IO)
 URL: /community
 ============================================================
 
 WHAT THIS PAGE DOES
 --------------------
-This is a real-time chat page where logged-in users can
-talk to each other. Messages appear instantly (no need to
-refresh the page) because we use WebSockets.
+This is a real-time chat page with multiple chat rooms.
+Logged-in users can pick a room and talk to others in that room.
+Messages appear instantly (no need to refresh) because we use WebSockets.
+
+CHAT ROOMS
+-----------
+There are 4 rooms. Each room has its own message list.
+  - General Chat   (general)     - general football talk
+  - Ballon d'Or    (ballon-dor)  - Ballon d'Or discussions
+  - Transfers      (transfers)   - transfer news and rumours
+  - GOAT Debate    (goat)        - who is the greatest of all time
+
+Users click a room tab to switch. Only messages for that room are shown.
+The server stores messages per room and only sends new messages to users
+in that room.
 
 HOW IT WORKS (STEP BY STEP)
 -----------------------------
-1. User must be logged in to use the chat.
-   If not logged in, they see a message saying
-   "Please log in to join the community chat."
+1. User opens the Community page. The frontend connects to the backend
+   using Socket.IO and joins the "general" room by emitting "join_room"
+   with room id "general".
 
-2. When the page loads, it connects to the backend
-   using Socket.IO (a WebSocket library).
+2. The server adds the user's socket to that room and sends back that
+   room's message history (chat_history). The frontend shows those
+   messages.
 
-3. When the user types a message and clicks "Send":
-   a. The message is sent to the backend via WebSocket
-   b. The backend receives it
-   c. The backend checks for bad words (moderation)
-   d. The backend sends the message to ALL connected users
-   e. Everyone's chat updates instantly
+3. When the user clicks another room tab (e.g. "Ballon d'Or"):
+   - The frontend sets currentRoom to "ballon-dor"
+   - An effect runs and emits "join_room" with "ballon-dor"
+   - The server moves the user into that room and sends that room's
+     message history. The chat area updates to show only that room's
+     messages.
 
-4. Messages appear in a scrollable list with:
+4. When the user types a message and clicks "Send":
+   - The frontend emits "send_message" with { room: currentRoom, text: ... }
+   - The backend checks login, ban, length, and censors bad words
+   - The backend adds the message to that room's array and broadcasts
+     it only to users in that room (io.to(roomId).emit("new_message", ...))
+   - Everyone in that room sees the message instantly.
+
+5. Messages appear in a scrollable list with:
    - The sender's name
    - The message text
    - The time it was sent
+   - A Report button (logged-in users only)
 
 WEBSOCKETS vs NORMAL HTTP
 ---------------------------
@@ -50,25 +71,29 @@ SOCKET.IO EXPLAINED
 ---------------------
 Socket.IO is a library that makes WebSockets easy to use.
 
-Backend (server.js):
-  const io = require("socket.io")(server)
-  io.on("connection", (socket) => {
-    socket.on("chat-message", (msg) => {
-      io.emit("chat-message", msg)
-    })
-  })
+Backend (server.js) - multi-room chat:
+  - chatMessages is an object: { "general": [], "ballon-dor": [], ... }
+  - When the client emits "join_room", the server runs socket.join(roomId)
+    and sends that room's history with socket.emit("chat_history", ...)
+  - When the client emits "send_message" with { room, text }, the server
+    pushes the message to chatMessages[room] and broadcasts only to that
+    room with io.to(roomId).emit("new_message", message)
 
 Frontend (Community.js):
-  import io from "socket.io-client"
-  const socket = io(API_BASE)
-  socket.on("chat-message", (msg) => {
-    // add message to the chat list
-  })
+  - Connects with io(API_BASE, { withCredentials: true, auth: { token } })
+  - Emits "join_room", roomId when the user switches room (or on load)
+  - Listens for "chat_history" to replace the message list
+  - Listens for "new_message" to append one message
+  - Emits "send_message" with { room: currentRoom, text: newMessage }
 
 The key events:
-  "connection": A user has joined the chat
-  "chat-message": A new message was sent
-  "disconnect": A user left the chat
+  "join_room" (client -> server): User wants to join a room; server
+    sends that room's chat_history back.
+  "chat_history" (server -> client): List of messages for the room.
+  "send_message" (client -> server): Payload { room, text }.
+  "new_message" (server -> client): One new message (only to users in that room).
+  "error_message" (server -> client): Error text (e.g. "You must be logged in").
+  "disconnect": User left (connection closed).
 
 MODERATION SYSTEM
 -------------------
@@ -81,10 +106,65 @@ by an admin.
 
 See moderation_system.txt for more details.
 
+KEY VARIABLES (Community.js)
+-----------------------------
+  CHAT_ROOMS    - Array of { id, label } for the 4 rooms
+  currentRoom   - Which room the user is in ("general", "ballon-dor", etc.)
+  messages      - Array of messages for the current room only
+  socket        - The Socket.IO connection to the server
+
+KEY FUNCTIONS (what they do in simple terms)
+---------------------------------------------
+  getCurrentRoomLabel()
+    Loops through CHAT_ROOMS and returns the label (e.g. "General Chat")
+    for the current room. Used to show the room name above the chat.
+
+  handleSendMessage(e)
+    Runs when the user clicks Send. Stops the form from refreshing the page
+    (e.preventDefault()). If the message is not empty, it sends the message
+    to the server with socket.emit("send_message", { room: currentRoom, text: newMessage }),
+    then clears the input.
+
+  scrollToBottom()
+    Uses chatEndRef (a ref to an element at the bottom of the chat). Calls
+    scrollIntoView() so the browser scrolls to that element. That way the
+    latest message is always visible.
+
+  openReportModal(msg) / closeReportModal()
+    openReportModal saves the message being reported and shows the modal.
+    closeReportModal hides the modal and clears the reason and loading state.
+
+  submitReport()
+    Builds the reason text, sends a POST request to /api/mod/report with
+    the message id, text, and reason. On success it shows "Report submitted!"
+    and closes the modal.
+
+KEY LOOPS (what the loop does in the code)
+-------------------------------------------
+  CHAT_ROOMS.map(function (room) { return <button>...</button> })
+    This loop goes through each chat room (General, Ballon d'Or, Transfers,
+    GOAT) and creates one button for each. When you click a button, it sets
+    currentRoom to that room's id, and the useEffect then emits join_room
+    so the server sends that room's messages.
+
+  messages.map(function (msg) { return <div>...</div> })
+    This loop goes through each message in the current room and creates one
+    block for each (showing the username, time, message text, and Report
+    button). So 10 messages means 10 blocks on the screen.
+
+  useEffect with [currentRoom, socket] (the "join room" effect)
+    This is not a for loop but it runs again every time currentRoom or socket
+    changes. When it runs, it clears the messages, sets loading to true, and
+    tells the server "join this room" (socket.emit("join_room", currentRoom)).
+    The server then sends back that room's history, and the chat_history
+    listener sets the messages and turns loading off.
+
 KEY REACT CONCEPTS USED
 -------------------------
-- useState: Stores messages, input text
-- useEffect: Connects to WebSocket when page loads
+- useState: Stores messages, input text, currentRoom, socket
+- useEffect (1): Connects to WebSocket when page loads, sets up event listeners
+- useEffect (2): When currentRoom or socket changes, emits "join_room" so the
+  server sends that room's history (and we clear messages and set loading)
 - useRef: Scrolls chat to the bottom when new messages arrive
 
 COMPLEX CODE EXPLAINED
@@ -119,23 +199,26 @@ DEFENCE TALKING POINTS
 Here is what to say when presenting the Community Chat feature:
 
 - "I implemented real-time communication using Socket.IO, which maintains
-  a persistent WebSocket connection between the client and server. This
-  means messages are delivered instantly without the user needing to
-  refresh the page, similar to how professional chat apps like Slack work."
+  a persistent WebSocket connection. Messages are delivered instantly
+  without refreshing, similar to apps like Slack or Discord."
 
-- "When a user sends a message, the frontend emits it to the server, and
-  the server broadcasts it to every connected client. This publish-subscribe
-  pattern is a standard approach for real-time features in modern web apps."
+- "I added multiple chat rooms so users can choose a topic: General Chat,
+  Ballon d'Or, Transfers, and GOAT Debate. Each room has its own message
+  list. On the server I use Socket.IO rooms: socket.join(roomId) and
+  io.to(roomId).emit() so only users in that room receive new messages.
+  This keeps discussions organised and on-topic."
+
+- "When the user switches room, the frontend emits join_room with the new
+  room id. The server sends that room's history (chat_history), and we
+  replace the message list. So each room's messages are stored separately
+  on the server in an object keyed by room id."
 
 - "I added a report system so users can flag inappropriate messages. This
   shows I thought about user safety and moderation, not just features."
 
-- "The chat automatically scrolls to the latest message using a React
-  useRef hook, which gives a smooth user experience without manual
-  scrolling."
-
 - "I chose Socket.IO over raw WebSockets because it provides automatic
   reconnection, fallback to HTTP polling if WebSockets are blocked, and
-  a simple event-based API that made development faster."
+  a simple event-based API. The room feature uses Socket.IO's built-in
+  room support, which is designed exactly for this use case."
 
 ============================================================

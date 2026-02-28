@@ -1,0 +1,94 @@
+"""
+predict_ballondor.py - Predict Ballon d'Or scores using the trained model
+==========================================================================
+Reads player data from stdin (JSON), runs the model, outputs predictions to stdout.
+
+Input (stdin):  {"players": [{"id":1, "goals":20, "assists":10, ...}, ...]}
+Output (stdout): {"results": [{"id":1, "ml_score":142.5}, ...], "meta": {...}}
+
+Called by Node.js backend via child_process.spawn.
+"""
+
+import sys
+import json
+import os
+import joblib
+import pandas as pd
+
+# ========================================
+# PATHS
+# ========================================
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(SCRIPT_DIR, "model", "ballondor_model.pkl")
+META_PATH = os.path.join(SCRIPT_DIR, "model", "meta.json")
+
+# ========================================
+# STEP 1: Load model and metadata
+# ========================================
+if not os.path.exists(MODEL_PATH):
+    print(json.dumps({"error": "Model file not found. Run train_ballondor.py first."}))
+    sys.exit(1)
+
+if not os.path.exists(META_PATH):
+    print(json.dumps({"error": "Meta file not found. Run train_ballondor.py first."}))
+    sys.exit(1)
+
+model = joblib.load(MODEL_PATH)
+
+with open(META_PATH, "r") as f:
+    meta = json.load(f)
+
+FEATURES = meta["features"]
+
+# ========================================
+# STEP 2: Read input from stdin
+# ========================================
+try:
+    raw_input = sys.stdin.read()
+    data = json.loads(raw_input)
+except json.JSONDecodeError as e:
+    print(json.dumps({"error": f"Invalid JSON input: {str(e)}"}))
+    sys.exit(1)
+
+players = data.get("players", [])
+if not players:
+    print(json.dumps({"error": "No players provided in input"}))
+    sys.exit(1)
+
+# ========================================
+# STEP 3: Build feature matrix and predict
+# ========================================
+rows = []
+ids = []
+for player in players:
+    row = {}
+    for feat in FEATURES:
+        row[feat] = float(player.get(feat, 0))
+    rows.append(row)
+    ids.append(player.get("id", 0))
+
+# Build a DataFrame so sklearn gets proper feature names
+df = pd.DataFrame(rows, columns=FEATURES)
+predictions = model.predict(df)
+
+results = []
+for i in range(len(predictions)):
+    results.append({
+        "id": ids[i],
+        "ml_score": round(float(predictions[i]), 2),
+    })
+
+# ========================================
+# STEP 4: Output JSON to stdout
+# ========================================
+output = {
+    "results": results,
+    "meta": {
+        "model_type": meta.get("model_type", "RandomForestRegressor"),
+        "features_used": FEATURES,
+        "metrics": meta.get("metrics", {}),
+        "trained_at": meta.get("trained_at", "unknown"),
+    },
+}
+
+print(json.dumps(output))

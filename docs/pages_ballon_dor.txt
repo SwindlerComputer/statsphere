@@ -73,6 +73,44 @@ world. Showing all 200 players would be confusing and would
 make the page slow. By showing only the top 10, it looks
 clean and makes sense (like the real award shortlist).
 
+KEY FUNCTIONS (what they do in simple terms)
+---------------------------------------------
+  calculateScore(player)
+    Takes one player object. Multiplies goals by 4, assists by 3,
+    rating by 10, keyPasses by 0.5, and goals-per-90 by 50, adds
+    them up, then multiplies by the league weight. Returns one
+    number. The higher the number, the better the player for the
+    Ballon d'Or. This function is defined OUTSIDE the component
+    so it is not recreated on every render (avoids bugs and is
+    easier to explain in a defence).
+
+  getLeagueWeight(leagueName)
+    Returns a number between 0.7 and 1.0 for that league. Premier
+    League is 1.0 (hardest), Saudi Pro League is 0.7. Used inside
+    calculateScore so that stats in a harder league count more.
+
+KEY LOOPS (what the loop does in the code)
+-------------------------------------------
+  for (var i = 0; i < data.length; i++) when processing players
+    We loop through all 200 players, call calculateScore on each,
+    and store the score on the player object. Then we sort that
+    array by score (highest first) and take the first 10 with
+    .slice(0, 10). So we end up with an array of exactly 10 players.
+
+  .sort(function (a, b) { return b.score - a.score; })
+    This sorts the array so that the player with the highest score
+    is first and the lowest is last. We use b - a so it is
+    descending (highest first).
+
+  .slice(0, 10)
+    Takes only the first 10 items from the sorted array. So even
+    though we have 200 players, we only keep the top 10 for
+    display. The rest are not shown.
+
+  top10.map(function (player) { return <card>...</card> })
+    Loops through the 10 players and creates one card per player.
+    So we see exactly 10 cards on the page.
+
 KEY REACT CONCEPTS USED
 -------------------------
 - useState: Stores top10 array and loading state

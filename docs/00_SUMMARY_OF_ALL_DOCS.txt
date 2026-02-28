@@ -1,0 +1,217 @@
+============================================================
+STATSPHERE - SUMMARY OF ALL DOCUMENTATION
+============================================================
+Use this file to find which .txt doc explains which part of the code.
+Written in simple language for below-average / average student level.
+============================================================
+
+CODE STYLE IN THIS PROJECT
+----------------------------
+The code is written so it is easy to explain in a defence:
+
+  - We use "var" instead of "const/let" so variable names are easy to spot.
+  - We use "function name() { }" instead of arrow functions (=>) so it's
+    clear what is a function.
+  - We use "for" loops instead of .forEach() or .map() in some places
+    so you can say "this loop goes from 0 to the length and does X each time".
+  - We avoid spread operator (...) and destructuring where a simple
+    variable assignment is clearer.
+  - Every important file has comments at the top saying what the file does
+    and what the main parts are.
+
+So when an examiner says "explain this loop" or "what does this function do?",
+you can use the comments and the simple style to explain it step by step.
+
+
+LIST OF ALL DOCUMENTATION FILES
+================================
+
+1.  how_the_app_works.txt
+    Files it describes: The whole app (all pages, mock data, tech stack)
+    Summary: Overview of StatSphere: what it is, the 3 main parts (frontend,
+    backend, database), all pages and URLs, where mock data lives. Read this
+    first for a big-picture view.
+
+2.  system_architecture.txt
+    Files it describes: App.js, server.js, db.js, folder structure
+    Summary: How the frontend, backend, and database connect. How fetch()
+    and API_BASE work. How the backend uses the database (pool.query).
+    Diagram of data flow.
+
+3.  authentication_flow.txt
+    Files it describes: auth/authRoutes.js, auth/authMiddleware.js
+    Summary: How login and register work. How JWT tokens are created and
+    checked. How cookies and localStorage store the token. Why we hash
+    passwords with bcrypt.
+
+4.  websocket_chat.txt
+    Files it describes: server.js (Socket.IO part), Community.js
+    Summary: How the real-time chat works. What WebSockets are. How
+    Socket.IO uses events (emit/on). Multi-room chat: join_room,
+    chat_history, send_message, new_message.
+
+5.  moderation_system.txt
+    Files it describes: server.js (banned words, censorMessage), api/modRoutes.js
+    Summary: How bad words are censored. How the report button works.
+    How admins can ban users and see reports. Middleware (requireAuth).
+
+6.  report_system.txt
+    Files it describes: Community.js (report modal), api/modRoutes.js (report route)
+    Summary: Step-by-step how a user reports a message: modal, reason,
+    POST /api/mod/report, database table reported_messages. Key variables
+    and functions.
+
+7.  prediction_model.txt
+    Files it describes: server.js (predict-match), Predictions.js
+    Summary: How we predict match outcomes. The formula: attack strength,
+    defense weakness, league weight, form bonus, home advantage.
+    Expected goals and win/draw/loss percentages.
+
+8.  mock_data_explained.txt
+    Files it describes: backend/data/*.json, how server reads them
+    Summary: Why we use mock data instead of real APIs. What each JSON
+    file contains (players, teams, standings, fixtures, etc.). How the
+    backend reads the files with fs and path.
+
+9.  responsive_design.txt
+    Files it describes: App.js (nav, hamburger), Tailwind classes
+    Summary: How the app works on mobile, tablet, and desktop. Tailwind
+    breakpoints (sm:, md:, lg:). Hamburger menu. Which pages use
+    flex-wrap, grid, overflow.
+
+10. login_register_explained.txt
+    Files it describes: Login.js, Register.js, authRoutes.js
+    Summary: Client-side and server-side validation. Password strength.
+    Email vs username login. Key functions and variables.
+
+11. pages_dashboard.txt
+    File it describes: frontend/src/pages/Dashboard.js
+    Summary: What the home page shows. How it fetches live matches.
+    League filter. Key concepts: useState, useEffect, .filter(), .map().
+
+12. pages_players.txt
+    File it describes: frontend/src/pages/Players.js
+    Summary: Table of 200 players. Pagination (20 per page). League
+    filter. Key: currentPage, startIndex, endIndex, .slice().
+
+13. pages_player_insights.txt
+    File it describes: frontend/src/pages/PlayerInsights.js
+    Summary: Player dropdown, Recharts (BarChart, RadarChart), rule-based
+    analysis (strengths/weaknesses). Key: analysePlayer, chart data format.
+
+14. pages_player_comparison.txt
+    File it describes: frontend/src/pages/PlayerComparison.js
+    Summary: Pick two players, compare stats side by side. getPlaystyle
+    function. StatRow component.
+
+15. pages_ballon_dor.txt
+    File it describes: frontend/src/pages/BallonDor.js
+    Summary: Top 10 Ballon d'Or candidates. calculateScore formula.
+    .sort() and .slice(0, 10). Why we moved the formula outside the
+    component.
+
+16. pages_predictions.txt
+    File it describes: frontend/src/pages/Predictions.js, server.js (predict-match)
+    Summary: Pick two teams, get predicted score and win/draw/loss %.
+    League weights. Expected goals. Full breakdown table.
+
+17. pages_league_standings.txt
+    File it describes: frontend/src/pages/LeagueStandings.js
+    Summary: Dropdown to pick competition. Table of standings (rank,
+    team, points, etc.). How we fetch and filter by competition.
+
+18. pages_league_fixtures.txt
+    File it describes: frontend/src/pages/LeagueFixtures.js
+    Summary: Fixtures list. Status filter (all/finished/scheduled).
+    Date formatting. Competition dropdown.
+
+19. pages_rankings.txt
+    File it describes: frontend/src/pages/Rankings.js, server.js, ranking JSONs
+    Summary: Six ranking views: Team Power, UEFA Clubs, FIFA World,
+    Africa, South America, Asia. Tabs and nav dropdown. useSearchParams
+    for ?view= and ?room=.
+
+20. pages_community_chat.txt
+    File it describes: frontend/src/pages/Community.js, server.js (Socket.IO)
+    Summary: Four chat rooms: General, Ballon d'Or, Transfers, GOAT.
+    join_room, send_message with { room, text }. Nav dropdown for rooms.
+    Report modal.
+
+21. pages_profile.txt
+    File it describes: frontend/src/pages/Profile.js
+    Summary: User info, favorite team/league/players. "+ Add" buttons
+    and picker panels. openPicker state. localStorage for saving.
+
+22. pages_login_register.txt
+    File it describes: frontend/src/pages/Login.js, Register.js
+    Summary: Login form (email or username), password show/hide.
+    Register form: validation, password strength bar, confirm password.
+
+
+KEY FUNCTIONS AND LOOPS IN THE PROJECT (quick reference)
+=========================================================
+
+BACKEND (server.js and routes)
+  - getLeagueWeight(league)     → Returns a number (e.g. 1.0 for Premier League)
+    so harder leagues count more in predictions.
+  - censorMessage(text)          → Replaces banned words in text with ****.
+    Uses a for loop over the bannedWords array and a regex replace.
+  - requireAuth(req, res, next)  → Middleware: checks JWT token; if not logged in,
+    sends 401. If OK, calls next() so the route handler runs.
+  - getUserFromToken(req)        → Reads token from cookie or Authorization header,
+    verifies it with JWT, returns the user object or null.
+  - Loop in server (send_message): We iterate over bannedWords with a for loop
+    and replace each banned word in the message with asterisks.
+
+FRONTEND – COMMON PATTERNS
+  - useEffect(function () { ... }, [])     → Runs once when the page loads.
+    Used to fetch data (e.g. fetch(API_BASE + "/api/...")).
+  - useEffect(function () { ... }, [X, Y]) → Runs when X or Y changes.
+    Used to re-fetch or re-run when user picks a different option.
+  - .map(function (item) { return <div>...</div> })  → Loop over an array
+    and return one React element per item (e.g. one row per player).
+  - .filter(function (item) { return condition })    → Loop over an array
+    and keep only items that match the condition (e.g. only players from one league).
+  - for (var i = 0; i < arr.length; i++) { ... }     → Classic loop: start at 0,
+    stop at length, do something for each index. Used in many places for
+    search or building a new array without .map.
+
+FRONTEND – PAGE-SPECIFIC
+  - calculateOverall(team)       → Rankings page: computes team power score from
+    attack, defense, form, league bonus.
+  - calculateScore(player)      → Ballon d'Or: computes candidate score from
+    goals, assists, rating, etc.
+  - getCurrentRoomLabel()       → Community: returns the display name of the
+    current chat room (e.g. "General Chat").
+  - getLeagueBonus(league)      → Returns bonus points for that league (used in
+    Rankings and predictions).
+  - Pagination loop (Players.js): We use startIndex = (currentPage - 1) * 20,
+    endIndex = startIndex + 20, then .slice(startIndex, endIndex) to show
+    only 20 players for the current page.
+  - Room switch (Community.js): When currentRoom or socket changes, a useEffect
+    runs: we emit "join_room" with the current room id so the server sends
+    that room's message history.
+
+
+WHERE TO FIND LOOP EXPLANATIONS
+--------------------------------
+  - "What does this for loop do?"  → Look in the .txt file for that page or
+    feature; many have a "COMPLEX CODE EXPLAINED" or "KEY FUNCTIONS" section
+    that describes the main loops.
+  - "What does .filter() do here?" → Usually explained as "goes through each
+    item and keeps only the ones where the condition is true".
+  - "What does .map() do here?"    → Usually explained as "goes through each
+    item and returns a new element (e.g. a row or card) for each one".
+
+
+DEFENCE TIPS
+--------------
+  - Every .txt file ends with "DEFENCE TALKING POINTS" – short sentences you
+    can say when the examiner asks about that feature.
+  - "COMPLEX CODE EXPLAINED" in each doc breaks down the 2–3 hardest parts
+    in simple language, often with a code snippet and line-by-line explanation.
+  - If asked "Why did you use a for loop instead of .map()?" you can say:
+    "I used a for loop so the code is easier to read and explain step by step
+    in a defence; both do the same thing."
+
+============================================================

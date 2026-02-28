@@ -14,6 +14,16 @@ Key Files:
   - backend/server.js              → WebSocket server setup
   - frontend/src/pages/Community.js → Chat page UI
 
+MULTIPLE CHAT ROOMS
+-------------------
+The chat has 4 rooms: General Chat, Ballon d'Or, Transfers, GOAT Debate.
+Each room has its own message list. The server stores messages per room in
+an object: chatMessages["general"], chatMessages["ballon-dor"], etc.
+When a user joins a room (join_room event), the server sends that room's
+history. When a user sends a message, the server broadcasts it only to
+users in that room using io.to(roomId).emit("new_message", message).
+See pages_community_chat.txt for full details.
+
 
 WHAT ARE WEBSOCKETS?
 ---------------------
@@ -61,7 +71,7 @@ STEP 1: SERVER SETUP (server.js)
   - Create HTTP server from Express app
   - Attach Socket.IO to the HTTP server
   - Configure CORS to allow frontend connections
-  - Store messages in an array (chatMessages = [])
+  - Store messages per room in an object (chatMessages["general"] = [], etc.)
 
 STEP 2: USER CONNECTS (Community.js)
   - When user opens the Community page, a WebSocket connection is created:
@@ -69,13 +79,13 @@ STEP 2: USER CONNECTS (Community.js)
   - The server detects the connection:
       io.on("connection", (socket) => { ... })
   - Server tries to identify the user using their JWT token (from cookie)
-  - Server sends existing chat history to the new user:
-      socket.emit("chat_history", chatMessages)
+  - Client emits "join_room", roomId (e.g. "general"); server runs socket.join(roomId)
+    and sends that room's history: socket.emit("chat_history", chatMessages[roomId])
 
 STEP 3: USER SENDS A MESSAGE
   - User types a message and clicks Send
-  - Frontend sends the message via WebSocket:
-      socket.emit("send_message", messageText)
+  - Frontend sends the message and current room via WebSocket:
+      socket.emit("send_message", { room: currentRoom, text: messageText })
   - Server receives it and validates:
       a. Is the user logged in?
       b. Is the user banned?
@@ -83,9 +93,9 @@ STEP 3: USER SENDS A MESSAGE
       d. Is the message too long? (max 200 characters)
       e. Is the user sending too fast? (rate limit: 2 seconds)
   - Server censors bad words (replaces with ***)
-  - Server creates a message object: { id, text, userName, timestamp }
-  - Server BROADCASTS to ALL connected users:
-      io.emit("new_message", newMessage)
+  - Server creates a message object and pushes it to chatMessages[roomId]
+  - Server sends the message only to users in that room:
+      io.to(roomId).emit("new_message", newMessage)
 
 STEP 4: ALL USERS RECEIVE THE MESSAGE
   - Every connected client has a listener:

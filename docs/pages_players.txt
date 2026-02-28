@@ -38,6 +38,39 @@ HOW IT WORKS (STEP BY STEP)
    - etc.
    The user clicks "Next" or "Previous" to change pages.
 
+KEY FUNCTIONS (what they do in simple terms)
+---------------------------------------------
+  (Players page uses mostly inline logic; the main logic is below.)
+
+  Pagination: startIndex = (currentPage - 1) * 20, endIndex = startIndex + 20.
+    We use these two numbers to take a "slice" of the filtered list. So on
+    page 1 we show players 0–19, on page 2 we show 20–39, and so on.
+
+  When the user clicks "Next": currentPage is increased by 1 and the page
+    scrolls back to the top (window.scrollTo(0, 0)) so they see the new
+    list from the start.
+
+  When a filter (search, league, position, team) changes: we reset
+    currentPage to 1 so the user always starts at page 1 of the new results.
+
+KEY LOOPS (what the loop does in the code)
+-------------------------------------------
+  .filter() on the players array (often chained)
+    Goes through every player and keeps only the ones that match the
+    search text AND the selected position AND the selected team AND
+    the selected league. So we start with 200 and end up with a
+    shorter list (e.g. 15 players) that match all filters.
+
+  .slice(startIndex, endIndex)
+    Not a loop, but it "cuts" the array: it takes only the players
+    between startIndex and endIndex. So we take the filtered list
+    and show only 20 at a time for the current page.
+
+  .map() to draw the table rows
+    Loops through the 20 players we got from the slice and creates
+    one table row (<tr>) per player. So 20 players mean 20 rows
+    on the screen.
+
 KEY REACT CONCEPTS USED
 -------------------------
 - useState: Stores players, search text, filters, current page

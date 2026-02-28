@@ -161,6 +161,28 @@ DEPLOYMENT
 - Database: Hosted on Supabase (cloud PostgreSQL)
 - Environment variables configured on Render dashboard
 
+KEY FUNCTIONS AND PATTERNS (high level)
+----------------------------------------
+  fetch(API_BASE + "/api/...")
+    The frontend uses this to ask the backend for data. It sends an HTTP
+    request (GET or POST). The backend runs the matching route (e.g. app.get
+    or app.post) and sends back JSON. So "fetch" = "please give me data"
+    and the route handler = "here is the data".
+
+  app.get("/api/something", function (req, res) { ... })
+    When the backend receives a GET request to that URL, this function runs.
+    It reads data (from a JSON file or the database) and sends it back with
+    res.json(data). So each route is one "endpoint" the frontend can call.
+
+  pool.query("SELECT ...", [param1, param2])
+    The backend uses this to talk to the database. It sends a SQL query
+    and gets back rows. The result is in result.rows. So the backend is
+    the middle layer: frontend asks backend, backend asks database, then
+    sends the answer back to the frontend.
+
+  (No "loops" in the architecture doc – loops are inside the route handlers
+   and page components; see the individual page docs for those.)
+
 COMPLEX CODE EXPLAINED
 -----------------------
 

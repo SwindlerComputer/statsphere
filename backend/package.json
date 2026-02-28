@@ -13,7 +13,9 @@
     "start": "node server.js",
     "export:ballondor": "node scripts/exportBallonDorTrainingData.js",
     "train:ballondor": "python3 ml/train_ballondor.py",
-    "ml:ballondor": "node scripts/exportBallonDorTrainingData.js && python3 ml/train_ballondor.py"
+    "ml:ballondor": "node scripts/exportBallonDorTrainingData.js && python ml/train_ballondor.py",
+    "generate:ml-scores": "node scripts/generateMlScoresPrecomputed.js",
+    "ml:full": "npm run ml:ballondor && npm run generate:ml-scores"
   },
   
   "keywords": [],

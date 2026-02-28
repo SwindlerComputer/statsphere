@@ -1,9 +1,9 @@
 // ========================================
 // BallonDor.js - Ballon d'Or Predictor (Top 10)
 // ========================================
-// This page predicts who might win the Ballon d'Or.
-// It loads all players, gives each one a rule-based score,
-// then shows the top 10 candidates.
+// Ranks players by current-season stats (WhoScored-style).
+// Loads all players from /api/insights/players, scores each with the formula below,
+// then shows the top 10.
 //
 // HOW THE SCORING WORKS:
 // Each player gets points for goals, assists, rating, etc.

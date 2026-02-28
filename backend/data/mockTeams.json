@@ -19,5 +19,6 @@
   { "id": 18, "name": "Bayer Leverkusen", "league": "Bundesliga", "country": "Germany" },
   { "id": 19, "name": "Al Nassr", "league": "Saudi Pro League", "country": "Saudi Arabia" },
   { "id": 20, "name": "Al Hilal", "league": "Saudi Pro League", "country": "Saudi Arabia" },
-  { "id": 21, "name": "Al Ittihad", "league": "Saudi Pro League", "country": "Saudi Arabia" }
+  { "id": 21, "name": "Al Ittihad", "league": "Saudi Pro League", "country": "Saudi Arabia" },
+  { "id": 22, "name": "Galatasaray", "league": "Super Lig", "country": "Turkey" }
 ]

@@ -69,6 +69,11 @@
     { "rank": 9, "team": "Rennes", "played": 26, "won": 8, "draw": 8, "lost": 10, "goalsFor": 28, "goalsAgainst": 32, "goalDifference": -4, "points": 32 },
     { "rank": 10, "team": "Strasbourg", "played": 26, "won": 7, "draw": 9, "lost": 10, "goalsFor": 26, "goalsAgainst": 34, "goalDifference": -8, "points": 30 }
   ],
+  "Super Lig": [
+    { "rank": 1, "team": "Galatasaray", "played": 26, "won": 18, "draw": 4, "lost": 4, "goalsFor": 52, "goalsAgainst": 24, "goalDifference": 28, "points": 58 },
+    { "rank": 2, "team": "Fenerbahce", "played": 26, "won": 16, "draw": 5, "lost": 5, "goalsFor": 48, "goalsAgainst": 26, "goalDifference": 22, "points": 53 },
+    { "rank": 3, "team": "Besiktas", "played": 26, "won": 14, "draw": 6, "lost": 6, "goalsFor": 42, "goalsAgainst": 28, "goalDifference": 14, "points": 48 }
+  ],
   "Champions League": [
     { "rank": 1, "team": "Liverpool", "played": 8, "won": 7, "draw": 1, "lost": 0, "goalsFor": 18, "goalsAgainst": 4, "goalDifference": 14, "points": 22 },
     { "rank": 2, "team": "Barcelona", "played": 8, "won": 6, "draw": 1, "lost": 1, "goalsFor": 20, "goalsAgainst": 8, "goalDifference": 12, "points": 19 },

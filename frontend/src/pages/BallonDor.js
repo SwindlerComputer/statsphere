@@ -24,7 +24,8 @@ var leagueWeights = {
   "Bundesliga": 0.9,
   "Ligue 1": 0.85,
   "Super Lig": 0.75,
-  "Saudi Pro League": 0.7
+  "Saudi Pro League": 0.7,
+  "Brazilian Serie A": 0.65
 };
 
 // ========================================
@@ -114,7 +115,7 @@ export default function BallonDor() {
         Ballon d'Or Predictor
       </h1>
       <p className="text-gray-400 text-center mb-6 text-sm sm:text-base">
-        Top 10 candidates based on goals, assists, rating, and consistency
+        Top 10 based on current season stats (WhoScored-style). Score uses goals, assists, rating, key passes, goals/90 and league weight.
       </p>
 
       {/* Explain the formula */}
@@ -124,7 +125,7 @@ export default function BallonDor() {
           Score = [(Goals x 4) + (Assists x 3) + (Rating x 10) + (Key Passes x 0.5) + (Goals/90 x 50)] x League Weight
         </p>
         <p className="text-xs text-gray-500">
-          League Weights: PL = 1.0, La Liga = 0.95, Serie A &amp; Bundesliga = 0.9, Ligue 1 = 0.85, Saudi Pro League = 0.7
+          League Weights: PL = 1.0, La Liga = 0.95, Serie A &amp; Bundesliga = 0.9, Ligue 1 = 0.85, Super Lig = 0.75, Saudi Pro League = 0.7
         </p>
       </div>
 

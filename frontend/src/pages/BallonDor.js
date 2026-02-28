@@ -37,7 +37,7 @@ var teamUCLStage = {
   "Bayern Munich": 3, "Real Madrid": 3, "Paris Saint-Germain": 3,
   "Borussia Dortmund": 3, "Atletico Madrid": 2, "AC Milan": 2,
   "Manchester City": 2, "Juventus": 1, "Napoli": 1,
-  "Aston Villa": 1, "Chelsea": 1
+  "Aston Villa": 1, "Chelsea": 1, "Everton": 0
 };
 
 // ========================================
@@ -45,7 +45,7 @@ var teamUCLStage = {
 // ========================================
 var teamTrophies = {
   "Real Madrid": 1, "Liverpool": 1, "Inter Milan": 1,
-  "Paris Saint-Germain": 1, "Al Hilal": 1
+  "Paris Saint-Germain": 1, "Al Hilal": 1, "Everton": 0
 };
 
 // ========================================
@@ -181,10 +181,19 @@ export default function BallonDor() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ players: mlPlayers }),
     })
-      .then(function (res) { return res.json(); })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) {
+            var msg = data.error || "ML request failed";
+            if (data.details) msg += " — " + data.details;
+            throw new Error(msg);
+          }
+          return data;
+        });
+      })
       .then(function (data) {
         if (data.error) {
-          setMlError(data.error);
+          setMlError(data.details ? data.error + ": " + data.details : data.error);
           setLoading(false);
           return;
         }
@@ -222,7 +231,7 @@ export default function BallonDor() {
       })
       .catch(function (err) {
         console.error("ML ranking error:", err);
-        setMlError("Failed to connect to ML backend: " + err.message);
+        setMlError("Failed to connect to ML backend. Is the server running? " + err.message);
         setLoading(false);
       });
   }

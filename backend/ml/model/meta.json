@@ -16,8 +16,8 @@
   ],
   "target": "ballondor_score",
   "metrics": {
-    "mae": 14.7248,
-    "r2": 0.8655
+    "mae": 14.7861,
+    "r2": 0.8678
   },
   "model_type": "RandomForestRegressor",
   "n_estimators": 100,
@@ -25,5 +25,5 @@
   "train_rows": 160,
   "test_rows": 40,
   "total_rows": 200,
-  "trained_at": "2026-02-28T12:18:04.287580"
+  "trained_at": "2026-02-28T12:35:44.050042"
 }

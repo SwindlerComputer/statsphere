@@ -56,6 +56,7 @@ const TEAM_TROPHIES = {
   "Aston Villa": 0,
   "Atletico Madrid": 0,
   "Bayer Leverkusen": 0,
+  "Everton": 0,
   "Al Nassr": 0,
   "Al Hilal": 1,
   "Al Ittihad": 0,
@@ -77,11 +78,12 @@ const UCL_STAGE = {
   "Borussia Dortmund": 3,
   "Atletico Madrid": 2,
   "AC Milan": 2,
+  "Manchester City": 2,
   "Juventus": 1,
   "Napoli": 1,
   "Aston Villa": 1,
   "Chelsea": 1,
-  "Manchester City": 2,
+  "Everton": 0,
 };
 
 // ========================================

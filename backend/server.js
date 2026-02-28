@@ -396,64 +396,82 @@ app.post("/api/ballondor/ml-rank", (req, res) => {
     return res.status(400).json({ error: "Request body must contain a non-empty 'players' array" });
   }
 
-  // Path to the prediction script
-  const scriptPath = path.join(__dirname, "ml", "predict_ballondor.py");
+  // Absolute path to the prediction script (works from any cwd)
+  const scriptPath = path.resolve(__dirname, "ml", "predict_ballondor.py");
+  const backendDir = path.resolve(__dirname);
 
-  // Try python3 first, fall back to python
-  const pythonCmd = process.platform === "win32" ? "python" : "python3";
+  // Python command: try python3 first, then python (Windows often has only "python")
+  const pythonCmds = process.platform === "win32" ? ["python", "py", "python3"] : ["python3", "python"];
 
-  const child = spawn(pythonCmd, [scriptPath], {
-    cwd: __dirname,
-    timeout: 30000,
-  });
-
-  let stdout = "";
-  let stderr = "";
-
-  child.stdout.on("data", (data) => {
-    stdout += data.toString();
-  });
-
-  child.stderr.on("data", (data) => {
-    stderr += data.toString();
-  });
-
-  // Send player data to Python via stdin
-  const inputJSON = JSON.stringify({ players: players });
-  child.stdin.write(inputJSON);
-  child.stdin.end();
-
-  child.on("close", (code) => {
-    if (code !== 0) {
-      console.error("Python ML script error:", stderr);
+  function trySpawn(index) {
+    if (index >= pythonCmds.length) {
       return res.status(500).json({
-        error: "ML prediction failed",
-        details: stderr || "Python script exited with code " + code,
+        error: "Python not found. Install Python 3 and add it to PATH.",
+        details: "Tried: " + pythonCmds.join(", "),
       });
     }
 
-    try {
-      const result = JSON.parse(stdout);
-      if (result.error) {
-        return res.status(500).json({ error: result.error });
-      }
-      res.json(result);
-    } catch (parseErr) {
-      console.error("Failed to parse Python output:", stdout);
-      res.status(500).json({
-        error: "Failed to parse ML output",
-        details: stdout.substring(0, 500),
-      });
-    }
-  });
-
-  child.on("error", (err) => {
-    console.error("Failed to start Python:", err.message);
-    res.status(500).json({
-      error: "Could not start Python. Make sure python3 is installed.",
-      details: err.message,
+    const pythonCmd = pythonCmds[index];
+    const child = spawn(pythonCmd, [scriptPath], {
+      cwd: backendDir,
+      timeout: 60000,
+      stdio: ["pipe", "pipe", "pipe"],
     });
-  });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (data) => { stdout += data.toString(); });
+    child.stderr.on("data", (data) => { stderr += data.toString(); });
+
+    const inputJSON = JSON.stringify({ players: players });
+    child.stdin.write(inputJSON, "utf8", (err) => {
+      if (err) console.error("stdin write error:", err);
+    });
+    child.stdin.end();
+
+    child.on("close", (code, signal) => {
+      let result;
+      try {
+        result = stdout ? JSON.parse(stdout) : null;
+      } catch (_) {
+        result = null;
+      }
+
+      if (code !== 0) {
+        const details = (result && result.error) ? result.error : (stderr || stdout || "Exit code " + code).trim().substring(0, 800);
+        console.error("Python ML script exit code:", code, "details:", details);
+        return res.status(500).json({
+          error: "ML prediction failed",
+          details: details,
+        });
+      }
+
+      if (result && result.error) {
+        return res.status(500).json({ error: result.error, details: result.error });
+      }
+      if (result) {
+        return res.json(result);
+      }
+      return res.status(500).json({
+        error: "No output from ML script",
+        details: stderr || "No stdout",
+      });
+    });
+
+    child.on("error", (err) => {
+      if (err.code === "ENOENT") {
+        trySpawn(index + 1);
+      } else {
+        res.status(500).json({
+          error: "Could not start Python",
+          details: err.message,
+        });
+      }
+    });
+  }
+
+  trySpawn(0);
 });
 
 // ========================================

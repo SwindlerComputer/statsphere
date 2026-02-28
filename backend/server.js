@@ -22,7 +22,6 @@ import authRoutes from "./auth/authRoutes.js";
 import footballApiRoutes from "./api/footballApiRoutes.js";
 import modRoutes from "./api/modRoutes.js";
 import { fileURLToPath } from "url";
-import { spawn } from "child_process";      // For calling Python ML scripts
 import { createServer } from "http";        // Needed for Socket.IO
 import { Server } from "socket.io";         // Socket.IO library
 import jwt from "jsonwebtoken";             // To verify user tokens
@@ -380,88 +379,6 @@ app.post("/api/predict-match", function (req, res) {
     teamA: { name: teamA.name, league: teamA.league, attack: teamA.attack, defense: teamA.defense, form: teamA.form },
     teamB: { name: teamB.name, league: teamB.league, attack: teamB.attack, defense: teamB.defense, form: teamB.form }
   });
-});
-
-// ========================================
-// ML BALLON D'OR RANKING (student-level)
-// ========================================
-// Simple idea: Frontend sends the list of players. We return an ML score for each.
-// We use a pre-saved JSON file (scores for all 200 players) so we don't need Python on the server.
-// POST /api/ballondor/ml-rank  body: { players: [{ id, goals, assists, ... }, ...] }
-const ML_PRECOMPUTED_PATH = path.join(__dirname, "data", "ml_scores_precomputed.json");
-
-app.post("/api/ballondor/ml-rank", (req, res) => {
-  const players = req.body.players;
-
-  if (!players || !Array.isArray(players) || players.length === 0) {
-    return res.status(400).json({ error: "Request body must contain a non-empty 'players' array" });
-  }
-
-  // PREFERRED: Use precomputed scores (works on Render without Python)
-  try {
-    const precomputed = JSON.parse(fs.readFileSync(ML_PRECOMPUTED_PATH, "utf8"));
-    const scoreMap = {};
-    for (const r of precomputed.results || []) {
-      scoreMap[r.id] = r.ml_score;
-    }
-    const results = players.map((p) => ({
-      id: p.id,
-      ml_score: scoreMap[p.id] ?? 0,
-    }));
-    return res.json({
-      results,
-      meta: precomputed.meta || { model_type: "RandomForestRegressor", precomputed: true },
-    });
-  } catch (err) {
-    if (err.code !== "ENOENT") {
-      console.error("ML precomputed read error:", err);
-      return res.status(500).json({ error: "ML data error", details: err.message });
-    }
-  }
-
-  // FALLBACK: Spawn Python (local dev only; Render has no Python)
-  const scriptPath = path.resolve(__dirname, "ml", "predict_ballondor.py");
-  const pythonCmds = process.platform === "win32" ? ["python", "py", "python3"] : ["python3", "python"];
-
-  function trySpawn(index) {
-    if (index >= pythonCmds.length) {
-      return res.status(500).json({
-        error: "ML not available. Run: npm run generate:ml-scores (then commit ml_scores_precomputed.json)",
-        details: "Python not found on server. Precomputed file missing.",
-      });
-    }
-    const child = spawn(pythonCmds[index], [scriptPath], {
-      cwd: __dirname,
-      timeout: 60000,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (d) => { stdout += d.toString(); });
-    child.stderr.on("data", (d) => { stderr += d.toString(); });
-    child.stdin.write(JSON.stringify({ players }), "utf8");
-    child.stdin.end();
-    child.on("close", (code) => {
-      if (code !== 0) {
-        return res.status(500).json({
-          error: "ML prediction failed",
-          details: (stderr || stdout || "Exit " + code).trim().substring(0, 500),
-        });
-      }
-      try {
-        const result = JSON.parse(stdout);
-        if (result.error) return res.status(500).json({ error: result.error });
-        res.json(result);
-      } catch (_) {
-        res.status(500).json({ error: "Invalid ML output", details: stdout.substring(0, 300) });
-      }
-    });
-    child.on("error", (err) => {
-      if (err.code === "ENOENT") trySpawn(index + 1);
-      else res.status(500).json({ error: "Could not start Python", details: err.message });
-    });
-  }
-  trySpawn(0);
 });
 
 // ========================================

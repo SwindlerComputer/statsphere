@@ -1,15 +1,11 @@
 // ========================================
-// BallonDor.js - Ballon d'Or Predictor (Top 10)
+// BallonDor.js - Ballon d'Or Predictor (Top 10) — student-level
 // ========================================
-// This page predicts who might win the Ballon d'Or.
-// It supports two modes:
-//   1. Rule-Based: simple weighted formula (runs in browser)
-//   2. ML Ranking: calls backend Python RandomForest model
+// Two ways to rank players:
+//   1. Rule-Based: a simple formula in the browser (goals×4 + assists×3 + ... × league weight)
+//   2. ML Ranking: we ask the backend for a score per player; backend uses a pre-saved list from a trained model
 //
-// HOW THE RULE-BASED SCORING WORKS:
-// Each player gets points for goals, assists, rating, etc.
-// The points are multiplied by a "league weight" so that
-// scoring in harder leagues (like Premier League) counts more.
+// Rule-based: we add up points here. ML: we send players to the API and get back scores, then sort by score.
 
 import { useEffect, useState } from "react";
 

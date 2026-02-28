@@ -1,13 +1,12 @@
 // ========================================
-// generateMlScoresPrecomputed.js
+// generateMlScoresPrecomputed.js (student-level)
 // ========================================
-// Runs Python predict on all mock players and saves the output to JSON.
-// This file is committed so Render can serve ML scores WITHOUT Python at runtime.
+// SIMPLE IDEA: We run the Python model once on all 200 players and save the scores to a JSON file.
+// The live server then just reads that file (no Python needed on the server).
 //
-// Run:  node backend/scripts/generateMlScoresPrecomputed.js
+// Run:  node scripts/generateMlScoresPrecomputed.js   (from backend folder)
 // Output: backend/data/ml_scores_precomputed.json
-//
-// Must run AFTER: npm run ml:ballondor (export + train)
+// Do this AFTER: npm run ml:ballondor
 
 import fs from "fs";
 import path from "path";

@@ -1,12 +1,13 @@
 """
-predict_ballondor.py - Predict Ballon d'Or scores using the trained model
-==========================================================================
-Reads player data from stdin (JSON), runs the model, outputs predictions to stdout.
+predict_ballondor.py - Get ML score for each player (student-level)
 
-Input (stdin):  {"players": [{"id":1, "goals":20, "assists":10, ...}, ...]}
-Output (stdout): {"results": [{"id":1, "ml_score":142.5}, ...], "meta": {...}}
+SIMPLE IDEA: Load the saved model. Read a list of players (with their stats) from stdin.
+For each player, the model gives a number (ml_score). We print those back as JSON.
 
-Called by Node.js backend via child_process.spawn.
+Input:  JSON with "players" array (each player has id, goals, assists, etc.)
+Output: JSON with "results" array (each has id and ml_score)
+
+The Node backend can run this script and pass player data in, then use the scores.
 """
 
 import sys
@@ -23,7 +24,7 @@ MODEL_PATH = os.path.join(SCRIPT_DIR, "model", "ballondor_model.pkl")
 META_PATH = os.path.join(SCRIPT_DIR, "model", "meta.json")
 
 # ========================================
-# STEP 1: Load model and metadata
+# STEP 1: Load the saved model and the list of feature names
 # ========================================
 if not os.path.exists(MODEL_PATH):
     print(json.dumps({"error": "Model file not found. Run train_ballondor.py first."}))
@@ -41,7 +42,7 @@ with open(META_PATH, "r") as f:
 FEATURES = meta["features"]
 
 # ========================================
-# STEP 2: Read input from stdin
+# STEP 2: Read the list of players (Node sends this in)
 # ========================================
 try:
     raw_input = sys.stdin.read()
@@ -56,18 +57,18 @@ if not players:
     sys.exit(1)
 
 # ========================================
-# STEP 3: Build feature matrix and predict
+# STEP 3: For each player, get the 13 numbers, then ask the model for a score
 # ========================================
 rows = []
 ids = []
 for player in players:
     row = {}
     for feat in FEATURES:
-        row[feat] = float(player.get(feat, 0))
+        row[feat] = float(player.get(feat, 0))   # use 0 if a stat is missing
     rows.append(row)
     ids.append(player.get("id", 0))
 
-# Build a DataFrame so sklearn gets proper feature names
+# Put into a table and run the model
 df = pd.DataFrame(rows, columns=FEATURES)
 predictions = model.predict(df)
 
@@ -79,7 +80,7 @@ for i in range(len(predictions)):
     })
 
 # ========================================
-# STEP 4: Output JSON to stdout
+# STEP 4: Send back id and ml_score for each player (as JSON)
 # ========================================
 output = {
     "results": results,

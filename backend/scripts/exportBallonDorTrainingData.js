@@ -1,10 +1,10 @@
 // ========================================
-// exportBallonDorTrainingData.js
+// exportBallonDorTrainingData.js (student-level)
 // ========================================
-// Reads mockPlayers.json and exports a CSV file for ML training.
-// Adds computed fields: team_trophies, ucl_stage_score, league_strength, ballondor_score.
+// SIMPLE IDEA: Read all players from JSON. For each player we add a "Ballon d'Or score"
+// (from a simple formula). We write one row per player to a CSV so Python can train on it.
 //
-// Run:  node backend/scripts/exportBallonDorTrainingData.js
+// Run:  node scripts/exportBallonDorTrainingData.js   (from backend folder)
 // Output: backend/data/ballondor_train.csv
 
 import fs from "fs";
@@ -87,14 +87,10 @@ const UCL_STAGE = {
 };
 
 // ========================================
-// RULE-BASED BALLON D'OR SCORE (TRAINING LABEL)
+// Our "label" for training: a simple score formula
 // ========================================
-// Simple weighted formula. This is the target variable for ML training.
-// The weights are chosen to reflect what matters for the Ballon d'Or:
-//   - goals and assists are the most important individual stats
-//   - avg_rating captures overall performance
-//   - team success (trophies, UCL progress) matters a lot
-//   - league strength penalises weaker leagues
+// We need one number per player for the model to learn from. We use a simple formula:
+// score = goals×4 + assists×3 + rating×10 + ... + team_trophies×15 + ucl×8 + league×20 + goals-per-90 bonus
 function computeBallonDorScore(p) {
   var score = 0;
   score += (p.goals || 0) * 4;

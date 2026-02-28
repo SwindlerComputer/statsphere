@@ -383,11 +383,11 @@ app.post("/api/predict-match", function (req, res) {
 });
 
 // ========================================
-// ML BALLON D'OR RANKING ENDPOINT
+// ML BALLON D'OR RANKING (student-level)
 // ========================================
-// POST /api/ballondor/ml-rank
-// Accepts { players: [...] } where each player has ML feature fields.
-// Uses precomputed JSON on Render (no Python needed). Falls back to Python locally.
+// Simple idea: Frontend sends the list of players. We return an ML score for each.
+// We use a pre-saved JSON file (scores for all 200 players) so we don't need Python on the server.
+// POST /api/ballondor/ml-rank  body: { players: [{ id, goals, assists, ... }, ...] }
 const ML_PRECOMPUTED_PATH = path.join(__dirname, "data", "ml_scores_precomputed.json");
 
 app.post("/api/ballondor/ml-rank", (req, res) => {
